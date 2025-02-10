@@ -1,0 +1,14 @@
+@mixin absoluteCenter($vertical: "true", $horizontal: "true") {
+  position: absolute;
+  @if $vertical == "true" and $horizontal == "true" {
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+  } @else if $horizontal == "true" {
+    left: 50%;
+    transform: translateX(-50%);
+  } @else if $vertical == "true" {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
