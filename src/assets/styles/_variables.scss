@@ -1,44 +1,123 @@
 // COLORS
 
 // TEXT || BUTTONS || ICONS
-$primary: "";
-$secondary: "";
-$on-primary: "";
-$on-secondary: "";
+$primary: #3d5cc2;
+$secondary: #4d4d4d;
+$on-primary: #f0f0f0;
+$on-secondary: #f0f0f0;
+$saturation: 50%;
+$lightness: 50%;
 
-// CONTAINERS
-$primary-container: "";
-$secondary-container: "";
-$on-primary-container: "";
-$on-secondary-container: "";
+// inverse (contrasting effects)
+$inverse-surface: "";
+$inverse-on-surface: "";
+$inverse-priamry: "";
+$inverse-on-priamry: "";
 
-// SURFACE
-$surface: "";
-$surface-container: "";
-$surface-container-low: "";
-$surface-container-high: "";
-$on-surface-body: "";
-$on-surface-body-low: "";
-$on-surface-body-high: "";
-$on-surface-heading: "";
-$on-surface-heading-low: "";
+// CONTAINERS (lower emphasis than their non-container values)
+$primary-container: #8195d7;
+$secondary-container: #8b8b8b;
+$on-primary-container: #0f0f0f;
+$on-secondary-container: #0f0f0f;
+
+// SURFACE (large areas, such as navbars (not for small containers such as tabs))
+$surface: #f0f0f0;
+$surface-container-low: #d3d3d3;
+$surface-container: #bcbcbc;
+$surface-container-high: #aaaaaa;
+$on-surface-body-low: #7a7a7a;
+$on-surface-body: #606060;
+$on-surface-body-high: #404040;
+$on-surface-heading: #0f0f0f;
 
 // BORDER
-$border-normal: "";
-$border-low: "";
-$border-lowest: "";
+$border-lowest: #7a7a7a;
+$border-low: #606060;
+$border-normal: #404040;
+$border-high: #0f0f0f;
 
 // FONT
 
+// FONT FAMILY
+$ff-headings: "Poppins", serif;
+$ff-body: "Inter", serif;
+
+// FONT WEIGHT
+$fw-regular: 400;
+$fw-medium: 500;
+$fw-semibold: 600;
+$fw-bold: 700;
+
 // FONT SIZE
 
-$fs-body-s: 0.75rem;
+$fs-body-xs: 0.75rem;
 $fs-body-sm: 0.875rem;
 $fs-body-m: 1rem;
 $fs-body-lg: 1.125rem;
 $fs-body-xl: 1.25rem;
 
-$fs-h1: 0.75rem;
-$fs-h2: 0.75rem;
-$fs-h3: 0.75rem;
-$fs-h4: 0.75rem;
+$fs-h1: 2.5rem;
+$fs-h2: 2.25rem;
+$fs-h3: 2rem;
+$fs-h4: 1.75rem;
+
+// LINE HEIGHT
+$lh-scaler-body: 1.5;
+$lh-scaler-headings: 1.2;
+
+$lh-body-xs: $fs-body-xs * $lh-scaler-body;
+$lh-body-sm: $fs-body-sm * $lh-scaler-body;
+$lh-body-m: $fs-body-m * $lh-scaler-body;
+$lh-body-lg: $fs-body-lg * $lh-scaler-body;
+$lh-body-xl: $fs-body-xl * $lh-scaler-body;
+
+$lh-h1: $fs-h1 * $lh-scaler-headings;
+$lh-h2: $fs-h2 * $lh-scaler-headings;
+$lh-h3: $fs-h3 * $lh-scaler-headings;
+$lh-h4: $fs-h4 * $lh-scaler-headings;
+
+// PARAGRAPH SPACING
+$ps-scaler: 1.5;
+
+$ps-body-xs: $fs-body-xs * $ps-scaler;
+$ps-body-sm: $fs-body-sm * $ps-scaler;
+$ps-body-m: $fs-body-m * $ps-scaler;
+$ps-body-lg: $fs-body-lg * $ps-scaler;
+$ps-body-xl: $fs-body-xl * $ps-scaler;
+
+$ps-h1: $fs-h1 * $ps-scaler;
+$ps-h2: $fs-h2 * $ps-scaler;
+$ps-h3: $fs-h3 * $ps-scaler;
+$ps-h4: $fs-h4 * $ps-scaler;
+
+// SIZE
+
+// BORDER WIDTH
+$bw-m: 0.0625rem; // 1px
+$bw-lg: 0.125rem;
+$bw-xl: 0.25rem;
+
+// SPACING
+$sp-25: 0.0625rem;
+$sp-50: 0.125rem;
+$sp-100: 0.25rem;
+$sp-200: 0.5rem;
+$sp-250: 0.75rem;
+$sp-300: 1rem;
+$sp-400: 1.5rem;
+$sp-500: 2rem;
+$sp-600: 2.5rem;
+$sp-700: 3rem;
+
+// BORDER RADIUS
+$br-25: 0.0625rem;
+$br-50: 0.125rem;
+$br-100: 0.25rem;
+$br-200: 0.5rem;
+$br-250: 0.75rem;
+$br-300: 1rem;
+$br-400: 1.5rem;
+$br-500: 2rem;
+$br-600: 2.5rem;
+$br-700: 3rem;
+$br-round: 50%;

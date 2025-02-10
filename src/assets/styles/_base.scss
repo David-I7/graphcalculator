@@ -1,5 +1,5 @@
 @use "./mixins" as mixins;
-@use "./variables" as variables;
+@use "./variables" as var;
 @forward "./mixins";
 @forward "./variables";
 
@@ -16,8 +16,48 @@ image {
 }
 
 :root {
+  font-family: var.$ff-body;
+  font-weight: var.$fw-regular;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-body-xs {
+  font-size: var.$fs-body-xs;
+}
+.font-body-sm {
+  font-size: var.$fs-body-sm;
+}
+.font-body-m {
+  font-size: var.$fs-body-m;
+}
+.font-body-lg {
+  font-size: var.$fs-body-lg;
+}
+.font-body-xl {
+  font-size: var.$fs-body-xl;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var.$ff-headings;
+  font-weight: var.$fw-bold;
+}
+
+h1 {
+  font-size: var.$fs-h1;
+}
+h2 {
+  font-size: var.$fs-h2;
+}
+h3 {
+  font-size: var.$fs-h3;
+}
+h4 {
+  font-size: var.$fs-h4;
 }
