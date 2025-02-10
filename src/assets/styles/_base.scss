@@ -1,0 +1,23 @@
+@use "./mixins" as mixins;
+@use "./variables" as variables;
+@forward "./mixins";
+@forward "./variables";
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+image {
+  max-width: 100%;
+}
+
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
