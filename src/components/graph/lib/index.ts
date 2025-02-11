@@ -81,9 +81,149 @@ class DrawGridCommand implements Command {
     this.ctx.strokeStyle = CSS_VARIABLES.borderLowest;
     this.ctx.lineWidth = 0.5;
 
-    let count: number = 1;
     const scale: number = parseFloat(this.scales[this.scalesIndex]);
     const majorGridLine = this.scales[this.scalesIndex][0] === "5" ? 4 : 5;
+
+    this.drawVerticalLeft(majorGridLine, scale);
+    this.drawVerticalRight(majorGridLine, scale);
+
+    //center
+
+    this.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
+
+    this.drawHorizontalTop(majorGridLine, scale);
+    this.drawHorizontalBottom(majorGridLine, scale);
+
+    this.ctx.restore();
+  }
+
+  drawHorizontalTop(majorGridLine: number, scale: number) {
+    let count: number = 1;
+
+    let y = -this.scaledStep;
+
+    for (y; y > -this.canvasCenterY - this.offsetY; y -= this.scaledStep) {
+      if (count % majorGridLine === 0) {
+        this.ctx.save();
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+
+        // grid lines
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
+        this.ctx.stroke();
+
+        // text
+
+        const label = this.generateLabel(count, scale, "positive");
+
+        if (0 < -this.canvasCenterX - this.offsetX) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            -this.canvasCenterX - this.offsetX + this.labelsPadding,
+            y
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        } else if (0 > this.canvasCenterX - this.offsetX) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            this.canvasCenterX - this.offsetX - this.labelsPadding,
+            y
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        }
+
+        const textMetrics = this.ctx.measureText(label);
+        this.ctx.fillText(
+          label,
+          -textMetrics.width / 2 - this.labelsPadding / 2,
+          y
+        );
+        this.ctx.restore();
+      } else {
+        this.ctx.beginPath();
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
+        this.ctx.stroke();
+      }
+
+      count++;
+    }
+  }
+  drawHorizontalBottom(majorGridLine: number, scale: number) {
+    let count: number = 1;
+
+    for (
+      let y = this.scaledStep;
+      y < this.canvasCenterY - this.offsetY;
+      y += this.scaledStep
+    ) {
+      if (count % majorGridLine === 0) {
+        this.ctx.save();
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+
+        // grid lines
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
+        this.ctx.stroke();
+
+        // text
+
+        const label = this.generateLabel(count, scale, "negative");
+
+        if (0 < -this.canvasCenterX - this.offsetX) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            -this.canvasCenterX - this.offsetX + this.labelsPadding,
+            y
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        } else if (0 > this.canvasCenterX - this.offsetX) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            this.canvasCenterX - this.offsetX - this.labelsPadding,
+            y
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        }
+
+        const textMetrics = this.ctx.measureText(label);
+        this.ctx.fillText(
+          label,
+          -textMetrics.width / 2 - this.labelsPadding / 2,
+          y
+        );
+        this.ctx.restore();
+      } else {
+        this.ctx.beginPath();
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
+        this.ctx.stroke();
+      }
+
+      count++;
+    }
+  }
+
+  drawVerticalLeft(majorGridLine: number, scale: number) {
+    let count: number = 1;
 
     for (
       let x = -this.scaledStep;
@@ -94,11 +234,40 @@ class DrawGridCommand implements Command {
         this.ctx.save();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+
+        // grid lines
+
         this.ctx.beginPath();
         this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
         this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
         this.ctx.stroke();
+
+        // text
+
         const label = this.generateLabel(count, scale, "negative");
+
+        if (0 < -this.canvasCenterY - this.offsetY) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            x,
+            -this.canvasCenterY - this.offsetY + this.labelsPadding
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        } else if (0 > this.canvasCenterY - this.offsetY) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            x,
+            this.canvasCenterY - this.offsetY - this.labelsPadding
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        }
+
         this.ctx.fillText(label, x, +this.labelsPadding);
         this.ctx.restore();
       } else {
@@ -110,8 +279,10 @@ class DrawGridCommand implements Command {
 
       count++;
     }
+  }
+  drawVerticalRight(majorGridLine: number, scale: number) {
+    let count: number = 1;
 
-    count = 1;
     for (
       let x = this.scaledStep;
       x < this.canvasCenterX - this.offsetX;
@@ -121,11 +292,39 @@ class DrawGridCommand implements Command {
         this.ctx.save();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+
+        // grid lines
+
         this.ctx.beginPath();
         this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
         this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
         this.ctx.stroke();
+
+        // text
+
         const label = this.generateLabel(count, scale, "positive");
+        if (0 < -this.canvasCenterY - this.offsetY) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            x,
+            -this.canvasCenterY - this.offsetY + this.labelsPadding
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        } else if (0 > this.canvasCenterY - this.offsetY) {
+          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.ctx.fillText(
+            label,
+            x,
+            this.canvasCenterY - this.offsetY - this.labelsPadding
+          );
+          this.ctx.restore();
+          count++;
+          continue;
+        }
+
         this.ctx.fillText(label, x, +this.labelsPadding);
         this.ctx.restore();
       } else {
@@ -137,76 +336,6 @@ class DrawGridCommand implements Command {
 
       count++;
     }
-
-    //center
-
-    this.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
-
-    count = 1;
-    for (
-      let y = -this.scaledStep;
-      y > -this.canvasCenterY - this.offsetY;
-      y -= this.scaledStep
-    ) {
-      if (count % majorGridLine === 0) {
-        this.ctx.save();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
-        const label = this.generateLabel(count, scale, "positive");
-        const textMetrics = this.ctx.measureText(label);
-        this.ctx.fillText(
-          label,
-          -textMetrics.width / 2 - this.labelsPadding / 2,
-          y
-        );
-        this.ctx.restore();
-      } else {
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
-      }
-
-      count++;
-    }
-
-    count = 1;
-    for (
-      let y = this.scaledStep;
-      y < this.canvasCenterY - this.offsetY;
-      y += this.scaledStep
-    ) {
-      if (count % majorGridLine === 0) {
-        this.ctx.save();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
-        const label = this.generateLabel(count, scale, "negative");
-        const textMetrics = this.ctx.measureText(label);
-        this.ctx.fillText(
-          label,
-          -textMetrics.width / 2 - this.labelsPadding / 2,
-          y
-        );
-        this.ctx.restore();
-      } else {
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
-      }
-
-      count++;
-    }
-
-    this.ctx.restore();
   }
 
   generateLabel(
@@ -244,12 +373,14 @@ class DrawGridCommand implements Command {
     if (event.type === "scale") {
       this.scaledStep = this.step * (event.payload.scale as unknown as number);
       // zoom in
+
       if ((event.payload.scale as unknown as number) > 1.8) {
         this.scaledStep = this.step * 0.7;
         this.scalesIndex -= 1;
       }
 
       //zoom out
+
       if ((event.payload.scale as unknown as number) < 0.7) {
         this.scaledStep = this.step * 1.8;
         this.scalesIndex += 1;
@@ -381,7 +512,6 @@ class Graph {
     this.canvas.addEventListener(
       "wheel",
       (e) => {
-        console.log(e);
         e.preventDefault();
         this.scale *= e.deltaY > 0 ? 1 / scaleFactor : scaleFactor;
         const event: GraphEvent = {
@@ -399,7 +529,6 @@ class Graph {
 
     let lastMouseX = 0;
     let lastMouseY = 0;
-    const ease: number = 0.2;
 
     this.canvas.addEventListener("mousedown", (e) => {
       this.isDragging = true;
@@ -411,12 +540,14 @@ class Graph {
       throttle((e) => {
         if (!this.isDragging) return;
 
-        const dx = Math.round((e.clientX - lastMouseX) * ease);
-        const dy = Math.round((e.clientY - lastMouseY) * ease);
+        const dx = Math.round(e.clientX - lastMouseX);
+        const dy = Math.round(e.clientY - lastMouseY);
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
 
         this.offsetX += dx;
         this.offsetY += dy;
-        console.log(this.offsetX, this.offsetY);
+
         const event: GraphEvent = {
           type: "pan",
           payload: {
@@ -427,7 +558,7 @@ class Graph {
         this.dispatch(event);
 
         this.ctx.translate(dx, dy);
-      }, 25)
+      }, 10)
     );
     this.canvas.addEventListener("mouseup", () => {
       this.isDragging = false;
