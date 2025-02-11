@@ -1,4 +1,4 @@
-import { debounce } from "../../../helpers/performance";
+import { debounce, throttle } from "../../../helpers/performance";
 import { CSS_VARIABLES } from "../../../data/css/variables";
 
 window.addEventListener("load", () => {
@@ -6,6 +6,14 @@ window.addEventListener("load", () => {
     "graph-calculator"
   ) as HTMLCanvasElement;
   const ctx = canvas.getContext("2d")!;
+
+  // ctx.translate(50, 50);
+  // ctx.fillRect(0, 0, 50, 50);
+
+  // setTimeout(() => {
+  //   ctx.translate(-50, -50);
+  //   ctx.fillRect(0, 0, 50, 50);
+  // }, 1000);
 
   setup(canvas, ctx);
 });
@@ -27,12 +35,21 @@ function setup(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
 interface Command {
   draw(scale: number): void;
   reset(cx: number, cy: number): void;
-  update(scale: number): void;
+  update(event: GraphEvent): void;
+}
+
+const GRAPH_EVENTS = ["scale", "pan"] as const;
+
+interface GraphEvent {
+  type: (typeof GRAPH_EVENTS)[number];
+  payload: Record<string, any>;
 }
 
 class DrawGridCommand implements Command {
   protected canvasCenterX: number;
   protected canvasCenterY: number;
+  protected offsetX: number = 0;
+  protected offsetY: number = 0;
   protected scalesIndex: number = 45;
   protected scales: string[] = [];
   protected scaledStep: number;
@@ -66,27 +83,28 @@ class DrawGridCommand implements Command {
 
     let count: number = 1;
     const scale: number = parseFloat(this.scales[this.scalesIndex]);
+    const majorGridLine = this.scales[this.scalesIndex][0] === "5" ? 4 : 5;
 
     for (
       let x = -this.scaledStep;
-      x > -this.canvasCenterX;
+      x > -this.canvasCenterX - this.offsetX;
       x -= this.scaledStep
     ) {
-      if (count % 5 === 0) {
+      if (count % majorGridLine === 0) {
         this.ctx.save();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
         this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY);
-        this.ctx.lineTo(x, this.canvasCenterY);
+        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
+        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
         this.ctx.stroke();
         const label = this.generateLabel(count, scale, "negative");
         this.ctx.fillText(label, x, +this.labelsPadding);
         this.ctx.restore();
       } else {
         this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY);
-        this.ctx.lineTo(x, this.canvasCenterY);
+        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
+        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
         this.ctx.stroke();
       }
 
@@ -96,24 +114,24 @@ class DrawGridCommand implements Command {
     count = 1;
     for (
       let x = this.scaledStep;
-      x < this.canvasCenterX;
+      x < this.canvasCenterX - this.offsetX;
       x += this.scaledStep
     ) {
-      if (count % 5 === 0) {
+      if (count % majorGridLine === 0) {
         this.ctx.save();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
         this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY);
-        this.ctx.lineTo(x, this.canvasCenterY);
+        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
+        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
         this.ctx.stroke();
         const label = this.generateLabel(count, scale, "positive");
         this.ctx.fillText(label, x, +this.labelsPadding);
         this.ctx.restore();
       } else {
         this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY);
-        this.ctx.lineTo(x, this.canvasCenterY);
+        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
+        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
         this.ctx.stroke();
       }
 
@@ -127,16 +145,16 @@ class DrawGridCommand implements Command {
     count = 1;
     for (
       let y = -this.scaledStep;
-      y > -this.canvasCenterY;
+      y > -this.canvasCenterY - this.offsetY;
       y -= this.scaledStep
     ) {
-      if (count % 5 === 0) {
+      if (count % majorGridLine === 0) {
         this.ctx.save();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
         this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX, y);
-        this.ctx.lineTo(this.canvasCenterX, y);
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
         this.ctx.stroke();
         const label = this.generateLabel(count, scale, "positive");
         const textMetrics = this.ctx.measureText(label);
@@ -148,8 +166,8 @@ class DrawGridCommand implements Command {
         this.ctx.restore();
       } else {
         this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX, y);
-        this.ctx.lineTo(this.canvasCenterX, y);
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
         this.ctx.stroke();
       }
 
@@ -159,16 +177,16 @@ class DrawGridCommand implements Command {
     count = 1;
     for (
       let y = this.scaledStep;
-      y < this.canvasCenterY;
+      y < this.canvasCenterY - this.offsetY;
       y += this.scaledStep
     ) {
-      if (count % 5 === 0) {
+      if (count % majorGridLine === 0) {
         this.ctx.save();
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
         this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX, y);
-        this.ctx.lineTo(this.canvasCenterX, y);
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
         this.ctx.stroke();
         const label = this.generateLabel(count, scale, "negative");
         const textMetrics = this.ctx.measureText(label);
@@ -180,8 +198,8 @@ class DrawGridCommand implements Command {
         this.ctx.restore();
       } else {
         this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX, y);
-        this.ctx.lineTo(this.canvasCenterX, y);
+        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
+        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
         this.ctx.stroke();
       }
 
@@ -222,28 +240,32 @@ class DrawGridCommand implements Command {
     this.canvasCenterY = cy;
   }
 
-  update(scale: number): void {
-    this.scaledStep = this.step * scale;
-    // zoom in
-    if (scale > 1.8) {
-      this.scaledStep = this.step;
-      this.scalesIndex -= 1;
-    }
+  update(event: GraphEvent): void {
+    if (event.type === "scale") {
+      this.scaledStep = this.step * (event.payload.scale as unknown as number);
+      // zoom in
+      if ((event.payload.scale as unknown as number) > 1.8) {
+        this.scaledStep = this.step * 0.7;
+        this.scalesIndex -= 1;
+      }
 
-    //zoom out
-    if (scale < 0.6) {
-      this.scaledStep = this.step;
-      this.scalesIndex += 1;
+      //zoom out
+      if ((event.payload.scale as unknown as number) < 0.7) {
+        this.scaledStep = this.step * 1.8;
+        this.scalesIndex += 1;
+      }
+    } else if (event.type == "pan") {
+      this.offsetX = event.payload.offsetX;
+      this.offsetY = event.payload.offsetY;
     }
-
-    Number().toExponential();
-    console.log(this.scalesIndex);
   }
 }
 
 class DrawAxisCommand implements Command {
   protected canvasCenterX: number;
   protected canvasCenterY: number;
+  protected offsetX: number = 0;
+  protected offsetY: number = 0;
   constructor(
     protected canvas: HTMLCanvasElement,
     protected ctx: CanvasRenderingContext2D
@@ -259,23 +281,23 @@ class DrawAxisCommand implements Command {
     this.ctx.lineWidth = 2;
 
     this.ctx.beginPath();
-    this.ctx.moveTo(0, -this.canvasCenterY);
-    this.ctx.lineTo(-6, -this.canvasCenterY + 10);
-    this.ctx.lineTo(+6, -this.canvasCenterY + 10);
+    this.ctx.moveTo(0, -this.canvasCenterY - this.offsetY);
+    this.ctx.lineTo(-6, -this.canvasCenterY - this.offsetY + 10);
+    this.ctx.lineTo(+6, -this.canvasCenterY - this.offsetY + 10);
     this.ctx.closePath();
     this.ctx.fill();
 
-    this.ctx.lineTo(0, this.canvasCenterY);
+    this.ctx.lineTo(0, this.canvasCenterY - this.offsetY);
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.moveTo(this.canvasCenterX, 0);
-    this.ctx.lineTo(this.canvasCenterX - 10, -6);
-    this.ctx.lineTo(this.canvasCenterX - 10, +6);
+    this.ctx.moveTo(this.canvasCenterX - this.offsetX, 0);
+    this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, -6);
+    this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, +6);
     this.ctx.closePath();
     this.ctx.fill();
 
-    this.ctx.lineTo(-this.canvasCenterX, 0);
+    this.ctx.lineTo(-this.canvasCenterX - this.offsetX, 0);
     this.ctx.stroke();
 
     this.ctx.restore();
@@ -286,7 +308,12 @@ class DrawAxisCommand implements Command {
     this.canvasCenterY = cy;
   }
 
-  update(): void {}
+  update(event: GraphEvent): void {
+    if (event.type == "pan") {
+      this.offsetX = event.payload.offsetX;
+      this.offsetY = event.payload.offsetY;
+    }
+  }
 }
 
 class Graph {
@@ -295,6 +322,9 @@ class Graph {
   protected canvasCenterX!: number;
   protected canvasCenterY!: number;
   protected scale: number = 1;
+  protected isDragging: boolean = false;
+  protected offsetX: number = 0;
+  protected offsetY: number = 0;
   constructor(
     public canvas: HTMLCanvasElement,
     public ctx: CanvasRenderingContext2D,
@@ -331,7 +361,7 @@ class Graph {
     let prevHeight: number = this.canvas.offsetHeight;
 
     const observer = new ResizeObserver(
-      debounce(() => {
+      throttle(() => {
         if (
           prevWidth > this.canvas.offsetWidth + 1 ||
           prevWidth < this.canvas.offsetWidth - 1 ||
@@ -351,14 +381,60 @@ class Graph {
     this.canvas.addEventListener(
       "wheel",
       (e) => {
+        console.log(e);
         e.preventDefault();
         this.scale *= e.deltaY > 0 ? 1 / scaleFactor : scaleFactor;
-        this.update();
-        this.scale = this.scale > 1.8 ? 1 : this.scale < 0.6 ? 1 : this.scale;
-        console.log(this.scale);
+        const event: GraphEvent = {
+          type: "scale",
+          payload: {
+            scale: this.scale,
+          },
+        };
+        this.dispatch(event);
+        this.scale =
+          this.scale > 1.8 ? 0.7 : this.scale < 0.7 ? 1.8 : this.scale;
       },
       { passive: false }
     );
+
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    const ease: number = 0.2;
+
+    this.canvas.addEventListener("mousedown", (e) => {
+      this.isDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+    this.canvas.addEventListener(
+      "mousemove",
+      throttle((e) => {
+        if (!this.isDragging) return;
+
+        const dx = Math.round((e.clientX - lastMouseX) * ease);
+        const dy = Math.round((e.clientY - lastMouseY) * ease);
+
+        this.offsetX += dx;
+        this.offsetY += dy;
+        console.log(this.offsetX, this.offsetY);
+        const event: GraphEvent = {
+          type: "pan",
+          payload: {
+            offsetX: this.offsetX,
+            offsetY: this.offsetY,
+          },
+        };
+        this.dispatch(event);
+
+        this.ctx.translate(dx, dy);
+      }, 25)
+    );
+    this.canvas.addEventListener("mouseup", () => {
+      this.isDragging = false;
+    });
+    this.canvas.addEventListener("mouseleave", () => {
+      this.isDragging = false;
+    });
   }
 
   register(command: Command) {
@@ -373,16 +449,22 @@ class Graph {
     }
   }
 
-  update() {
-    this.commands.forEach((command) => command.update(this.scale));
+  dispatch(event: GraphEvent) {
+    this.commands.forEach((command) => command.update(event));
   }
 
   reset() {
     // reset canvas settings
 
+    this.offsetX = 0;
+    this.offsetY = 0;
     this.canvasCenterX = Math.round(this.canvas.width / 2);
     this.canvasCenterY = Math.round(this.canvas.height / 2);
     this.ctx.translate(this.canvasCenterX, this.canvasCenterY);
+    this.dispatch({
+      type: "pan",
+      payload: { offsetX: this.offsetX, offsetY: this.offsetY },
+    });
 
     // reset ctx settings
 
@@ -403,8 +485,8 @@ class Graph {
 
   clear() {
     this.ctx.clearRect(
-      -this.canvasCenterX,
-      -this.canvasCenterY,
+      -this.canvasCenterX - this.offsetX,
+      -this.canvasCenterY - this.offsetY,
       this.canvas.width,
       this.canvas.height
     );
