@@ -1,6 +1,11 @@
 import { debounce, throttle } from "../../../helpers/performance";
 import { CSS_VARIABLES } from "../../../data/css/variables";
 
+// NOTES
+
+// add zooming in or out without fixing origin in place if users mouse is not pointing towards the center (given a tolerance)
+// fix floating point label errors
+
 window.addEventListener("load", () => {
   const canvas = document.getElementById(
     "graph-calculator"
@@ -405,31 +410,55 @@ class DrawAxisCommand implements Command {
     this.canvasCenterX = Math.round(canvas.width / 2);
   }
   draw(scale: number) {
+    if (
+      (0 > this.canvasCenterX - this.offsetX ||
+        0 < -this.canvasCenterX - this.offsetX) &&
+      (0 > this.canvasCenterY - this.offsetY ||
+        0 < -this.canvasCenterY - this.offsetY)
+    )
+      return;
+
     this.ctx.save();
 
     this.ctx.strokeStyle = CSS_VARIABLES.borderHigh;
     this.ctx.fillStyle = CSS_VARIABLES.borderHigh;
     this.ctx.lineWidth = 2;
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, -this.canvasCenterY - this.offsetY);
-    this.ctx.lineTo(-6, -this.canvasCenterY - this.offsetY + 10);
-    this.ctx.lineTo(+6, -this.canvasCenterY - this.offsetY + 10);
-    this.ctx.closePath();
-    this.ctx.fill();
+    // y axis
+    if (
+      !(
+        0 > this.canvasCenterX - this.offsetX ||
+        0 < -this.canvasCenterX - this.offsetX
+      )
+    ) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, -this.canvasCenterY - this.offsetY);
+      this.ctx.lineTo(-6, -this.canvasCenterY - this.offsetY + 10);
+      this.ctx.lineTo(+6, -this.canvasCenterY - this.offsetY + 10);
+      this.ctx.closePath();
+      this.ctx.fill();
 
-    this.ctx.lineTo(0, this.canvasCenterY - this.offsetY);
-    this.ctx.stroke();
+      this.ctx.lineTo(0, this.canvasCenterY - this.offsetY);
+      this.ctx.stroke();
+    }
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.canvasCenterX - this.offsetX, 0);
-    this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, -6);
-    this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, +6);
-    this.ctx.closePath();
-    this.ctx.fill();
+    // x axis
+    if (
+      !(
+        0 > this.canvasCenterY - this.offsetY ||
+        0 < -this.canvasCenterY - this.offsetY
+      )
+    ) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.canvasCenterX - this.offsetX, 0);
+      this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, -6);
+      this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, +6);
+      this.ctx.closePath();
+      this.ctx.fill();
 
-    this.ctx.lineTo(-this.canvasCenterX - this.offsetX, 0);
-    this.ctx.stroke();
+      this.ctx.lineTo(-this.canvasCenterX - this.offsetX, 0);
+      this.ctx.stroke();
+    }
 
     this.ctx.restore();
   }
@@ -487,7 +516,9 @@ class Graph {
 
   private registerEvents() {
     //scoped variables
+
     const scaleFactor = 1.1;
+    const wheelTolerance: number = 75;
     let prevWidth: number = this.canvas.offsetWidth;
     let prevHeight: number = this.canvas.offsetHeight;
 
@@ -513,7 +544,38 @@ class Graph {
       "wheel",
       (e) => {
         e.preventDefault();
-        this.scale *= e.deltaY > 0 ? 1 / scaleFactor : scaleFactor;
+        // console.log(e.offsetX, e.offsetY);
+        const zoomDirection = e.deltaY > 0 ? "OUT" : "IN";
+
+        const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
+        const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
+
+        if (Math.abs(dx) > wheelTolerance || Math.abs(dy) > wheelTolerance) {
+          // console.log(this.offsetX, this.offsetY);
+          // console.log(dx, dy);
+          const roundedX = Math.round(dx / 10);
+          const roundedY = Math.round(dy / 10);
+          if (zoomDirection === "IN") {
+            this.offsetX += -roundedX;
+            this.offsetY += -roundedY;
+            this.ctx.translate(-roundedX, -roundedY);
+          } else {
+            this.offsetX += roundedX;
+            this.offsetY += roundedY;
+            this.ctx.translate(roundedX, roundedY);
+          }
+
+          const event: GraphEvent = {
+            type: "pan",
+            payload: {
+              offsetX: this.offsetX,
+              offsetY: this.offsetY,
+            },
+          };
+          this.dispatch(event);
+        }
+
+        this.scale *= zoomDirection === "OUT" ? 1 / scaleFactor : scaleFactor;
         const event: GraphEvent = {
           type: "scale",
           payload: {
