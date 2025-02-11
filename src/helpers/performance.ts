@@ -14,3 +14,37 @@ export function debounce<T extends any[]>(
     }, delay);
   };
 }
+
+export function throttle<T extends any[]>(
+  cb: (...args: T) => void,
+  delay: number = 300
+) {
+  let timerId: number | null = null;
+  let finalTimerId: number | null = null;
+  let waitingArgs: T | null = null;
+
+  return (...args: T) => {
+    waitingArgs = args;
+
+    if (finalTimerId) {
+      timerId = finalTimerId;
+      return;
+    }
+
+    if (!timerId) {
+      cb(...waitingArgs);
+      waitingArgs = null;
+      timerId = setTimeout(() => {
+        if (waitingArgs !== null) {
+          finalTimerId = setTimeout(() => {
+            cb(...(waitingArgs as T));
+            waitingArgs = null;
+            finalTimerId = null;
+            timerId = null;
+          }, delay);
+        }
+        timerId = null;
+      }, delay);
+    }
+  };
+}
