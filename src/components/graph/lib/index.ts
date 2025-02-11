@@ -34,10 +34,10 @@ class DrawGridCommand implements Command {
   protected canvasCenterX: number;
   protected canvasCenterY: number;
   protected scalesIndex: number = 45;
-  protected scales: number[] = [];
+  protected scales: string[] = [];
   protected scaledStep: number;
   protected n: number = 15;
-  protected labelsPadding: number = 16;
+  protected labelsPadding: number = 14;
   constructor(
     protected canvas: HTMLCanvasElement,
     protected ctx: CanvasRenderingContext2D,
@@ -50,8 +50,9 @@ class DrawGridCommand implements Command {
     const scaleFactors = [1, 2, 5];
     for (let i = -this.n; i <= this.n; ++i) {
       let j = 0;
+
       while (j < scaleFactors.length) {
-        this.scales.push(scaleFactors[j] * 10 ** i);
+        this.scales.push(`${scaleFactors[j]}e${i}`);
         j++;
       }
     }
@@ -64,6 +65,7 @@ class DrawGridCommand implements Command {
     this.ctx.lineWidth = 0.5;
 
     let count: number = 1;
+    const scale: number = parseFloat(this.scales[this.scalesIndex]);
 
     for (
       let x = -this.scaledStep;
@@ -78,11 +80,8 @@ class DrawGridCommand implements Command {
         this.ctx.moveTo(x, -this.canvasCenterY);
         this.ctx.lineTo(x, this.canvasCenterY);
         this.ctx.stroke();
-        this.ctx.fillText(
-          `-${count * this.scales[this.scalesIndex]}`,
-          x,
-          +this.labelsPadding
-        );
+        const label = this.generateLabel(count, scale, "negative");
+        this.ctx.fillText(label, x, +this.labelsPadding);
         this.ctx.restore();
       } else {
         this.ctx.beginPath();
@@ -108,11 +107,8 @@ class DrawGridCommand implements Command {
         this.ctx.moveTo(x, -this.canvasCenterY);
         this.ctx.lineTo(x, this.canvasCenterY);
         this.ctx.stroke();
-        this.ctx.fillText(
-          `${count * this.scales[this.scalesIndex]}`,
-          x,
-          +this.labelsPadding
-        );
+        const label = this.generateLabel(count, scale, "positive");
+        this.ctx.fillText(label, x, +this.labelsPadding);
         this.ctx.restore();
       } else {
         this.ctx.beginPath();
@@ -142,9 +138,11 @@ class DrawGridCommand implements Command {
         this.ctx.moveTo(-this.canvasCenterX, y);
         this.ctx.lineTo(this.canvasCenterX, y);
         this.ctx.stroke();
+        const label = this.generateLabel(count, scale, "positive");
+        const textMetrics = this.ctx.measureText(label);
         this.ctx.fillText(
-          `${count * this.scales[this.scalesIndex]}`,
-          -this.labelsPadding,
+          label,
+          -textMetrics.width / 2 - this.labelsPadding / 2,
           y
         );
         this.ctx.restore();
@@ -172,9 +170,11 @@ class DrawGridCommand implements Command {
         this.ctx.moveTo(-this.canvasCenterX, y);
         this.ctx.lineTo(this.canvasCenterX, y);
         this.ctx.stroke();
+        const label = this.generateLabel(count, scale, "negative");
+        const textMetrics = this.ctx.measureText(label);
         this.ctx.fillText(
-          `-${count * this.scales[this.scalesIndex]}`,
-          -this.labelsPadding,
+          label,
+          -textMetrics.width / 2 - this.labelsPadding / 2,
           y
         );
         this.ctx.restore();
@@ -189,6 +189,32 @@ class DrawGridCommand implements Command {
     }
 
     this.ctx.restore();
+  }
+
+  generateLabel(
+    count: number,
+    scale: number,
+    direction: "negative" | "positive"
+  ): string {
+    let label: string = "";
+
+    if (scale < 1e-5 || scale > 1e5) {
+      const scientificNotation = this.scales[this.scalesIndex].split("e");
+      const humanScientificNotation = `${scientificNotation[0]} X 10^${scientificNotation[1]}`;
+      if (direction === "negative") {
+        label = "-" + humanScientificNotation;
+      } else {
+        label = humanScientificNotation;
+      }
+    } else {
+      if (direction === "negative") {
+        label = `-${count * scale}`;
+      } else {
+        label = `${count * scale}`;
+      }
+    }
+
+    return label;
   }
 
   reset(cx: number, cy: number): void {
@@ -362,6 +388,7 @@ class Graph {
 
     this.ctx.font = `500 ${16 * this.dpr}px Inter`;
     this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
 
     this.commands.forEach((command) => {
       command.reset(this.canvasCenterX, this.canvasCenterY);
