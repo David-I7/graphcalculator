@@ -3,8 +3,9 @@ import { CSS_VARIABLES } from "../../../data/css/variables";
 
 // NOTES
 
-// add zooming in or out without fixing origin in place if users mouse is not pointing towards the center (given a tolerance)
 // fix floating point label errors
+// starting from 5 X 10^-6 or 5 X 10^6
+// when you reach a multiple of 10, increase or decrease respectively, 10 X 10^-6 => 10^-5
 
 window.addEventListener("load", () => {
   const canvas = document.getElementById(
@@ -26,48 +27,146 @@ window.addEventListener("load", () => {
 function setup(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
   const graph = new Graph(canvas, ctx);
 
-  graph.register(new DrawGridCommand(canvas, ctx, 25));
-  graph.register(new DrawAxisCommand(canvas, ctx));
+  graph.addCommand(new DrawGridCommand(graph, 25));
+  graph.addCommand(new DrawAxisCommand(graph));
 
   function animate() {
-    graph.clear();
-    graph.render();
+    graph.clearCommands();
+    graph.renderCommands();
     requestAnimationFrame(animate);
   }
   animate();
 }
 
-interface Command {
-  draw(scale: number): void;
-  reset(cx: number, cy: number): void;
-  update(event: GraphEvent): void;
+interface GraphCommand {
+  graph: Graph;
+  draw(): void;
 }
 
-const GRAPH_EVENTS = ["scale", "pan"] as const;
-
-interface GraphEvent {
-  type: (typeof GRAPH_EVENTS)[number];
-  payload: Record<string, any>;
+interface GraphCommandController {
+  commands: GraphCommand[];
+  add(command: GraphCommand): void;
+  remove(command: GraphCommand): void;
+  render(): void;
+  clear(graph: Graph): void;
 }
 
-class DrawGridCommand implements Command {
-  protected canvasCenterX: number;
-  protected canvasCenterY: number;
-  protected offsetX: number = 0;
-  protected offsetY: number = 0;
+class CommandController implements GraphCommandController {
+  public commands: GraphCommand[] = [];
+  constructor() {}
+
+  remove(command: GraphCommand): void {
+    for (let i = 0; i < this.commands.length; ++i) {
+      if (this.commands[i] === command) {
+        this.commands.splice(i, 1);
+      }
+    }
+  }
+
+  add(command: GraphCommand): void {
+    this.commands.push(command);
+  }
+
+  render() {
+    this.commands.forEach((command) => {
+      command.draw();
+    });
+  }
+
+  clear(graph: Graph): void {
+    graph.ctx.clearRect(
+      -graph.canvasCenterX - graph.offsetX,
+      -graph.canvasCenterY - graph.offsetY,
+      graph.canvas.width,
+      graph.canvas.height
+    );
+  }
+}
+
+interface Observer<T> {
+  observable: Observable<T>;
+  update<T>(data: T): void;
+  viewState(): T;
+}
+
+interface Observable<T> {
+  add(observer: Observer<T>): void;
+  remove(observer: Observer<T>): void;
+  notify<T>(data: T): void;
+  get state(): T;
+  set state(newState: T);
+}
+
+type ScaleEventData = {
+  scale: number;
+};
+
+type EventDataMap = {
+  scale: ScaleEventData;
+};
+
+const GRAPH_EVENT_NAMES = ["scale"] as const;
+
+interface BusEvent {
+  callbacks: Function[];
+  register(cb: Function): void;
+  deregister(cb: Function): void;
+  execute<T>(data: T): void;
+}
+
+type Event_Name = (typeof GRAPH_EVENT_NAMES)[number];
+
+interface MessageBus {
+  events: Record<string, BusEvent>;
+  dispatch<K extends keyof EventDataMap>(
+    eventName: K,
+    data: EventDataMap[K]
+  ): void;
+  on<K extends keyof EventDataMap>(
+    eventName: K,
+    cb: (event: EventDataMap[K]) => void
+  ): void;
+  removeListener<K extends keyof EventDataMap>(
+    eventName: K,
+    cb: (event: EventDataMap[K]) => void
+  ): void;
+}
+
+class ScaleEvent implements BusEvent {
+  public callbacks: Function[] = [];
+  constructor() {}
+  register(cb: Function): void {
+    this.callbacks.push(cb);
+  }
+  deregister(cb: Function): void {
+    for (let i = 0; i < this.callbacks.length; ++i) {
+      if (this.callbacks[i] === cb) {
+        this.callbacks.splice(i, 1);
+        break;
+      }
+    }
+  }
+  execute<T>(data: T): void {
+    this.callbacks.forEach((callback) => {
+      callback(data);
+    });
+  }
+}
+
+const eventMap: Record<Event_Name, new () => BusEvent> = {
+  scale: ScaleEvent,
+};
+
+class DrawGridCommand implements GraphCommand {
   protected scalesIndex: number = 45;
   protected scales: string[] = [];
   protected scaledStep: number;
   protected n: number = 15;
   protected labelsPadding: number = 14;
-  constructor(
-    protected canvas: HTMLCanvasElement,
-    protected ctx: CanvasRenderingContext2D,
-    public step: number
-  ) {
-    this.canvasCenterX = Math.round(this.canvas.width / 2);
-    this.canvasCenterY = Math.round(this.canvas.height / 2);
+  constructor(public graph: Graph, public step: number) {
     this.scaledStep = this.step;
+
+    graph.on("scale", this.scaleHandler.bind(this));
 
     const scaleFactors = [1, 2, 5];
     for (let i = -this.n; i <= this.n; ++i) {
@@ -81,10 +180,27 @@ class DrawGridCommand implements Command {
     console.log(this.scales);
   }
 
+  scaleHandler(e: ScaleEventData) {
+    this.scaledStep = this.step * e.scale;
+
+    // zoom out
+    if (e.scale > 1.8) {
+      this.scaledStep = this.step * 0.7;
+      this.scalesIndex -= 1;
+    }
+
+    //zoom in
+
+    if (e.scale < 0.7) {
+      this.scaledStep = this.step * 1.8;
+      this.scalesIndex += 1;
+    }
+  }
+
   draw(): void {
-    this.ctx.save();
-    this.ctx.strokeStyle = CSS_VARIABLES.borderLowest;
-    this.ctx.lineWidth = 0.5;
+    this.graph.ctx.save();
+    this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLowest;
+    this.graph.ctx.lineWidth = 0.5;
 
     const scale: number = parseFloat(this.scales[this.scalesIndex]);
     const majorGridLine = this.scales[this.scalesIndex][0] === "5" ? 4 : 5;
@@ -94,12 +210,12 @@ class DrawGridCommand implements Command {
 
     //center
 
-    this.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
+    this.graph.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
 
     this.drawHorizontalTop(majorGridLine, scale);
     this.drawHorizontalBottom(majorGridLine, scale);
 
-    this.ctx.restore();
+    this.graph.ctx.restore();
   }
 
   drawHorizontalTop(majorGridLine: number, scale: number) {
@@ -107,57 +223,67 @@ class DrawGridCommand implements Command {
 
     let y = -this.scaledStep;
 
-    for (y; y > -this.canvasCenterY - this.offsetY; y -= this.scaledStep) {
+    for (
+      y;
+      y > -this.graph.canvasCenterY - this.graph.offsetY;
+      y -= this.scaledStep
+    ) {
       if (count % majorGridLine === 0) {
-        this.ctx.save();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+        this.graph.ctx.save();
+        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          -this.graph.canvasCenterX - this.graph.offsetX,
+          y
+        );
+        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.stroke();
 
         // text
 
         const label = this.generateLabel(count, scale, "positive");
 
-        if (0 < -this.canvasCenterX - this.offsetX) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        if (0 < -this.graph.canvasCenterX - this.graph.offsetX) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
-            -this.canvasCenterX - this.offsetX + this.labelsPadding,
+            -this.graph.canvasCenterX - this.graph.offsetX + this.labelsPadding,
             y
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.canvasCenterX - this.offsetX) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        } else if (0 > this.graph.canvasCenterX - this.graph.offsetX) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
-            this.canvasCenterX - this.offsetX - this.labelsPadding,
+            this.graph.canvasCenterX - this.graph.offsetX - this.labelsPadding,
             y
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
         }
 
-        const textMetrics = this.ctx.measureText(label);
-        this.ctx.fillText(
+        const textMetrics = this.graph.ctx.measureText(label);
+        this.graph.ctx.fillText(
           label,
           -textMetrics.width / 2 - this.labelsPadding / 2,
           y
         );
-        this.ctx.restore();
+        this.graph.ctx.restore();
       } else {
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          -this.graph.canvasCenterX - this.graph.offsetX,
+          y
+        );
+        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.stroke();
       }
 
       count++;
@@ -168,59 +294,65 @@ class DrawGridCommand implements Command {
 
     for (
       let y = this.scaledStep;
-      y < this.canvasCenterY - this.offsetY;
+      y < this.graph.canvasCenterY - this.graph.offsetY;
       y += this.scaledStep
     ) {
       if (count % majorGridLine === 0) {
-        this.ctx.save();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+        this.graph.ctx.save();
+        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          -this.graph.canvasCenterX - this.graph.offsetX,
+          y
+        );
+        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.stroke();
 
         // text
 
         const label = this.generateLabel(count, scale, "negative");
 
-        if (0 < -this.canvasCenterX - this.offsetX) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        if (0 < -this.graph.canvasCenterX - this.graph.offsetX) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
-            -this.canvasCenterX - this.offsetX + this.labelsPadding,
+            -this.graph.canvasCenterX - this.graph.offsetX + this.labelsPadding,
             y
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.canvasCenterX - this.offsetX) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        } else if (0 > this.graph.canvasCenterX - this.graph.offsetX) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
-            this.canvasCenterX - this.offsetX - this.labelsPadding,
+            this.graph.canvasCenterX - this.graph.offsetX - this.labelsPadding,
             y
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
         }
 
-        const textMetrics = this.ctx.measureText(label);
-        this.ctx.fillText(
+        const textMetrics = this.graph.ctx.measureText(label);
+        this.graph.ctx.fillText(
           label,
           -textMetrics.width / 2 - this.labelsPadding / 2,
           y
         );
-        this.ctx.restore();
+        this.graph.ctx.restore();
       } else {
-        this.ctx.beginPath();
-        this.ctx.moveTo(-this.canvasCenterX - this.offsetX, y);
-        this.ctx.lineTo(this.canvasCenterX - this.offsetX, y);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          -this.graph.canvasCenterX - this.graph.offsetX,
+          y
+        );
+        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.stroke();
       }
 
       count++;
@@ -232,54 +364,60 @@ class DrawGridCommand implements Command {
 
     for (
       let x = -this.scaledStep;
-      x > -this.canvasCenterX - this.offsetX;
+      x > -this.graph.canvasCenterX - this.graph.offsetX;
       x -= this.scaledStep
     ) {
       if (count % majorGridLine === 0) {
-        this.ctx.save();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+        this.graph.ctx.save();
+        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
-        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          x,
+          -this.graph.canvasCenterY - this.graph.offsetY
+        );
+        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.stroke();
 
         // text
 
         const label = this.generateLabel(count, scale, "negative");
 
-        if (0 < -this.canvasCenterY - this.offsetY) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        if (0 < -this.graph.canvasCenterY - this.graph.offsetY) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
             x,
-            -this.canvasCenterY - this.offsetY + this.labelsPadding
+            -this.graph.canvasCenterY - this.graph.offsetY + this.labelsPadding
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.canvasCenterY - this.offsetY) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        } else if (0 > this.graph.canvasCenterY - this.graph.offsetY) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
             x,
-            this.canvasCenterY - this.offsetY - this.labelsPadding
+            this.graph.canvasCenterY - this.graph.offsetY - this.labelsPadding
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
         }
 
-        this.ctx.fillText(label, x, +this.labelsPadding);
-        this.ctx.restore();
+        this.graph.ctx.fillText(label, x, +this.labelsPadding);
+        this.graph.ctx.restore();
       } else {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
-        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          x,
+          -this.graph.canvasCenterY - this.graph.offsetY
+        );
+        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.stroke();
       }
 
       count++;
@@ -290,53 +428,59 @@ class DrawGridCommand implements Command {
 
     for (
       let x = this.scaledStep;
-      x < this.canvasCenterX - this.offsetX;
+      x < this.graph.canvasCenterX - this.graph.offsetX;
       x += this.scaledStep
     ) {
       if (count % majorGridLine === 0) {
-        this.ctx.save();
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = CSS_VARIABLES.borderLow;
+        this.graph.ctx.save();
+        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
-        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          x,
+          -this.graph.canvasCenterY - this.graph.offsetY
+        );
+        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.stroke();
 
         // text
 
         const label = this.generateLabel(count, scale, "positive");
-        if (0 < -this.canvasCenterY - this.offsetY) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        if (0 < -this.graph.canvasCenterY - this.graph.offsetY) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
             x,
-            -this.canvasCenterY - this.offsetY + this.labelsPadding
+            -this.graph.canvasCenterY - this.graph.offsetY + this.labelsPadding
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.canvasCenterY - this.offsetY) {
-          this.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
-          this.ctx.fillText(
+        } else if (0 > this.graph.canvasCenterY - this.graph.offsetY) {
+          this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+          this.graph.ctx.fillText(
             label,
             x,
-            this.canvasCenterY - this.offsetY - this.labelsPadding
+            this.graph.canvasCenterY - this.graph.offsetY - this.labelsPadding
           );
-          this.ctx.restore();
+          this.graph.ctx.restore();
           count++;
           continue;
         }
 
-        this.ctx.fillText(label, x, +this.labelsPadding);
-        this.ctx.restore();
+        this.graph.ctx.fillText(label, x, +this.labelsPadding);
+        this.graph.ctx.restore();
       } else {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, -this.canvasCenterY - this.offsetY);
-        this.ctx.lineTo(x, this.canvasCenterY - this.offsetY);
-        this.ctx.stroke();
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(
+          x,
+          -this.graph.canvasCenterY - this.graph.offsetY
+        );
+        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.stroke();
       }
 
       count++;
@@ -349,150 +493,179 @@ class DrawGridCommand implements Command {
     direction: "negative" | "positive"
   ): string {
     let label: string = "";
+    const scientificNotation = this.scales[this.scalesIndex].split("e");
 
     if (scale < 1e-5 || scale > 1e5) {
-      const scientificNotation = this.scales[this.scalesIndex].split("e");
-      const humanScientificNotation = `${scientificNotation[0]} X 10^${scientificNotation[1]}`;
+      console.log(Number(scientificNotation[0]));
+      const humanScientificNotation = `${
+        count - Number(scientificNotation[0]) + count
+      } X 10^${scientificNotation[1]}`;
       if (direction === "negative") {
         label = "-" + humanScientificNotation;
       } else {
         label = humanScientificNotation;
       }
     } else {
-      if (direction === "negative") {
-        label = `-${count * scale}`;
+      if (scale < 0.1) {
+        if (direction === "negative") {
+          label = `-${(count * scale).toFixed(
+            Math.abs(Number(scientificNotation[1]))
+          )}`;
+        } else {
+          label = `${(count * scale).toFixed(
+            Math.abs(Number(scientificNotation[1]))
+          )}`;
+        }
       } else {
-        label = `${count * scale}`;
+        if (direction === "negative") {
+          label = `-${count * scale}`;
+        } else {
+          label = `${count * scale}`;
+        }
       }
     }
 
     return label;
   }
-
-  reset(cx: number, cy: number): void {
-    this.canvasCenterX = cx;
-    this.canvasCenterY = cy;
-  }
-
-  update(event: GraphEvent): void {
-    if (event.type === "scale") {
-      this.scaledStep = this.step * (event.payload.scale as unknown as number);
-      // zoom in
-
-      if ((event.payload.scale as unknown as number) > 1.8) {
-        this.scaledStep = this.step * 0.7;
-        this.scalesIndex -= 1;
-      }
-
-      //zoom out
-
-      if ((event.payload.scale as unknown as number) < 0.7) {
-        this.scaledStep = this.step * 1.8;
-        this.scalesIndex += 1;
-      }
-    } else if (event.type == "pan") {
-      this.offsetX = event.payload.offsetX;
-      this.offsetY = event.payload.offsetY;
-    }
-  }
 }
 
-class DrawAxisCommand implements Command {
-  protected canvasCenterX: number;
-  protected canvasCenterY: number;
-  protected offsetX: number = 0;
-  protected offsetY: number = 0;
-  constructor(
-    protected canvas: HTMLCanvasElement,
-    protected ctx: CanvasRenderingContext2D
-  ) {
-    this.canvasCenterY = Math.round(canvas.height / 2);
-    this.canvasCenterX = Math.round(canvas.width / 2);
-  }
-  draw(scale: number) {
+class DrawAxisCommand implements GraphCommand {
+  constructor(public graph: Graph) {}
+  draw() {
     if (
-      (0 > this.canvasCenterX - this.offsetX ||
-        0 < -this.canvasCenterX - this.offsetX) &&
-      (0 > this.canvasCenterY - this.offsetY ||
-        0 < -this.canvasCenterY - this.offsetY)
+      (0 > this.graph.canvasCenterX - this.graph.offsetX ||
+        0 < -this.graph.canvasCenterX - this.graph.offsetX) &&
+      (0 > this.graph.canvasCenterY - this.graph.offsetY ||
+        0 < -this.graph.canvasCenterY - this.graph.offsetY)
     )
       return;
 
-    this.ctx.save();
+    this.graph.ctx.save();
 
-    this.ctx.strokeStyle = CSS_VARIABLES.borderHigh;
-    this.ctx.fillStyle = CSS_VARIABLES.borderHigh;
-    this.ctx.lineWidth = 2;
+    this.graph.ctx.strokeStyle = CSS_VARIABLES.borderHigh;
+    this.graph.ctx.fillStyle = CSS_VARIABLES.borderHigh;
+    this.graph.ctx.lineWidth = 2;
 
     // y axis
     if (
       !(
-        0 > this.canvasCenterX - this.offsetX ||
-        0 < -this.canvasCenterX - this.offsetX
+        0 > this.graph.canvasCenterX - this.graph.offsetX ||
+        0 < -this.graph.canvasCenterX - this.graph.offsetX
       )
     ) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, -this.canvasCenterY - this.offsetY);
-      this.ctx.lineTo(-6, -this.canvasCenterY - this.offsetY + 10);
-      this.ctx.lineTo(+6, -this.canvasCenterY - this.offsetY + 10);
-      this.ctx.closePath();
-      this.ctx.fill();
+      this.graph.ctx.beginPath();
+      this.graph.ctx.moveTo(0, -this.graph.canvasCenterY - this.graph.offsetY);
+      this.graph.ctx.lineTo(
+        -6,
+        -this.graph.canvasCenterY - this.graph.offsetY + 10
+      );
+      this.graph.ctx.lineTo(
+        +6,
+        -this.graph.canvasCenterY - this.graph.offsetY + 10
+      );
+      this.graph.ctx.closePath();
+      this.graph.ctx.fill();
 
-      this.ctx.lineTo(0, this.canvasCenterY - this.offsetY);
-      this.ctx.stroke();
+      this.graph.ctx.lineTo(0, this.graph.canvasCenterY - this.graph.offsetY);
+      this.graph.ctx.stroke();
     }
 
     // x axis
     if (
       !(
-        0 > this.canvasCenterY - this.offsetY ||
-        0 < -this.canvasCenterY - this.offsetY
+        0 > this.graph.canvasCenterY - this.graph.offsetY ||
+        0 < -this.graph.canvasCenterY - this.graph.offsetY
       )
     ) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.canvasCenterX - this.offsetX, 0);
-      this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, -6);
-      this.ctx.lineTo(this.canvasCenterX - this.offsetX - 10, +6);
-      this.ctx.closePath();
-      this.ctx.fill();
+      this.graph.ctx.beginPath();
+      this.graph.ctx.moveTo(this.graph.canvasCenterX - this.graph.offsetX, 0);
+      this.graph.ctx.lineTo(
+        this.graph.canvasCenterX - this.graph.offsetX - 10,
+        -6
+      );
+      this.graph.ctx.lineTo(
+        this.graph.canvasCenterX - this.graph.offsetX - 10,
+        +6
+      );
+      this.graph.ctx.closePath();
+      this.graph.ctx.fill();
 
-      this.ctx.lineTo(-this.canvasCenterX - this.offsetX, 0);
-      this.ctx.stroke();
+      this.graph.ctx.lineTo(-this.graph.canvasCenterX - this.graph.offsetX, 0);
+      this.graph.ctx.stroke();
     }
 
-    this.ctx.restore();
-  }
-
-  reset(cx: number, cy: number): void {
-    this.canvasCenterX = cx;
-    this.canvasCenterY = cy;
-  }
-
-  update(event: GraphEvent): void {
-    if (event.type == "pan") {
-      this.offsetX = event.payload.offsetX;
-      this.offsetY = event.payload.offsetY;
-    }
+    this.graph.ctx.restore();
   }
 }
 
-class Graph {
+class Graph implements MessageBus {
+  public events: Record<string, BusEvent> = {};
   protected dpr: number;
-  protected commands: Command[];
-  protected canvasCenterX!: number;
-  protected canvasCenterY!: number;
-  protected scale: number = 1;
+  protected commandController: GraphCommandController;
+  private _canvasCenterX!: number;
+  private _canvasCenterY!: number;
+  private _scale: number = 1;
   protected isDragging: boolean = false;
-  protected offsetX: number = 0;
-  protected offsetY: number = 0;
+  private _offsetX: number = 0;
+  private _offsetY: number = 0;
   constructor(
     public canvas: HTMLCanvasElement,
-    public ctx: CanvasRenderingContext2D,
-    ...commands: Command[]
+    public ctx: CanvasRenderingContext2D
   ) {
-    this.commands = commands;
+    this.commandController = new CommandController();
     this.dpr = window.devicePixelRatio || 1;
     this.init();
+  }
+
+  async dispatch<K extends keyof EventDataMap>(
+    eventName: K,
+    data: EventDataMap[K]
+  ): Promise<void> {
+    const busEvent = this.events[eventName];
+
+    if (!busEvent) return;
+
+    busEvent.execute(data);
+  }
+
+  on<K extends keyof EventDataMap>(
+    eventName: K,
+    cb: (event: EventDataMap[K]) => void
+  ): void {
+    if (this.events[eventName]) {
+      this.events[eventName].register(cb);
+    } else {
+      const busEvent = new eventMap[eventName]();
+      busEvent.register(cb);
+      this.events[eventName] = busEvent;
+    }
+  }
+
+  removeListener<K extends keyof EventDataMap>(
+    eventName: K,
+    cb: (event: EventDataMap[K]) => void
+  ): void {
+    const busEvent = this.events[eventName];
+
+    if (!busEvent) return;
+
+    busEvent.deregister(cb);
+  }
+
+  get scale() {
+    return this._scale;
+  }
+  get offsetX() {
+    return this._offsetX;
+  }
+  get offsetY() {
+    return this._offsetY;
+  }
+  get canvasCenterX() {
+    return this._canvasCenterX;
+  }
+  get canvasCenterY() {
+    return this._canvasCenterY;
   }
 
   private init() {
@@ -500,8 +673,8 @@ class Graph {
 
     this.canvas.width = this.canvas.offsetWidth * this.dpr;
     this.canvas.height = this.canvas.offsetHeight * this.dpr;
-    this.canvasCenterX = Math.round(this.canvas.width / 2);
-    this.canvasCenterY = Math.round(this.canvas.height / 2);
+    this._canvasCenterX = Math.round(this.canvas.width / 2);
+    this._canvasCenterY = Math.round(this.canvas.height / 2);
     this.ctx.translate(this.canvasCenterX, this.canvasCenterY);
 
     // ctx settings
@@ -510,11 +683,11 @@ class Graph {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 
-    // register event listeners
-    this.registerEvents();
+    // init event listeners
+    this.initEvents();
   }
 
-  private registerEvents() {
+  private initEvents() {
     //scoped variables
 
     const scaleFactor = 1.1;
@@ -556,35 +729,21 @@ class Graph {
           const roundedX = Math.round(dx / 10);
           const roundedY = Math.round(dy / 10);
           if (zoomDirection === "IN") {
-            this.offsetX += -roundedX;
-            this.offsetY += -roundedY;
+            this._offsetX += -roundedX;
+            this._offsetY += -roundedY;
             this.ctx.translate(-roundedX, -roundedY);
           } else {
-            this.offsetX += roundedX;
-            this.offsetY += roundedY;
+            this._offsetX += roundedX;
+            this._offsetY += roundedY;
             this.ctx.translate(roundedX, roundedY);
           }
-
-          const event: GraphEvent = {
-            type: "pan",
-            payload: {
-              offsetX: this.offsetX,
-              offsetY: this.offsetY,
-            },
-          };
-          this.dispatch(event);
         }
 
-        this.scale *= zoomDirection === "OUT" ? 1 / scaleFactor : scaleFactor;
-        const event: GraphEvent = {
-          type: "scale",
-          payload: {
-            scale: this.scale,
-          },
-        };
-        this.dispatch(event);
-        this.scale =
+        this._scale =
           this.scale > 1.8 ? 0.7 : this.scale < 0.7 ? 1.8 : this.scale;
+        this._scale *= zoomDirection === "OUT" ? 1 / scaleFactor : scaleFactor;
+        this.dispatch("scale", { scale: this.scale });
+        console.log(this.scale);
       },
       { passive: false }
     );
@@ -607,17 +766,8 @@ class Graph {
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
 
-        this.offsetX += dx;
-        this.offsetY += dy;
-
-        const event: GraphEvent = {
-          type: "pan",
-          payload: {
-            offsetX: this.offsetX,
-            offsetY: this.offsetY,
-          },
-        };
-        this.dispatch(event);
+        this._offsetX += dx;
+        this._offsetY += dy;
 
         this.ctx.translate(dx, dy);
       }, 10)
@@ -630,58 +780,35 @@ class Graph {
     });
   }
 
-  register(command: Command) {
-    this.commands.push(command);
+  addCommand(command: GraphCommand) {
+    this.commandController.add(command);
   }
 
-  deregister(command: Command) {
-    for (let i = 0; i < this.commands.length; ++i) {
-      if (this.commands[i] === command) {
-        this.commands.splice(i, 1);
-      }
-    }
-  }
-
-  dispatch(event: GraphEvent) {
-    this.commands.forEach((command) => command.update(event));
+  removeCommand(command: GraphCommand) {
+    this.commandController.remove(command);
   }
 
   reset() {
     // reset canvas settings
 
-    this.offsetX = 0;
-    this.offsetY = 0;
-    this.canvasCenterX = Math.round(this.canvas.width / 2);
-    this.canvasCenterY = Math.round(this.canvas.height / 2);
+    this._offsetX = 0;
+    this._offsetY = 0;
+    this._canvasCenterX = Math.round(this.canvas.width / 2);
+    this._canvasCenterY = Math.round(this.canvas.height / 2);
     this.ctx.translate(this.canvasCenterX, this.canvasCenterY);
-    this.dispatch({
-      type: "pan",
-      payload: { offsetX: this.offsetX, offsetY: this.offsetY },
-    });
 
     // reset ctx settings
 
     this.ctx.font = `500 ${16 * this.dpr}px Inter`;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
-
-    this.commands.forEach((command) => {
-      command.reset(this.canvasCenterX, this.canvasCenterY);
-    });
   }
 
-  render() {
-    this.commands.forEach((command) => {
-      command.draw(this.scale);
-    });
+  renderCommands() {
+    this.commandController.render();
   }
 
-  clear() {
-    this.ctx.clearRect(
-      -this.canvasCenterX - this.offsetX,
-      -this.canvasCenterY - this.offsetY,
-      this.canvas.width,
-      this.canvas.height
-    );
+  clearCommands() {
+    this.commandController.clear(this);
   }
 }
