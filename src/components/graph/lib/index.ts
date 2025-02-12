@@ -185,13 +185,13 @@ class DrawGridCommand implements GraphCommand {
 
     // zoom out
     if (e.scale > 1.8) {
-      this.scaledStep = this.step * 0.7;
+      this.scaledStep = this.step * 0.8;
       this.scalesIndex -= 1;
     }
 
     //zoom in
 
-    if (e.scale < 0.7) {
+    if (e.scale < 0.8) {
       this.scaledStep = this.step * 1.8;
       this.scalesIndex += 1;
     }
@@ -204,31 +204,37 @@ class DrawGridCommand implements GraphCommand {
 
     const scale: number = parseFloat(this.scales[this.scalesIndex]);
     const majorGridLine = this.scales[this.scalesIndex][0] === "5" ? 4 : 5;
+    const scientificNotation = this.scales[this.scalesIndex].split("e");
+    const drawData = {
+      scale,
+      majorGridLine,
+      scientificNotation,
+    };
 
-    this.drawVerticalLeft(majorGridLine, scale);
-    this.drawVerticalRight(majorGridLine, scale);
+    this.drawVerticalLeft(drawData);
+    this.drawVerticalRight(drawData);
 
     //center
 
     this.graph.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
 
-    this.drawHorizontalTop(majorGridLine, scale);
-    this.drawHorizontalBottom(majorGridLine, scale);
+    this.drawHorizontalTop(drawData);
+    this.drawHorizontalBottom(drawData);
 
     this.graph.ctx.restore();
   }
 
-  drawHorizontalTop(majorGridLine: number, scale: number) {
+  drawHorizontalTop(data: {
+    scale: number;
+    majorGridLine: number;
+    scientificNotation: string[];
+  }) {
     let count: number = 1;
 
     let y = -this.scaledStep;
 
-    for (
-      y;
-      y > -this.graph.canvasCenterY - this.graph.offsetY;
-      y -= this.scaledStep
-    ) {
-      if (count % majorGridLine === 0) {
+    for (y; y > this.graph.clientTop; y -= this.scaledStep) {
+      if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -236,32 +242,38 @@ class DrawGridCommand implements GraphCommand {
         // grid lines
 
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          -this.graph.canvasCenterX - this.graph.offsetX,
-          y
-        );
-        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.moveTo(this.graph.clientLeft, y);
+        this.graph.ctx.lineTo(this.graph.clientRight, y);
         this.graph.ctx.stroke();
 
         // text
 
-        const label = this.generateLabel(count, scale, "positive");
+        const label = this.generateLabel(
+          count,
+          data.scale,
+          data.scientificNotation,
+          "positive"
+        );
 
-        if (0 < -this.graph.canvasCenterX - this.graph.offsetX) {
+        // sticky labels
+
+        const textMetrics = this.graph.ctx.measureText(label);
+
+        if (0 < this.graph.clientLeft) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
-            -this.graph.canvasCenterX - this.graph.offsetX + this.labelsPadding,
+            this.graph.clientLeft + textMetrics.width / 2 + this.labelsPadding,
             y
           );
           this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.graph.canvasCenterX - this.graph.offsetX) {
+        } else if (0 > this.graph.clientRight) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
-            this.graph.canvasCenterX - this.graph.offsetX - this.labelsPadding,
+            this.graph.clientRight - this.labelsPadding - textMetrics.width / 2,
             y
           );
           this.graph.ctx.restore();
@@ -269,7 +281,6 @@ class DrawGridCommand implements GraphCommand {
           continue;
         }
 
-        const textMetrics = this.graph.ctx.measureText(label);
         this.graph.ctx.fillText(
           label,
           -textMetrics.width / 2 - this.labelsPadding / 2,
@@ -278,26 +289,27 @@ class DrawGridCommand implements GraphCommand {
         this.graph.ctx.restore();
       } else {
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          -this.graph.canvasCenterX - this.graph.offsetX,
-          y
-        );
-        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.moveTo(this.graph.clientLeft, y);
+        this.graph.ctx.lineTo(this.graph.clientRight, y);
         this.graph.ctx.stroke();
       }
 
       count++;
     }
   }
-  drawHorizontalBottom(majorGridLine: number, scale: number) {
+  drawHorizontalBottom(data: {
+    scale: number;
+    majorGridLine: number;
+    scientificNotation: string[];
+  }) {
     let count: number = 1;
 
     for (
       let y = this.scaledStep;
-      y < this.graph.canvasCenterY - this.graph.offsetY;
+      y < this.graph.clientBottom;
       y += this.scaledStep
     ) {
-      if (count % majorGridLine === 0) {
+      if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -305,32 +317,38 @@ class DrawGridCommand implements GraphCommand {
         // grid lines
 
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          -this.graph.canvasCenterX - this.graph.offsetX,
-          y
-        );
-        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.moveTo(this.graph.clientLeft, y);
+        this.graph.ctx.lineTo(this.graph.clientRight, y);
         this.graph.ctx.stroke();
 
         // text
 
-        const label = this.generateLabel(count, scale, "negative");
+        const label = this.generateLabel(
+          count,
+          data.scale,
+          data.scientificNotation,
+          "negative"
+        );
 
-        if (0 < -this.graph.canvasCenterX - this.graph.offsetX) {
+        // sticky labels
+
+        const textMetrics = this.graph.ctx.measureText(label);
+
+        if (0 < this.graph.clientLeft) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
-            -this.graph.canvasCenterX - this.graph.offsetX + this.labelsPadding,
+            this.graph.clientLeft + this.labelsPadding + textMetrics.width / 2,
             y
           );
           this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.graph.canvasCenterX - this.graph.offsetX) {
+        } else if (0 > this.graph.clientRight) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
-            this.graph.canvasCenterX - this.graph.offsetX - this.labelsPadding,
+            this.graph.clientRight - this.labelsPadding - textMetrics.width / 2,
             y
           );
           this.graph.ctx.restore();
@@ -338,7 +356,6 @@ class DrawGridCommand implements GraphCommand {
           continue;
         }
 
-        const textMetrics = this.graph.ctx.measureText(label);
         this.graph.ctx.fillText(
           label,
           -textMetrics.width / 2 - this.labelsPadding / 2,
@@ -347,11 +364,8 @@ class DrawGridCommand implements GraphCommand {
         this.graph.ctx.restore();
       } else {
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          -this.graph.canvasCenterX - this.graph.offsetX,
-          y
-        );
-        this.graph.ctx.lineTo(this.graph.canvasCenterX - this.graph.offsetX, y);
+        this.graph.ctx.moveTo(this.graph.clientLeft, y);
+        this.graph.ctx.lineTo(this.graph.clientRight, y);
         this.graph.ctx.stroke();
       }
 
@@ -359,15 +373,19 @@ class DrawGridCommand implements GraphCommand {
     }
   }
 
-  drawVerticalLeft(majorGridLine: number, scale: number) {
+  drawVerticalLeft(data: {
+    scale: number;
+    majorGridLine: number;
+    scientificNotation: string[];
+  }) {
     let count: number = 1;
 
     for (
       let x = -this.scaledStep;
-      x > -this.graph.canvasCenterX - this.graph.offsetX;
+      x > this.graph.clientLeft;
       x -= this.scaledStep
     ) {
-      if (count % majorGridLine === 0) {
+      if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -375,63 +393,68 @@ class DrawGridCommand implements GraphCommand {
         // grid lines
 
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          x,
-          -this.graph.canvasCenterY - this.graph.offsetY
-        );
-        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.moveTo(x, this.graph.clientTop);
+        this.graph.ctx.lineTo(x, this.graph.clientBottom);
         this.graph.ctx.stroke();
 
         // text
 
-        const label = this.generateLabel(count, scale, "negative");
+        const label = this.generateLabel(
+          count,
+          data.scale,
+          data.scientificNotation,
+          "negative"
+        );
 
-        if (0 < -this.graph.canvasCenterY - this.graph.offsetY) {
+        // sticky labels
+
+        if (0 < this.graph.clientTop) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
             x,
-            -this.graph.canvasCenterY - this.graph.offsetY + this.labelsPadding
+            this.graph.clientTop + this.labelsPadding
           );
           this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.graph.canvasCenterY - this.graph.offsetY) {
+        } else if (0 > this.graph.clientBottom) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
             x,
-            this.graph.canvasCenterY - this.graph.offsetY - this.labelsPadding
+            this.graph.clientBottom - this.labelsPadding
           );
           this.graph.ctx.restore();
           count++;
           continue;
         }
 
-        this.graph.ctx.fillText(label, x, +this.labelsPadding);
+        this.graph.ctx.fillText(label, x, this.labelsPadding);
         this.graph.ctx.restore();
       } else {
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          x,
-          -this.graph.canvasCenterY - this.graph.offsetY
-        );
-        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.moveTo(x, this.graph.clientTop);
+        this.graph.ctx.lineTo(x, this.graph.clientBottom);
         this.graph.ctx.stroke();
       }
 
       count++;
     }
   }
-  drawVerticalRight(majorGridLine: number, scale: number) {
+  drawVerticalRight(data: {
+    scale: number;
+    majorGridLine: number;
+    scientificNotation: string[];
+  }) {
     let count: number = 1;
 
     for (
       let x = this.scaledStep;
-      x < this.graph.canvasCenterX - this.graph.offsetX;
+      x < this.graph.clientRight;
       x += this.scaledStep
     ) {
-      if (count % majorGridLine === 0) {
+      if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -439,47 +462,49 @@ class DrawGridCommand implements GraphCommand {
         // grid lines
 
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          x,
-          -this.graph.canvasCenterY - this.graph.offsetY
-        );
-        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.moveTo(x, this.graph.clientTop);
+        this.graph.ctx.lineTo(x, this.graph.clientBottom);
         this.graph.ctx.stroke();
 
         // text
 
-        const label = this.generateLabel(count, scale, "positive");
-        if (0 < -this.graph.canvasCenterY - this.graph.offsetY) {
+        const label = this.generateLabel(
+          count,
+          data.scale,
+          data.scientificNotation,
+          "positive"
+        );
+
+        // sticky labels
+
+        if (0 < this.graph.clientTop) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
             x,
-            -this.graph.canvasCenterY - this.graph.offsetY + this.labelsPadding
+            this.graph.clientTop + this.labelsPadding
           );
           this.graph.ctx.restore();
           count++;
           continue;
-        } else if (0 > this.graph.canvasCenterY - this.graph.offsetY) {
+        } else if (0 > this.graph.clientBottom) {
           this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
           this.graph.ctx.fillText(
             label,
             x,
-            this.graph.canvasCenterY - this.graph.offsetY - this.labelsPadding
+            this.graph.clientBottom - this.labelsPadding
           );
           this.graph.ctx.restore();
           count++;
           continue;
         }
 
-        this.graph.ctx.fillText(label, x, +this.labelsPadding);
+        this.graph.ctx.fillText(label, x, this.labelsPadding);
         this.graph.ctx.restore();
       } else {
         this.graph.ctx.beginPath();
-        this.graph.ctx.moveTo(
-          x,
-          -this.graph.canvasCenterY - this.graph.offsetY
-        );
-        this.graph.ctx.lineTo(x, this.graph.canvasCenterY - this.graph.offsetY);
+        this.graph.ctx.moveTo(x, this.graph.clientTop);
+        this.graph.ctx.lineTo(x, this.graph.clientBottom);
         this.graph.ctx.stroke();
       }
 
@@ -490,15 +515,15 @@ class DrawGridCommand implements GraphCommand {
   generateLabel(
     count: number,
     scale: number,
+    scientificNotation: string[],
     direction: "negative" | "positive"
   ): string {
     let label: string = "";
-    const scientificNotation = this.scales[this.scalesIndex].split("e");
 
-    if (scale < 1e-5 || scale > 1e5) {
-      console.log(Number(scientificNotation[0]));
+    if (scale < 1e-5 || scale > 2e6) {
+      // console.log(Number(scientificNotation[0]));
       const humanScientificNotation = `${
-        count - Number(scientificNotation[0]) + count
+        count * Number(scientificNotation[0])
       } X 10^${scientificNotation[1]}`;
       if (direction === "negative") {
         label = "-" + humanScientificNotation;
@@ -608,6 +633,10 @@ class Graph implements MessageBus {
   protected isDragging: boolean = false;
   private _offsetX: number = 0;
   private _offsetY: number = 0;
+  private _clientTop!: number;
+  private _clientBottom!: number;
+  private _clientLeft!: number;
+  private _clientRight!: number;
   constructor(
     public canvas: HTMLCanvasElement,
     public ctx: CanvasRenderingContext2D
@@ -615,41 +644,6 @@ class Graph implements MessageBus {
     this.commandController = new CommandController();
     this.dpr = window.devicePixelRatio || 1;
     this.init();
-  }
-
-  async dispatch<K extends keyof EventDataMap>(
-    eventName: K,
-    data: EventDataMap[K]
-  ): Promise<void> {
-    const busEvent = this.events[eventName];
-
-    if (!busEvent) return;
-
-    busEvent.execute(data);
-  }
-
-  on<K extends keyof EventDataMap>(
-    eventName: K,
-    cb: (event: EventDataMap[K]) => void
-  ): void {
-    if (this.events[eventName]) {
-      this.events[eventName].register(cb);
-    } else {
-      const busEvent = new eventMap[eventName]();
-      busEvent.register(cb);
-      this.events[eventName] = busEvent;
-    }
-  }
-
-  removeListener<K extends keyof EventDataMap>(
-    eventName: K,
-    cb: (event: EventDataMap[K]) => void
-  ): void {
-    const busEvent = this.events[eventName];
-
-    if (!busEvent) return;
-
-    busEvent.deregister(cb);
   }
 
   get scale() {
@@ -661,6 +655,18 @@ class Graph implements MessageBus {
   get offsetY() {
     return this._offsetY;
   }
+  get clientTop() {
+    return this._clientTop;
+  }
+  get clientBottom() {
+    return this._clientBottom;
+  }
+  get clientLeft() {
+    return this._clientLeft;
+  }
+  get clientRight() {
+    return this._clientRight;
+  }
   get canvasCenterX() {
     return this._canvasCenterX;
   }
@@ -669,13 +675,18 @@ class Graph implements MessageBus {
   }
 
   private init() {
-    // set canvas height
+    // graph settings
 
     this.canvas.width = this.canvas.offsetWidth * this.dpr;
     this.canvas.height = this.canvas.offsetHeight * this.dpr;
     this._canvasCenterX = Math.round(this.canvas.width / 2);
     this._canvasCenterY = Math.round(this.canvas.height / 2);
-    this.ctx.translate(this.canvasCenterX, this.canvasCenterY);
+    this.ctx.translate(this._canvasCenterX, this._canvasCenterY);
+
+    this._clientTop = -this._canvasCenterY - this._offsetY;
+    this._clientBottom = this._canvasCenterY - this.offsetY;
+    this._clientLeft = -this._canvasCenterX - this._offsetX;
+    this._clientRight = this._canvasCenterX - this._offsetX;
 
     // ctx settings
 
@@ -731,19 +742,20 @@ class Graph implements MessageBus {
           if (zoomDirection === "IN") {
             this._offsetX += -roundedX;
             this._offsetY += -roundedY;
+            this.updateClientPosition(this._offsetX, this._offsetY);
             this.ctx.translate(-roundedX, -roundedY);
           } else {
             this._offsetX += roundedX;
             this._offsetY += roundedY;
+            this.updateClientPosition(this._offsetX, this._offsetY);
             this.ctx.translate(roundedX, roundedY);
           }
         }
 
         this._scale =
-          this.scale > 1.8 ? 0.7 : this.scale < 0.7 ? 1.8 : this.scale;
+          this.scale > 1.8 ? 0.8 : this.scale < 0.8 ? 1.8 : this.scale;
         this._scale *= zoomDirection === "OUT" ? 1 / scaleFactor : scaleFactor;
         this.dispatch("scale", { scale: this.scale });
-        console.log(this.scale);
       },
       { passive: false }
     );
@@ -768,6 +780,7 @@ class Graph implements MessageBus {
 
         this._offsetX += dx;
         this._offsetY += dy;
+        this.updateClientPosition(this._offsetX, this._offsetY);
 
         this.ctx.translate(dx, dy);
       }, 10)
@@ -780,28 +793,76 @@ class Graph implements MessageBus {
     });
   }
 
-  addCommand(command: GraphCommand) {
-    this.commandController.add(command);
+  private updateClientPosition(offsetX: number, offsetY: number) {
+    this._clientLeft = -this._canvasCenterX - offsetX;
+    this._clientRight = this._canvasCenterX - offsetX;
+    this._clientTop = -this._canvasCenterY - offsetY;
+    this._clientBottom = this._canvasCenterY - offsetY;
   }
 
-  removeCommand(command: GraphCommand) {
-    this.commandController.remove(command);
-  }
-
-  reset() {
+  private reset() {
     // reset canvas settings
 
-    this._offsetX = 0;
-    this._offsetY = 0;
     this._canvasCenterX = Math.round(this.canvas.width / 2);
     this._canvasCenterY = Math.round(this.canvas.height / 2);
     this.ctx.translate(this.canvasCenterX, this.canvasCenterY);
+
+    this._offsetX = 0;
+    this._offsetY = 0;
+    this.updateClientPosition(this._offsetX, this._offsetY);
 
     // reset ctx settings
 
     this.ctx.font = `500 ${16 * this.dpr}px Inter`;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
+  }
+
+  // MESSAGE BUS
+
+  dispatch<K extends keyof EventDataMap>(
+    eventName: K,
+    data: EventDataMap[K]
+  ): void {
+    const busEvent = this.events[eventName];
+
+    if (!busEvent) return;
+
+    busEvent.execute(data);
+  }
+
+  on<K extends keyof EventDataMap>(
+    eventName: K,
+    cb: (event: EventDataMap[K]) => void
+  ): void {
+    if (this.events[eventName]) {
+      this.events[eventName].register(cb);
+    } else {
+      const busEvent = new eventMap[eventName]();
+      busEvent.register(cb);
+      this.events[eventName] = busEvent;
+    }
+  }
+
+  removeListener<K extends keyof EventDataMap>(
+    eventName: K,
+    cb: (event: EventDataMap[K]) => void
+  ): void {
+    const busEvent = this.events[eventName];
+
+    if (!busEvent) return;
+
+    busEvent.deregister(cb);
+  }
+
+  // COMMAND PROXY
+
+  addCommand(command: GraphCommand) {
+    this.commandController.add(command);
+  }
+
+  removeCommand(command: GraphCommand) {
+    this.commandController.remove(command);
   }
 
   renderCommands() {
