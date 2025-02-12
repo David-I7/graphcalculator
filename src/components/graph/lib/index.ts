@@ -229,9 +229,20 @@ class DrawGridCommand implements GraphCommand {
     majorGridLine: number;
     scientificNotation: string[];
   }) {
-    let count: number = 1;
+    if (this.graph.clientTop > 0) return;
 
+    let count: number = 1;
     let y = -this.scaledStep;
+
+    // reduce unnecessary computations
+
+    if (this.graph.clientBottom < 0) {
+      const stepMultiple = Math.floor(
+        Math.abs(this.graph.clientBottom) / this.scaledStep
+      );
+      y = -this.scaledStep * stepMultiple;
+      count = stepMultiple;
+    }
 
     for (y; y > this.graph.clientTop; y -= this.scaledStep) {
       if (count % data.majorGridLine === 0) {
@@ -302,13 +313,22 @@ class DrawGridCommand implements GraphCommand {
     majorGridLine: number;
     scientificNotation: string[];
   }) {
-    let count: number = 1;
+    if (this.graph.clientBottom < 0) return;
 
-    for (
-      let y = this.scaledStep;
-      y < this.graph.clientBottom;
-      y += this.scaledStep
-    ) {
+    let count: number = 1;
+    let y = this.scaledStep;
+
+    // // reduce unnecessary computations
+
+    if (this.graph.clientTop > 0) {
+      const stepMultiple = Math.floor(
+        Math.abs(this.graph.clientTop) / this.scaledStep
+      );
+      y = this.scaledStep * stepMultiple;
+      count = stepMultiple;
+    }
+
+    for (y; y < this.graph.clientBottom; y += this.scaledStep) {
       if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
@@ -378,13 +398,22 @@ class DrawGridCommand implements GraphCommand {
     majorGridLine: number;
     scientificNotation: string[];
   }) {
-    let count: number = 1;
+    if (this.graph.clientLeft > 0) return;
 
-    for (
-      let x = -this.scaledStep;
-      x > this.graph.clientLeft;
-      x -= this.scaledStep
-    ) {
+    let count: number = 1;
+    let x = -this.scaledStep;
+
+    // // reduce unnecessary computations
+
+    if (this.graph.clientRight < 0) {
+      const stepMultiple = Math.floor(
+        Math.abs(this.graph.clientRight) / this.scaledStep
+      );
+      x = -this.scaledStep * stepMultiple;
+      count = stepMultiple;
+    }
+
+    for (x; x > this.graph.clientLeft; x -= this.scaledStep) {
       if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
@@ -447,13 +476,22 @@ class DrawGridCommand implements GraphCommand {
     majorGridLine: number;
     scientificNotation: string[];
   }) {
-    let count: number = 1;
+    if (this.graph.clientRight < 0) return;
 
-    for (
-      let x = this.scaledStep;
-      x < this.graph.clientRight;
-      x += this.scaledStep
-    ) {
+    let count: number = 1;
+    let x = this.scaledStep;
+
+    // // reduce unnecessary computations
+
+    if (this.graph.clientLeft > 0) {
+      const stepMultiple = Math.floor(
+        Math.abs(this.graph.clientLeft) / this.scaledStep
+      );
+      x = this.scaledStep * stepMultiple;
+      count = stepMultiple;
+    }
+
+    for (x; x < this.graph.clientRight; x += this.scaledStep) {
       if (count % data.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
@@ -518,6 +556,8 @@ class DrawGridCommand implements GraphCommand {
     scientificNotation: string[],
     direction: "negative" | "positive"
   ): string {
+    if (count === 0) return "";
+
     let label: string = "";
 
     if (scale < 1e-5 || scale > 2e6) {
