@@ -32,4 +32,7 @@ export const CSS_VARIABLES = {
   borderLow: "#606060",
   borderNormal: "#404040",
   borderHigh: "#0f0f0f",
+
+  // SHADOW
+  shadowLevel2: "rgba(0,0,0,0.38)",
 };
