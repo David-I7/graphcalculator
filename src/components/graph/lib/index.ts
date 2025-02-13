@@ -504,60 +504,88 @@ class DrawGridCommand implements GraphCommand {
 
   generateLabel(
     count: number,
-    scale: number,
+    scaler: number,
     scientificNotation: string[],
     sign: "neg" | "pos"
   ): string | string[] {
     if (count === 0) return "";
 
     let label: string = "";
+    const scalerCoefficient = Number(scientificNotation[0]);
 
     // 5 * 10^5 is min
-    if (scale < 1e-4 || scale > 2e5) {
+    if (scaler < 1e-5 || scaler > 2e4) {
       const labels: string[] = [];
       let exponent = Number(scientificNotation[1]);
-      let coefficient = count * Number(scientificNotation[0]);
-      let coefficientPower: number = 1;
+      let labelCoefficient = count * Number(scientificNotation[0]);
+      let labelCoefficientPower: number = 1;
 
-      if (coefficient >= 10) {
-        coefficientPower = Math.floor(Math.log10(coefficient));
-        const coefficientOffset = coefficient / 10 ** coefficientPower;
+      if (labelCoefficient >= 10) {
+        labelCoefficientPower = Math.floor(Math.log10(labelCoefficient));
+        const labelCoefficientOffset =
+          labelCoefficient / 10 ** labelCoefficientPower;
 
-        exponent += coefficientPower;
-        coefficient = coefficientOffset;
+        exponent += labelCoefficientPower;
+        labelCoefficient = labelCoefficientOffset;
       }
 
-      // if (exponent <= 4){
-      //   // sign is negative if exponent is <=4 always
-      //   if (sign === "neg") {
-      //     labels[0] = "-" + labels[0];
-      //   }
-      // }
+      if (exponent >= -4 && exponent < 3) {
+        // sign is negative if exponent is <=4 always
+        if (scaler < 0.1) {
+          if (sign === "neg") {
+            label = `-${(count * scaler).toFixed(
+              Math.abs(Number(scientificNotation[1])) -
+                (scalerCoefficient === 1 ? 0 : 1)
+            )}`;
+          } else {
+            label = `${(count * scaler).toFixed(
+              Math.abs(Number(scientificNotation[1])) -
+                (scalerCoefficient === 1 ? 0 : 1)
+            )}`;
+          }
+        } else {
+          if (sign === "neg") {
+            label = `-${count * scaler}`;
+          } else {
+            label = `${count * scaler}`;
+          }
+        }
+        return label;
+      }
 
-      labels[0] = `${coefficient.toFixed(coefficientPower - 1)} x 10`;
+      labels[0] = `${
+        Number.isInteger(labelCoefficient)
+          ? labelCoefficient.toString()
+          : labelCoefficient.toFixed(
+              labelCoefficientPower - (scalerCoefficient === 1 ? 0 : 1)
+            )
+      } x 10`;
       labels[1] = exponent.toString();
+
       if (sign === "neg") {
         labels[0] = "-" + labels[0];
       }
 
       return labels;
-    } else {
-      if (scale < 0.1) {
-        if (sign === "neg") {
-          label = `-${(count * scale).toFixed(
-            Math.abs(Number(scientificNotation[1]))
-          )}`;
-        } else {
-          label = `${(count * scale).toFixed(
-            Math.abs(Number(scientificNotation[1]))
-          )}`;
-        }
+    }
+
+    if (scaler < 0.1) {
+      if (sign === "neg") {
+        label = `-${(count * scaler).toFixed(
+          Math.abs(Number(scientificNotation[1])) -
+            (scalerCoefficient === 1 ? 0 : 1)
+        )}`;
       } else {
-        if (sign === "neg") {
-          label = `-${count * scale}`;
-        } else {
-          label = `${count * scale}`;
-        }
+        label = `${(count * scaler).toFixed(
+          Math.abs(Number(scientificNotation[1])) -
+            (scalerCoefficient === 1 ? 0 : 1)
+        )}`;
+      }
+    } else {
+      if (sign === "neg") {
+        label = `-${count * scaler}`;
+      } else {
+        label = `${count * scaler}`;
       }
     }
 
