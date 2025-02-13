@@ -1,0 +1,63 @@
+@use "../../../assets/styles/base" as base;
+
+.expression-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 17.625rem;
+
+  &__resizer {
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    width: 1rem;
+    &:hover {
+      cursor: e-resize;
+    }
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -50%;
+      bottom: 0;
+      width: 50%;
+      box-shadow: 4px 0px 6px base.$shadow-level2;
+    }
+  }
+
+  &__header {
+    height: 3.5rem;
+    background-color: base.$surface-container-low;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .expression-panel {
+    top: 50%;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+
+    &__resizer {
+      inset: 0;
+      top: -1rem;
+      height: 1rem;
+      width: auto;
+      &:hover {
+        cursor: default;
+      }
+      &::before {
+        top: 100%;
+        left: 0;
+        right: 0;
+        height: 50%;
+        bottom: auto;
+        width: auto;
+        box-shadow: 0px -4px 6px base.$shadow-level2;
+      }
+    }
+  }
+}
