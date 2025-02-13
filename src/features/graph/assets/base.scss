@@ -12,3 +12,9 @@
   overflow: hidden;
   width: calc(100% - 17.625rem);
 }
+
+@media screen and (max-width: 500px) {
+  .graph-container {
+    width: 100%;
+  }
+}

@@ -55,9 +55,20 @@ const ExpressionPanelResizer = () => {
           }px`;
         }
 
-        function onMouseLeave(e: MouseEvent) {
+        function onMouseLeave() {
           document.body.style.cursor = "default";
           windowController.abort();
+        }
+      },
+      { signal: resizerController.signal }
+    );
+
+    window.addEventListener(
+      "resize",
+      () => {
+        if (window.innerWidth <= MOBILE_BREAKPOINT) {
+          panel.style.removeProperty("width");
+          graphContainer.style.removeProperty("width");
         }
       },
       { signal: resizerController.signal }
