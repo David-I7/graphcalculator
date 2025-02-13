@@ -13,10 +13,16 @@ window.addEventListener("load", () => {
   ) as HTMLCanvasElement;
   const ctx = canvas.getContext("2d")!;
 
-  // canvas.width = canvas.offsetWidth;
-  // canvas.height = canvas.offsetHeight;
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  // ctx.fillRect(100 - 8, 100 - 20, 64, 32);
 
   // ctx.font = "bold 14px Inter";
+  // ctx.strokeStyle = "white";
+  // ctx.lineWidth = 4;
+  // ctx.strokeText("100", 100, 100);
+  // ctx.fillText("100", 100, 100);
 
   setup(canvas, ctx);
 });
@@ -593,10 +599,18 @@ class DrawGridCommand implements GraphCommand {
   }
 
   renderLabel(label: string, axis: "x" | "y", coord: number) {
+    this.graph.ctx.strokeStyle = "white";
+    this.graph.ctx.lineWidth = 4;
+
     if (axis === "y") {
       const textMetrics = this.graph.ctx.measureText(label);
       if (0 < this.graph.clientLeft) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+        this.graph.ctx.strokeText(
+          label,
+          this.graph.clientLeft + textMetrics.width / 2 + this.labelsPadding,
+          coord
+        );
         this.graph.ctx.fillText(
           label,
           this.graph.clientLeft + textMetrics.width / 2 + this.labelsPadding,
@@ -604,12 +618,22 @@ class DrawGridCommand implements GraphCommand {
         );
       } else if (0 > this.graph.clientRight) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+        this.graph.ctx.strokeText(
+          label,
+          this.graph.clientRight - this.labelsPadding - textMetrics.width / 2,
+          coord
+        );
         this.graph.ctx.fillText(
           label,
           this.graph.clientRight - this.labelsPadding - textMetrics.width / 2,
           coord
         );
       } else {
+        this.graph.ctx.strokeText(
+          label,
+          -textMetrics.width / 2 - this.labelsPadding / 2,
+          coord
+        );
         this.graph.ctx.fillText(
           label,
           -textMetrics.width / 2 - this.labelsPadding / 2,
@@ -619,6 +643,11 @@ class DrawGridCommand implements GraphCommand {
     } else {
       if (0 < this.graph.clientTop) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+        this.graph.ctx.strokeText(
+          label,
+          coord,
+          this.graph.clientTop + this.labelsPadding
+        );
         this.graph.ctx.fillText(
           label,
           coord,
@@ -626,55 +655,27 @@ class DrawGridCommand implements GraphCommand {
         );
       } else if (0 > this.graph.clientBottom) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
+        this.graph.ctx.strokeText(
+          label,
+          coord,
+          this.graph.clientBottom - this.labelsPadding
+        );
         this.graph.ctx.fillText(
           label,
           coord,
           this.graph.clientBottom - this.labelsPadding
         );
       } else {
+        this.graph.ctx.strokeText(label, coord, this.labelsPadding);
         this.graph.ctx.fillText(label, coord, this.labelsPadding);
       }
     }
   }
 
-  drawScientificLabel(
-    labels: string[],
-    axis: "x" | "y",
-    xStart: number,
-    yStart: number
-  ) {
-    let x: number = xStart;
-    let y: number = yStart;
-    let measuredText!: TextMetrics;
-
-    if (axis === "x") {
-      this.graph.ctx.fillText(labels[0], x, y);
-      measuredText = this.graph.ctx.measureText(labels[0]);
-      x += measuredText.width / 2 + 8;
-      y -= 8;
-
-      this.graph.ctx.fillText(labels[1], x, y);
-    } else {
-      measuredText = this.graph.ctx.measureText(labels[0]);
-      if (0 < this.graph.clientLeft) {
-        x += measuredText.width / 2 - 4;
-        this.graph.ctx.fillText(labels[0], x, y);
-
-        x += measuredText.width / 2 + 8;
-        y -= 8;
-        this.graph.ctx.fillText(labels[1], x, y);
-      } else {
-        x -= measuredText.width / 2 + 8;
-        this.graph.ctx.fillText(labels[0], x, y);
-
-        x = xStart;
-        y -= 8;
-        this.graph.ctx.fillText(labels[1], x, y);
-      }
-    }
-  }
-
   renderScientificLabel(labels: string[], axis: "x" | "y", coord: number) {
+    this.graph.ctx.strokeStyle = "white";
+    this.graph.ctx.lineWidth = 4;
+
     if (axis === "y") {
       if (0 < this.graph.clientLeft) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
@@ -714,6 +715,48 @@ class DrawGridCommand implements GraphCommand {
         );
       } else {
         this.drawScientificLabel(labels, "x", coord, this.labelsPadding * 1.5);
+      }
+    }
+  }
+  drawScientificLabel(
+    labels: string[],
+    axis: "x" | "y",
+    xStart: number,
+    yStart: number
+  ) {
+    let x: number = xStart;
+    let y: number = yStart;
+    let measuredText!: TextMetrics;
+
+    if (axis === "x") {
+      this.graph.ctx.strokeText(labels[0], x, y);
+      this.graph.ctx.fillText(labels[0], x, y);
+      measuredText = this.graph.ctx.measureText(labels[0]);
+      x += measuredText.width / 2 + 8;
+      y -= 8;
+
+      this.graph.ctx.strokeText(labels[1], x, y);
+      this.graph.ctx.fillText(labels[1], x, y);
+    } else {
+      measuredText = this.graph.ctx.measureText(labels[0]);
+      if (0 < this.graph.clientLeft) {
+        x += measuredText.width / 2 - 4;
+        this.graph.ctx.strokeText(labels[0], x, y);
+        this.graph.ctx.fillText(labels[0], x, y);
+
+        x += measuredText.width / 2 + 8;
+        y -= 8;
+        this.graph.ctx.strokeText(labels[1], x, y);
+        this.graph.ctx.fillText(labels[1], x, y);
+      } else {
+        x -= measuredText.width / 2 + 8;
+        this.graph.ctx.strokeText(labels[0], x, y);
+        this.graph.ctx.fillText(labels[0], x, y);
+
+        x = xStart;
+        y -= 8;
+        this.graph.ctx.strokeText(labels[1], x, y);
+        this.graph.ctx.fillText(labels[1], x, y);
       }
     }
   }
@@ -795,7 +838,6 @@ class Graph implements MessageBus {
   readonly scales: Scales;
   private _canvasCenterX!: number;
   private _canvasCenterY!: number;
-  // private _scale: number = 1;
   protected isDragging: boolean = false;
   private _offsetX: number = 0;
   private _offsetY: number = 0;
@@ -891,15 +933,12 @@ class Graph implements MessageBus {
       "wheel",
       (e) => {
         e.preventDefault();
-        // console.log(e.offsetX, e.offsetY);
         const zoomDirection = e.deltaY > 0 ? "OUT" : "IN";
 
         const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
         const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
 
         if (Math.abs(dx) > wheelTolerance || Math.abs(dy) > wheelTolerance) {
-          // console.log(this.offsetX, this.offsetY);
-          // console.log(dx, dy);
           const roundedX = Math.round(dx / 10);
           const roundedY = Math.round(dy / 10);
           if (zoomDirection === "IN") {
