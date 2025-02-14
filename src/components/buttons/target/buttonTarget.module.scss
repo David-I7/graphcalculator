@@ -1,0 +1,11 @@
+@use "../../../assets/styles/base" as base;
+
+.button-target {
+  @include base.gridCenter();
+  border-radius: base.$br-200;
+  width: 2.5rem;
+  height: 2.5rem;
+  &:hover {
+    cursor: pointer;
+  }
+}
