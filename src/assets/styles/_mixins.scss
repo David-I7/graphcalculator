@@ -12,3 +12,14 @@
     transform: translateY(-50%);
   }
 }
+
+@mixin gridCenter {
+  display: grid;
+  place-content: center;
+}
+
+@mixin flexBetween {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

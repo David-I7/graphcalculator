@@ -13,7 +13,6 @@ const ExpressionPanelResizer = () => {
     const graphContainer = document.querySelector(
       ".graph-container"
     ) as HTMLDivElement;
-    console.log(graphContainer);
     const panel = resizerRef.current.parentElement!;
     const resizerController = new AbortController();
     let windowController: AbortController;

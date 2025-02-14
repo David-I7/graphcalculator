@@ -6,7 +6,7 @@
   left: 0;
   bottom: 0;
   width: 17.625rem;
-  background-color: white;
+  background-color: base.$surface;
   z-index: 10;
 
   &__resizer {
@@ -29,10 +29,20 @@
       box-shadow: 4px 0px 6px base.$shadow-level2;
     }
   }
+}
 
-  &__header {
-    height: 3.5rem;
-    background-color: base.$surface-container-low;
+.expression-panel-top-bar {
+  @include base.flexBetween();
+  height: 3.5rem;
+  background-color: base.$surface-container-low;
+  padding-inline: 0.5rem;
+  gap: 1rem;
+
+  &__right {
+    display: flex;
+  }
+  &__left {
+    flex: 1;
   }
 }
 
