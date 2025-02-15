@@ -6,6 +6,8 @@
   left: 0;
   bottom: 0;
   width: 17.625rem;
+  min-width: 17.625rem;
+  max-width: calc(100% - 17.625rem);
   background-color: base.$surface;
   z-index: 10;
 
@@ -127,6 +129,7 @@
     left: 0;
     bottom: 0;
     width: 100%;
+    max-width: 100%;
 
     &__resizer {
       inset: 0;
