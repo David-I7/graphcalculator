@@ -11,7 +11,6 @@
 
   &__resizer {
     position: absolute;
-
     top: 0;
     bottom: 0;
     left: 100%;
@@ -37,12 +36,88 @@
   background-color: base.$surface-container-low;
   padding-inline: 0.5rem;
   gap: 1rem;
+  border-bottom: 1px solid base.$border-lowest;
 
   &__right {
     display: flex;
   }
   &__left {
     flex: 1;
+  }
+}
+
+.expression-list {
+  &__li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3.5rem;
+    border-bottom: 1px solid base.$border-lowest;
+
+    &:focus-within {
+      outline: 1px solid base.$primary-container;
+
+      .dynamic-island {
+        background-color: base.$primary-container;
+        color: base.$on-primary-container;
+      }
+    }
+
+    .dynamic-island {
+      transition: background-color 150ms ease-out, color 150ms ease-out;
+      min-width: 2.5rem;
+      align-self: stretch;
+      padding: 0.125rem;
+      background-color: base.$surface-container-low;
+
+      &:hover {
+        cursor: move;
+      }
+
+      &__index {
+        font-size: base.$fs-body-xs;
+        margin-bottom: 0.125rem;
+      }
+      &__type {
+      }
+    }
+
+    input {
+      width: 100%;
+      outline: none;
+    }
+  }
+
+  &__li--faded {
+    min-height: 3.5rem;
+    display: flex;
+    position: relative;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    &::before {
+      @extend .fade-out;
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 50%;
+    }
+
+    .dynamic-island {
+      width: 2.5rem;
+      align-self: stretch;
+      padding: 0.125rem;
+      background-color: base.$surface-container-low;
+
+      &__index {
+        font-size: base.$fs-body-xs;
+        margin-bottom: 0.125rem;
+      }
+    }
   }
 }
 

@@ -6,9 +6,13 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const ButtonTarget = (props: Props) => {
-  const mergedClassName = props.className
-    ? styles.buttonTarget + ` ${props.className}`
-    : styles.buttonTarget;
+  const mergedClassName = React.useMemo(
+    () =>
+      props.className
+        ? styles.buttonTarget + ` ${props.className}`
+        : styles.buttonTarget,
+    [props.className]
+  );
 
   return (
     <button {...props} className={mergedClassName}>
