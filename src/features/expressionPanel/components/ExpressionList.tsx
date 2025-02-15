@@ -1,8 +1,9 @@
+import { useState } from "react";
 import ButtonTarget from "../../../components/buttons/target/ButtonTarget";
 import { Close } from "../../../components/svgs";
 
 type ExpressionListData = {
-  type: "note" | "expression" | "table";
+  type: "note" | "expression" | "table" | null;
   payload: string;
   id: number;
 };
@@ -13,22 +14,36 @@ const mockData: ExpressionListData[] = [
 ];
 
 const ExpressionList = () => {
+  const [state, setState] = useState<ExpressionListData[]>(mockData);
+
   return (
     <div className="expression-list">
       <ul>
-        {mockData.map((item, index) => {
+        {state.map((item, index) => {
           return (
-            <li key={item.id} className="expression-list__li">
+            <li draggable key={item.id} className="expression-list__li">
               <div className="dynamic-island">
                 <div className="dynamic-island__index">{index + 1}</div>
                 <div className="dynamic-island__type">
-                  {item.type === "expression" ? "f(x)" : '""'}
+                  {item.type === "expression"
+                    ? "f(x)"
+                    : item.type === "note"
+                    ? '""'
+                    : undefined}
                 </div>
               </div>
 
-              <input defaultValue={item.payload}></input>
+              <input
+                autoFocus={index === state.length - 1 ? true : false}
+                defaultValue={item.payload}
+              ></input>
 
               <ButtonTarget
+                onClick={(e) => {
+                  setState(
+                    state.filter((filterdItem) => filterdItem.id !== item.id)
+                  );
+                }}
                 title={`Delete ${item.type}`}
                 className="button--hovered"
               >
@@ -37,9 +52,18 @@ const ExpressionList = () => {
             </li>
           );
         })}
-        <li key={"newExpression"} className="expression-list__li--faded">
+        <li
+          role="button"
+          onClick={() => {
+            setState([
+              ...state,
+              { type: null, payload: "", id: state[state.length - 1].id + 1 },
+            ]);
+          }}
+          className="expression-list__li--faded"
+        >
           <div className="dynamic-island">
-            <div className="dynamic-island__index">{mockData.length + 1}</div>
+            <div className="dynamic-island__index">{state.length + 1}</div>
           </div>
         </li>
       </ul>
