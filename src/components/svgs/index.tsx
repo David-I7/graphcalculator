@@ -106,15 +106,16 @@ export const ChevronDown = (props: Props) => {
       width="24"
       height="24"
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
         d="M5 9L12 16L19 9"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -125,15 +126,36 @@ export const ChevronUp = (props: Props) => {
       width="24"
       height="24"
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
         d="M19 15L12 8L5 15"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+export const Close = (props: Props) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M7 7L17 17M7 17L17 7"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

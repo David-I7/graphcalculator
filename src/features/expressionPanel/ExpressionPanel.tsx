@@ -1,14 +1,12 @@
 import "./assets/base.scss";
 import ExpressionList from "./components/ExpressionList";
 import ExpressionPanelHeader from "./components/ExpressionTopBar";
-import ExpressionPanelResizer from "./components/ExpressionPanelResizer";
 
 const ExpressionPanel = () => {
   return (
     <div className="expression-panel">
       <ExpressionPanelHeader />
       <ExpressionList />
-      <ExpressionPanelResizer />
     </div>
   );
 };

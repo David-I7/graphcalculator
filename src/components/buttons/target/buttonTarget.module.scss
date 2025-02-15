@@ -5,6 +5,7 @@
   border-radius: base.$br-200;
   width: 2.5rem;
   height: 2.5rem;
+  flex-shrink: 0;
   &:hover {
     cursor: pointer;
   }
