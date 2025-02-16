@@ -1,6 +1,8 @@
 @use "../../../assets/styles/base" as base;
 
 .expression-panel {
+  display: grid;
+  grid-template-rows: 3.5rem 1fr;
   position: absolute;
   top: 0;
   left: 0;
@@ -13,6 +15,7 @@
 
   &__resizer {
     position: absolute;
+
     top: 0;
     bottom: 0;
     left: 100%;
@@ -22,6 +25,7 @@
     }
     &::before {
       content: "";
+      pointer-events: none;
       position: absolute;
       top: 0;
       left: -50%;
@@ -34,7 +38,6 @@
 
 .expression-panel-top-bar {
   @include base.flexBetween();
-  height: 3.5rem;
   background-color: base.$surface-container-low;
   padding-inline: 0.5rem;
   gap: 1rem;
@@ -49,6 +52,9 @@
 }
 
 .expression-list {
+  overflow-y: auto;
+  padding-bottom: 2rem;
+
   &__li {
     display: flex;
     align-items: center;

@@ -43,6 +43,7 @@ image {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scrollbar-width: 0.5rem;
 }
 
 .font-body-xs {
@@ -116,4 +117,17 @@ main {
     rgba(var.$surface, 0) 0%,
     rgba(var.$surface, 1) 100%
   );
+}
+
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar {
+    width: 0.5rem;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: var.$surface-container-low;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var.$surface-container;
+    border-radius: var.$br-400;
+  }
 }
