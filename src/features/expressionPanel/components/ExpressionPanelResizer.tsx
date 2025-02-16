@@ -62,7 +62,7 @@ const ExpressionPanelResizer = () => {
       resizerRef.current!.addEventListener(
         "mousedown",
         (e) => {
-          if (window.innerWidth < MOBILE_BREAKPOINT) return;
+          if (isMobile) return;
 
           // cleanup
           e.preventDefault();
@@ -84,24 +84,20 @@ const ExpressionPanelResizer = () => {
 
           function onMouseMove(e: MouseEvent) {
             const offsetX = e.clientX - expressionPanelRef.current!.offsetWidth;
+
             if (
-              offsetX < 0 &&
-              expressionPanelRef.current!.offsetWidth + offsetX < MIN_SIZE
-            )
-              return;
-            if (
-              offsetX > 0 &&
-              window.innerWidth - expressionPanelRef.current!.offsetWidth <=
-                MAX_SIZE_OFFSET
+              expressionPanelRef.current!.offsetWidth + offsetX < MIN_SIZE ||
+              expressionPanelRef.current!.offsetWidth + offsetX >
+                window.innerWidth - MAX_SIZE_OFFSET
             )
               return;
 
             expressionPanelRef.current!.style.width = `${
               expressionPanelRef.current!.offsetWidth + offsetX
             }px`;
-            graphContainerRef.current!.style.width = `${
-              graphContainerRef.current!.offsetWidth - offsetX
-            }px`;
+            graphContainerRef.current!.style.width = `calc(100% - ${
+              expressionPanelRef.current!.offsetWidth
+            }px)`;
           }
 
           function onMouseLeave() {
@@ -124,6 +120,7 @@ const ExpressionPanelResizer = () => {
           }
         } else {
           graphContainerRef.current!.style.removeProperty("height");
+
           graphContainerRef.current!.style.width = isOpen
             ? `calc(100% - ${expressionPanelRef.current!.offsetWidth}px)`
             : "100%";
@@ -141,8 +138,6 @@ const ExpressionPanelResizer = () => {
       windowController?.abort();
     };
   }, [isMobile, isOpen]);
-
-  console.log(isMobile);
 
   return (
     <>
