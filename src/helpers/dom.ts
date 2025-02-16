@@ -3,6 +3,7 @@ export function calculateTextWidth(text: string, className: string): number {
   div.className = className;
   div.innerText = text;
   div.style.position = "absolute";
+  div.style.width = "max-content";
   div.style.whiteSpace = "nowrap";
   div.style.visibility = "hidden";
   document.body.appendChild(div);

@@ -58,6 +58,7 @@
   &__li {
     display: flex;
     align-items: center;
+    position: relative;
     gap: 1rem;
     min-height: 3.5rem;
     border-bottom: 1px solid base.$border-lowest;
@@ -83,20 +84,24 @@
       }
 
       &__index {
-        font-size: base.$fs-body-xs;
+        @extend .font-body-xs;
         margin-bottom: 0.125rem;
       }
       &__type {
       }
     }
+  }
 
-    textarea {
-      width: 100%;
-      outline: none;
-      resize: none;
-      background-color: transparent;
-      font-size: base.$fs-body-xl;
-    }
+  &__textarea {
+    @extend .font-body-xl;
+    width: calc(100% - 3.5rem);
+    outline: none;
+    resize: none;
+    // border: none;
+    background-color: transparent;
+    height: 1lh;
+    overflow: hidden;
+    display: block;
   }
 
   &__li--faded {

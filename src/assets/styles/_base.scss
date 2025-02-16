@@ -37,6 +37,7 @@ image {
 :root {
   font-family: var.$ff-body;
   font-weight: var.$fw-regular;
+  line-height: var.$lh-body-m;
   color: var.$on-surface-body;
 
   font-synthesis: none;
@@ -48,18 +49,23 @@ image {
 
 .font-body-xs {
   font-size: var.$fs-body-xs;
+  line-height: var.$lh-body-xs;
 }
 .font-body-sm {
   font-size: var.$fs-body-sm;
+  line-height: var.$lh-body-sm;
 }
 .font-body-m {
   font-size: var.$fs-body-m;
+  line-height: var.$lh-body-m;
 }
 .font-body-lg {
   font-size: var.$fs-body-lg;
+  line-height: var.$lh-body-lg;
 }
 .font-body-xl {
   font-size: var.$fs-body-xl;
+  line-height: var.$lh-body-xl;
 }
 
 h1,
@@ -122,6 +128,7 @@ main {
 @supports selector(::-webkit-scrollbar) {
   ::-webkit-scrollbar {
     width: 0.5rem;
+    height: 0.5rem;
   }
   ::-webkit-scrollbar-track {
     background-color: var.$surface-container-low;

@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import ButtonTarget from "../../../components/buttons/target/ButtonTarget";
 import { Close } from "../../../components/svgs";
 import useDraggable from "../../../hooks/useDraggable";
+import ExpressionTextarea from "./ExpressionTextarea";
+import { calculateTextWidth } from "../../../helpers/dom";
 
 type ExpressionListData = {
   type: "note" | "expression" | "table" | null;
@@ -88,10 +90,10 @@ const ExpressionList = () => {
                 </div>
               </div>
 
-              <textarea
+              <ExpressionTextarea
                 autoFocus={index === state.length - 1 ? true : false}
                 defaultValue={item.payload}
-              ></textarea>
+              />
 
               <ButtonTarget
                 onClick={() => {
@@ -101,8 +103,9 @@ const ExpressionList = () => {
                 }}
                 title={`Delete ${item.type}`}
                 className="button--hovered"
+                style={{ position: "absolute", top: "0.5rem", right: "0" }}
               >
-                <Close width={24} height={24} />
+                <Close />
               </ButtonTarget>
             </li>
           );
