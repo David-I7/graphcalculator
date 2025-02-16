@@ -139,8 +139,6 @@ const ExpressionPanelResizer = () => {
     };
   }, [isMobile, isOpen]);
 
-  console.log(isMobile);
-
   return (
     <>
       {isOpen && (

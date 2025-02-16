@@ -1,5 +1,5 @@
 import ButtonTarget from "../../../components/buttons/target/ButtonTarget";
-import { ArrowLeft, Edit, Plus } from "../../../components/svgs";
+import { Edit, Plus } from "../../../components/svgs";
 import DropdownInput from "../../../components/dropdown/DropdownInput";
 import Dropdown from "../../../components/dropdown/Dropdown";
 import ExpressionPanelResizer from "./ExpressionPanelResizer";

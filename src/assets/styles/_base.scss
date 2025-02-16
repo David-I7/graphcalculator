@@ -11,15 +11,23 @@
   box-sizing: border-box;
 }
 
+ol,
+ul {
+  list-style-type: none;
+}
+
 button,
 input {
   border: none;
   background-color: transparent;
   color: inherit;
 }
+
+textarea,
 input {
   font-family: inherit;
   font-size: inherit;
+  color: inherit;
 }
 
 image {
