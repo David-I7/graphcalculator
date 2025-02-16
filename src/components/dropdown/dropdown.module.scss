@@ -11,20 +11,15 @@
     outline: 2px solid base.$primary;
   }
 
-  transition: filter 250ms ease-out;
-  &:hover {
-    filter: brightness(90%);
-  }
-
   &__input {
+    @extend .font-body-lg;
     min-width: 0;
     flex-shrink: 1;
-    padding-inline: 0.25rem;
+    padding-inline: 0.5rem;
     height: 100%;
     outline: none;
     border-top-left-radius: base.$br-100;
     border-bottom-left-radius: base.$br-100;
-    font-size: base.$fs-body-sm;
     font-weight: base.$fw-medium;
     color: base.$on-surface-heading;
 
