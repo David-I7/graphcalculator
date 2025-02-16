@@ -38,8 +38,8 @@ const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
     const handleFocus = (e: FocusEvent) => {
       const input = e.currentTarget! as HTMLInputElement;
       input.select();
-      input.style.minWidth = `100%`;
-      input.parentElement!.style.minWidth = `100%`;
+      input.style.flex = "1";
+      input.parentElement!.style.flex = `1`;
     };
 
     const handleBlur = (e: FocusEvent) => {
@@ -58,8 +58,8 @@ const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
       } else {
         input.style.width = `${width}px`;
       }
-      input.style.removeProperty("min-width");
-      input.parentElement!.style.removeProperty("min-width");
+      input.style.removeProperty("flex");
+      input.parentElement!.style.removeProperty("flex");
       onSave?.();
     };
 

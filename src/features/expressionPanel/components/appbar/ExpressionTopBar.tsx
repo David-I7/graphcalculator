@@ -1,8 +1,8 @@
-import ButtonTarget from "../../../components/buttons/target/ButtonTarget";
-import { Edit, Plus } from "../../../components/svgs";
-import DropdownInput from "../../../components/dropdown/DropdownInput";
-import Dropdown from "../../../components/dropdown/Dropdown";
+import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
+import { Edit, Plus } from "../../../../components/svgs";
 import ExpressionPanelResizer from "./ExpressionPanelResizer";
+import GraphMenu from "../menu/GraphMenu";
+import DropdownInput from "../../../../components/dropdown/DropdownInput";
 
 const defaultValue = "Untitled";
 
@@ -10,24 +10,14 @@ const ExpressionTopBar = () => {
   return (
     <header className="expression-panel-top-bar">
       <div className="expression-panel-top-bar__left">
+        <GraphMenu />
+        {/* <h1>{defaultValue}</h1> */}
         <DropdownInput
+          className="button--hovered bg-surface-container-low"
           defaultValue={defaultValue}
           initialValue={defaultValue}
-          className={"bg-surface-container-low button--hovered"}
-          onSave={() => {
-            console.log("db save");
-          }}
         >
-          <Dropdown
-            style={{
-              paddingInline: "0.25rem",
-              borderTopLeftRadius: "0",
-              borderTopRightRadius: "0",
-            }}
-            className="button--hovered bg-surface-container-low"
-          >
-            <Dropdown.Button />
-          </Dropdown>
+          <></>
         </DropdownInput>
       </div>
       <div className="expression-panel-top-bar__right">

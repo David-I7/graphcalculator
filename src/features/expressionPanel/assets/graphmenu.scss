@@ -1,0 +1,12 @@
+@use "../../../assets/styles/base" as base;
+
+.graph-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  transform: translateX(-100%);
+  width: 17.625rem;
+  background-color: black;
+}

@@ -47,7 +47,15 @@
     display: flex;
   }
   &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     flex: 1;
+
+    h1 {
+      @extend .font-body-lg;
+      font-weight: base.$fw-medium;
+    }
   }
 }
 

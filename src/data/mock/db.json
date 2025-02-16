@@ -1,0 +1,36 @@
+{
+  "graphs": [
+    {
+      "name": "My Second Graph",
+      "id": "140fcf29-1c6c-4c2f-9706-93c15148121a",
+      "expressions": [
+        {
+          "type": "expression",
+          "payload": "f(x) = sin(x) + 3x",
+          "id": 2
+        },
+        {
+          "type": "expression",
+          "payload": "g(x) = 2^x",
+          "id": 4
+        }
+      ]
+    },
+    {
+      "name": "My Graph",
+      "id": "c40fcf29-1c6c-4c2f-9706-93c15148121a",
+      "expressions": [
+        {
+          "type": "expression",
+          "payload": "f(x) = 3x",
+          "id": 1
+        },
+        {
+          "type": "expression",
+          "payload": "g(x) = x",
+          "id": 2
+        }
+      ]
+    }
+  ]
+}

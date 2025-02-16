@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { MOBILE_BREAKPOINT } from "../../../data/css/breakpoints";
-import ButtonTarget from "../../../components/buttons/target/ButtonTarget";
+import { MOBILE_BREAKPOINT } from "../../../../data/css/breakpoints";
+import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
-} from "../../../components/svgs";
+} from "../../../../components/svgs";
 import { createPortal } from "react-dom";
-import { throttle } from "../../../helpers/performance";
+import { throttle } from "../../../../helpers/performance";
 
 const MIN_SIZE = 280;
 const MAX_SIZE_OFFSET = 280;
