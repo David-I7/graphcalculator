@@ -36,7 +36,12 @@ $border-normal: #404040;
 $border-high: #0f0f0f;
 
 // SHADOW
-$shadow-level2: rgba(0, 0, 0, 0.38);
+$shadow-level1: rgba(0, 0, 0, 0.15);
+$shadow-level2: rgba(0, 0, 0, 0.3);
+
+// SCRIM
+$scrim: rgba(0, 0, 0, 0.38);
+$scrim-light: rgba(255, 255, 255, 0.62);
 
 // FONT
 
@@ -123,3 +128,9 @@ $br-500: 2rem;
 $br-600: 2.5rem;
 $br-700: 3rem;
 $br-round: 50%;
+
+// ANIMATION
+$an-sp-default: 250ms;
+$an-sp-fast: 150ms;
+$an-sp-slow: 350ms;
+$an-sp-slowest: 500ms;
