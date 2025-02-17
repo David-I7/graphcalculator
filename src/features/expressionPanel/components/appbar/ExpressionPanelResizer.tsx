@@ -100,15 +100,16 @@ const ExpressionPanelResizer = () => {
       }
     }, 50);
 
-    window.addEventListener("resize", throttledResize, {
+    window.addEventListener("resize", throttledResize.throttleFunc, {
       signal: resizerController.signal,
     });
 
-    throttledResize();
+    throttledResize.throttleFunc();
 
     return () => {
       resizerController.abort();
       windowController?.abort();
+      throttledResize.abort();
     };
   }, [isMobile, isOpen]);
 
@@ -167,8 +168,8 @@ const ExpressionPanelResizer = () => {
             }}
             style={
               isMobile
-                ? { position: "fixed", bottom: "0.5rem", right: "0.5rem" }
-                : { position: "fixed", top: "0.5rem", left: "0.5rem" }
+                ? { position: "fixed", bottom: "1rem", right: "1rem" }
+                : { position: "fixed", top: "1rem", left: "1rem" }
             }
             className="button--hovered bg-surface-container-low"
           >

@@ -23,28 +23,34 @@ export function throttle<T extends any[]>(
   let finalTimerId: number | null = null;
   let waitingArgs: T | null = null;
 
-  return (...args: T) => {
-    waitingArgs = args;
+  return {
+    abort: () => {
+      if (timerId) clearTimeout(timerId);
+      if (finalTimerId) clearTimeout(finalTimerId);
+    },
+    throttleFunc: (...args: T) => {
+      waitingArgs = args;
 
-    if (finalTimerId) {
-      timerId = finalTimerId;
-      return;
-    }
+      if (finalTimerId) {
+        timerId = finalTimerId;
+        return;
+      }
 
-    if (!timerId) {
-      cb(...waitingArgs);
-      waitingArgs = null;
-      timerId = setTimeout(() => {
-        if (waitingArgs !== null) {
-          finalTimerId = setTimeout(() => {
-            cb(...(waitingArgs as T));
-            waitingArgs = null;
-            finalTimerId = null;
-            timerId = null;
-          }, delay);
-        }
-        timerId = null;
-      }, delay);
-    }
+      if (!timerId) {
+        cb(...waitingArgs);
+        waitingArgs = null;
+        timerId = setTimeout(() => {
+          if (waitingArgs !== null) {
+            finalTimerId = setTimeout(() => {
+              cb(...(waitingArgs as T));
+              waitingArgs = null;
+              finalTimerId = null;
+              timerId = null;
+            }, delay);
+          }
+          timerId = null;
+        }, delay);
+      }
+    },
   };
 }

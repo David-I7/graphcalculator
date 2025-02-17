@@ -1,0 +1,18 @@
+@use "../../assets/styles/base" as base;
+
+.resize-input {
+  @extend .font-body-lg;
+  width: 0;
+  flex: 1;
+  padding-inline: 0.5rem;
+  height: 2rem;
+  outline: none;
+  border-radius: base.$br-100;
+  font-weight: base.$fw-medium;
+  color: base.$on-surface-heading;
+
+  &:focus-visible {
+    background-color: transparent;
+    outline: 1px solid base.$primary;
+  }
+}
