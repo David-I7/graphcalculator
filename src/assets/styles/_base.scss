@@ -111,7 +111,7 @@ main {
 }
 
 .button--hovered {
-  transition: filter 250ms ease-out;
+  transition: filter var.$an-sp-fast ease-out;
   &:hover {
     filter: brightness(85%);
   }

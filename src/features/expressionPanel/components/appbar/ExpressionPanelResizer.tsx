@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { MOBILE_BREAKPOINT } from "../../../../data/css/breakpoints";
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import {
   ArrowDown,
@@ -9,49 +8,29 @@ import {
 } from "../../../../components/svgs";
 import { createPortal } from "react-dom";
 import { throttle } from "../../../../helpers/performance";
+import {
+  AnimateSlideY,
+  AnimateSlideX,
+  AnimationOptions,
+} from "../../../../lib/animations";
+import { CSS_VARIABLES } from "../../../../data/css/variables";
+import { useAppSelector } from "../../../../state/hooks";
+import { usePopulateRef } from "../../../../hooks/reactutils";
 
 const MIN_SIZE = 280;
 const MAX_SIZE_OFFSET = 280;
-const ANIMATION_DURATION = 250;
-
-const AnimateSlideLeft: Keyframe[] = [
-  { offset: 0, transform: "translateX(0)" },
-  {
-    offset: 1,
-    transform: "translateX(-100%)",
-  },
-];
-const AnimateSlideDown: Keyframe[] = [
-  { offset: 0, transform: "translateY(0)" },
-  {
-    offset: 1,
-    transform: "translateY(100%)",
-  },
-];
-
-const AnimationOptions: KeyframeAnimationOptions = {
-  fill: "forwards",
-  duration: ANIMATION_DURATION,
-  easing: "ease-out",
-};
 
 const ExpressionPanelResizer = () => {
   const [isOpen, setIsOpen] = useState<boolean>(true);
-  const [isMobile, setIsMobile] = useState<boolean>(
-    window.innerWidth <= MOBILE_BREAKPOINT
-  );
+  const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
   const resizerRef = useRef<HTMLDivElement>(null);
   const graphContainerRef = useRef<HTMLDivElement>(null);
   const expressionPanelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    graphContainerRef.current = document.querySelector(
-      ".graph-container"
-    ) as HTMLDivElement;
-    expressionPanelRef.current = document.querySelector(
-      ".expression-panel"
-    ) as HTMLDivElement;
+  usePopulateRef(graphContainerRef, { selector: ".graph-container" });
+  usePopulateRef(expressionPanelRef, { selector: ".expression-panel" });
 
+  useEffect(() => {
     if (!graphContainerRef.current || !expressionPanelRef.current)
       throw new Error("No refernce to graph container or expression panel");
 
@@ -59,6 +38,7 @@ const ExpressionPanelResizer = () => {
     let windowController: AbortController;
 
     isOpen &&
+      !isMobile &&
       resizerRef.current!.addEventListener(
         "mousedown",
         (e) => {
@@ -108,30 +88,23 @@ const ExpressionPanelResizer = () => {
         { signal: resizerController.signal }
       );
 
-    window.addEventListener(
-      "resize",
-      throttle(() => {
-        if (window.innerWidth <= MOBILE_BREAKPOINT) {
-          expressionPanelRef.current!.style.removeProperty("width");
-          graphContainerRef.current!.style.removeProperty("width");
+    const throttledResize = throttle(() => {
+      if (isMobile) {
+        expressionPanelRef.current!.style.removeProperty("width");
+        graphContainerRef.current!.style.removeProperty("width");
+      } else {
+        graphContainerRef.current!.style.removeProperty("height");
+        graphContainerRef.current!.style.width = isOpen
+          ? `calc(100% - ${expressionPanelRef.current!.offsetWidth}px)`
+          : "100%";
+      }
+    }, 50);
 
-          if (!isMobile) {
-            setIsMobile(true);
-          }
-        } else {
-          graphContainerRef.current!.style.removeProperty("height");
+    window.addEventListener("resize", throttledResize, {
+      signal: resizerController.signal,
+    });
 
-          graphContainerRef.current!.style.width = isOpen
-            ? `calc(100% - ${expressionPanelRef.current!.offsetWidth}px)`
-            : "100%";
-
-          if (isMobile) {
-            setIsMobile(false);
-          }
-        }
-      }, 50),
-      { signal: resizerController.signal }
-    );
+    throttledResize();
 
     return () => {
       resizerController.abort();
@@ -147,20 +120,20 @@ const ExpressionPanelResizer = () => {
             onClick={(e) => {
               if (isMobile) {
                 expressionPanelRef.current!.animate(
-                  AnimateSlideDown,
+                  AnimateSlideY(),
                   AnimationOptions
                 );
                 graphContainerRef.current!.style.height = "100%";
               } else {
                 expressionPanelRef.current!.animate(
-                  AnimateSlideLeft,
+                  AnimateSlideX(),
                   AnimationOptions
                 );
                 graphContainerRef.current!.style.width = "100%";
               }
               setTimeout(() => {
                 setIsOpen(!isOpen);
-              }, ANIMATION_DURATION);
+              }, CSS_VARIABLES.animationSpeedDefault);
             }}
             className="button--hovered bg-surface-container-low"
           >
@@ -174,23 +147,23 @@ const ExpressionPanelResizer = () => {
           <ButtonTarget
             onClick={(e) => {
               if (isMobile) {
-                expressionPanelRef.current!.animate(AnimateSlideDown, {
-                  ...AnimationOptions,
-                  direction: "reverse",
-                });
+                expressionPanelRef.current!.animate(
+                  AnimateSlideY("100%", "0"),
+                  AnimationOptions
+                );
                 graphContainerRef.current!.style.height = "50%";
               } else {
-                expressionPanelRef.current!.animate(AnimateSlideLeft, {
-                  ...AnimationOptions,
-                  direction: "reverse",
-                });
+                expressionPanelRef.current!.animate(
+                  AnimateSlideX("-100%", "0"),
+                  AnimationOptions
+                );
                 graphContainerRef.current!.style.width = `calc(100% - ${
                   expressionPanelRef.current!.offsetWidth
                 }px)`;
               }
               setTimeout(() => {
                 setIsOpen(!isOpen);
-              }, ANIMATION_DURATION);
+              }, CSS_VARIABLES.animationSpeedDefault);
             }}
             style={
               isMobile

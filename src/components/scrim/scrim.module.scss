@@ -1,0 +1,15 @@
+@use "../../assets/styles/base" as base;
+
+.scrim {
+  z-index: 20;
+  position: fixed;
+  inset: 0;
+  background-color: transparent;
+  animation: srim-transition-in base.$an-sp-default ease-out forwards;
+}
+
+@keyframes srim-transition-in {
+  to {
+    background-color: base.$scrim-light;
+  }
+}

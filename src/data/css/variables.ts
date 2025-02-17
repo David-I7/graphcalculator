@@ -34,5 +34,16 @@ export const CSS_VARIABLES = {
   borderHigh: "#0f0f0f",
 
   // SHADOW
-  shadowLevel2: "rgba(0,0,0,0.38)",
+  shadowLevel1: "rgba(0,0,0,0.15)",
+  shadowLevel2: "rgba(0,0,0,0.30)",
+
+  // SCRIM
+  scrim: "rgba(0,0,0,0.38)",
+  scrimLight: "rgba(255,255,255,0.62)",
+
+  // ANIMATION
+  animationSpeedFast: 150,
+  animationSpeedDefault: 250,
+  animationSpeedSlow: 350,
+  animationSpeedSlowest: 500,
 };
