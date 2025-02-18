@@ -3,6 +3,9 @@
     {
       "name": "My Second Graph",
       "id": "140fcf29-1c6c-4c2f-9706-93c15148121a",
+      "thumb": "dnfnkdfnkjdfnjkd",
+      "createdAt": "2025-02-17T14:22:56.120Z",
+      "modifiedAt": "2025-02-17T14:22:56.120Z",
       "expressions": [
         {
           "type": "expression",
@@ -19,6 +22,9 @@
     {
       "name": "My Graph",
       "id": "c40fcf29-1c6c-4c2f-9706-93c15148121a",
+      "thumb": "dnfnkdfnkjdfnjkd",
+      "createdAt": "2025-02-16T14:23:11.210Z",
+      "modifiedAt": "2025-02-16T14:23:11.210Z",
       "expressions": [
         {
           "type": "expression",

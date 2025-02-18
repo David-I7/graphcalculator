@@ -1,14 +1,24 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MOBILE_BREAKPOINT } from "../../data/css/breakpoints";
 
+function getCookie(name: string) {
+  const regex = new RegExp(`(^| )${name}=([^;]*)`);
+  const match = document.cookie.match(regex);
+  if (match) {
+    return match[2];
+  }
+}
+
 interface GlobalState {
   isMobile: boolean;
+  isAuthenticated: boolean;
 }
 const initialState: GlobalState = {
   isMobile: window.innerWidth <= MOBILE_BREAKPOINT,
+  isAuthenticated: getCookie("sid") ? true : false,
 };
 
-const mobileSlice = createSlice({
+const globalSlice = createSlice({
   name: "global",
   initialState,
   reducers: {
@@ -16,9 +26,13 @@ const mobileSlice = createSlice({
       if (state.isMobile === action.payload) return;
       state.isMobile = action.payload;
     },
+    updateIsAuthenticated: (state, action: PayloadAction<boolean>) => {
+      if (state.isAuthenticated === action.payload) return;
+      state.isAuthenticated = action.payload;
+    },
   },
 });
 
-export default mobileSlice.reducer;
+export default globalSlice.reducer;
 
-export const { updateIsMobile } = mobileSlice.actions;
+export const { updateIsMobile } = globalSlice.actions;

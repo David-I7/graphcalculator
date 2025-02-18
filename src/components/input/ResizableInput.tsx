@@ -2,32 +2,39 @@ import React, {
   ChangeEvent,
   FocusEvent,
   KeyboardEvent,
-  ReactNode,
   useEffect,
   useState,
 } from "react";
-import styles from "./dropdown.module.scss";
+import styles from "./input.module.scss";
 import { calculateTextWidth } from "../../helpers/dom";
 
-type ComponentProps = {
-  defaultValue: string;
+type ResizableInputProps = {
+  defaultValue?: string;
   initialValue: string;
-  children: ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
+  inputProps?: Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    | "value"
+    | "defaultValue"
+    | "onBlur"
+    | "onChange"
+    | "onFocus"
+    | "onKeyDown"
+    | "type"
+  >;
   onSave?: () => void;
 };
 
-const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
+export const ResizableInput = React.forwardRef<
+  HTMLInputElement,
+  ResizableInputProps
+>(
   (
     {
-      defaultValue,
+      defaultValue = " ",
       initialValue,
-      children,
-      className,
-      style,
+      inputProps,
       onSave,
-    }: ComponentProps,
+    }: ResizableInputProps,
     ref
   ) => {
     const [inputValue, setInputVal] = useState<string>(initialValue);
@@ -38,8 +45,7 @@ const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
     const handleFocus = (e: FocusEvent) => {
       const input = e.currentTarget! as HTMLInputElement;
       input.select();
-      input.style.flex = "1";
-      input.parentElement!.style.flex = `1`;
+      input.style.removeProperty("max-width");
     };
 
     const handleBlur = (e: FocusEvent) => {
@@ -54,12 +60,10 @@ const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
       const width = calculateTextWidth(value, mergedClassname);
 
       if (width > input.offsetWidth) {
-        input.style.width = `${input.offsetWidth}px`;
+        input.style.maxWidth = `${input.offsetWidth}px`;
       } else {
-        input.style.width = `${width}px`;
+        input.style.maxWidth = `${width}px`;
       }
-      input.style.removeProperty("flex");
-      input.parentElement!.style.removeProperty("flex");
       onSave?.();
     };
 
@@ -71,10 +75,10 @@ const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
 
     const mergedClassname = React.useMemo(
       () =>
-        className
-          ? `${className} ${styles.dropdownInputContainerInput}`
-          : styles.dropdownInputContainerInput,
-      [className]
+        inputProps?.className
+          ? `${inputProps?.className} ${styles.resizeInput}`
+          : styles.resizeInput,
+      [inputProps?.className]
     );
 
     useEffect(() => {
@@ -84,31 +88,25 @@ const DropdownInput = React.forwardRef<HTMLInputElement, ComponentProps>(
           const width = calculateTextWidth(inputValue, mergedClassname);
           const inputRef =
             (ref as React.RefObject<HTMLInputElement>)?.current ||
-            document.querySelector(`.${styles.dropdownInputContainerInput}`);
-          inputRef.style.width = `${width}px`;
+            document.querySelector(`.${styles.resizeInput}`);
+          inputRef.style.maxWidth = `${width}px`;
         },
         { once: true }
       );
     }, []);
 
     return (
-      <div className={styles.dropdownInputContainer}>
-        <input
-          ref={ref}
-          value={inputValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          onKeyDown={onSave ? handleEnter : undefined}
-          style={style}
-          className={mergedClassname}
-          type="text"
-          aria-label="File name"
-        />
-        {children}
-      </div>
+      <input
+        ref={ref}
+        {...inputProps}
+        type="text"
+        className={mergedClassname}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyDown={onSave ? handleEnter : undefined}
+        value={inputValue}
+      />
     );
   }
 );
-
-export default DropdownInput;

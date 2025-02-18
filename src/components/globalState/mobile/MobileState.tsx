@@ -11,24 +11,25 @@ const MobileState = () => {
   useEffect(() => {
     const eventCrontroller = new AbortController();
 
-    window.addEventListener(
-      "resize",
-      throttle(() => {
-        if (window.innerWidth <= MOBILE_BREAKPOINT) {
-          if (!isMobile) {
-            dispatch(updateIsMobile(true));
-          }
-        } else {
-          if (isMobile) {
-            dispatch(updateIsMobile(false));
-          }
+    const throttledResize = throttle(() => {
+      if (window.innerWidth <= MOBILE_BREAKPOINT) {
+        if (!isMobile) {
+          dispatch(updateIsMobile(true));
         }
-      }, 50),
-      { signal: eventCrontroller.signal }
-    );
+      } else {
+        if (isMobile) {
+          dispatch(updateIsMobile(false));
+        }
+      }
+    }, 50);
+
+    window.addEventListener("resize", throttledResize.throttleFunc, {
+      signal: eventCrontroller.signal,
+    });
 
     return () => {
       eventCrontroller.abort();
+      throttledResize.abort();
     };
   }, [isMobile]);
 

@@ -90,6 +90,19 @@ h4 {
   font-size: var.$fs-h4;
 }
 
+.font-regular {
+  font-weight: var.$fw-regular;
+}
+.font-medium {
+  font-weight: var.$fw-medium;
+}
+.font-bold {
+  font-weight: var.$fw-bold;
+}
+.font-semibold {
+  font-weight: var.$fw-semibold;
+}
+
 #root {
   min-height: 100svh;
   height: 100svh;
@@ -97,7 +110,7 @@ h4 {
 }
 
 body {
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 main {

@@ -1,34 +1,5 @@
 @use "../../assets/styles/base" as base;
 
-.dropdown-input-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  border-radius: base.$br-100;
-  height: 2rem;
-  overflow: hidden;
-  &:focus-within {
-    outline: 2px solid base.$primary;
-  }
-
-  &__input {
-    @extend .font-body-lg;
-    min-width: 0;
-    flex-shrink: 1;
-    padding-inline: 0.5rem;
-    height: 100%;
-    outline: none;
-    border-top-left-radius: base.$br-100;
-    border-bottom-left-radius: base.$br-100;
-    font-weight: base.$fw-medium;
-    color: base.$on-surface-heading;
-
-    &:focus-visible {
-      background-color: transparent;
-    }
-  }
-}
-
 .dropdown {
   display: inline-flex;
   position: relative;

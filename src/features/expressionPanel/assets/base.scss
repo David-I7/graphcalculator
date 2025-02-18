@@ -100,9 +100,17 @@
     }
   }
 
-  &__textarea {
+  &__textarea-container {
     @extend .font-body-xl;
-    width: calc(100% - 3.5rem);
+    padding-block: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    padding-right: 3.5rem;
+  }
+
+  &__textarea {
+    width: 100%;
     outline: none;
     resize: none;
     // border: none;
@@ -110,6 +118,10 @@
     height: 1lh;
     overflow: hidden;
     display: block;
+  }
+
+  &__textarea-container span {
+    font-size: inherit;
   }
 
   &__li--faded {

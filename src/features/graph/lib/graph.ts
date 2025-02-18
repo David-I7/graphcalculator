@@ -104,7 +104,7 @@ export class Graph implements MessageBus {
           prevHeight = this.canvas.offsetHeight;
           this.reset();
         }
-      }, 50)
+      }, 50).throttleFunc
     );
     observer.observe(this.canvas.parentElement!);
 
@@ -161,7 +161,7 @@ export class Graph implements MessageBus {
         this.updateClientPosition(this._offsetX, this._offsetY);
 
         this.ctx.translate(dx, dy);
-      }, 10)
+      }, 10).throttleFunc
     );
     this.canvas.addEventListener("mouseup", () => {
       this.isDragging = false;

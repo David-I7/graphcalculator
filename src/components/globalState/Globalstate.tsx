@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import MobileState from "./mobile/MobileState";
+import { useFetch } from "../../hooks/api";
+import { getGraphs } from "../../lib/api/graph";
 
 const Globalstate = () => {
   return (
     <>
       <MobileState />
-      {/* <TestState /> */}
     </>
   );
 };
@@ -16,8 +17,15 @@ function TestState() {
   const [primitive, setPrimitive] = useState<number>(0);
   const [mutable, setMutable] = useState<number[]>([1, 2, 3]);
 
+  // react batches these because they are synchronous
+  if (primitive === 0) {
+    setPrimitive(1);
+  } else if (primitive === 1) {
+    setPrimitive(2);
+  }
   useEffect(() => {
     console.log("Effect with no dep running");
+    console.log(primitive);
   });
 
   return (
@@ -52,3 +60,35 @@ function TestState() {
     </div>
   );
 }
+
+// function FetchGraphs() {
+//   const { isLoading, isError, data, error } = useFetch(getGraphs);
+
+//   if (isLoading) return <div>Loading...</div>;
+
+//   if (isError)
+//     return (
+//       <div>
+//         Unexpected Error:
+//         {JSON.stringify(error)}
+//       </div>
+//     );
+
+//   return <pre>{JSON.stringify(data, null, 2)}</pre>;
+// }
+
+// function FetchWithSuspense({
+//   fallback = "Loading...",
+//   children,
+// }: {
+//   fallback?: ReactNode;
+//   children: ReactNode;
+// }) {
+//   return <Suspense fallback={fallback}>{children}</Suspense>;
+// }
+
+// const FetchGraphsWithUse = <T,>({ p }: { p: Promise<T> }) => {
+//   const data = use(p);
+
+//   return <pre>{JSON.stringify(data, null, 2)}</pre>;
+// };
