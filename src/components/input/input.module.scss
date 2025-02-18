@@ -16,3 +16,27 @@
     outline: 1px solid base.$primary;
   }
 }
+
+.textarea-container {
+  @extend .font-body-xl;
+  padding-block: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  padding-right: 3.5rem;
+}
+
+.textarea {
+  width: 100%;
+  outline: none;
+  resize: none;
+  // border: none;
+  background-color: transparent;
+  height: 1lh;
+  overflow: hidden;
+  display: block;
+}
+
+.textarea-container span {
+  font-size: inherit;
+}

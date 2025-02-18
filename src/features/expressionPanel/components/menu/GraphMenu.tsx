@@ -2,7 +2,6 @@ import {
   createContext,
   ReactNode,
   useContext,
-  useEffect,
   useId,
   useRef,
   useState,
@@ -10,7 +9,10 @@ import {
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import { Menu } from "../../../../components/svgs";
 import "../../assets/graphmenu.scss";
-import { AnimateSlideX, AnimationOptions } from "../../../../lib/animations";
+import {
+  AnimateSlideX,
+  KeyframeAnimationOptionsBuilder,
+} from "../../../../lib/animations";
 import { usePopulateRef } from "../../../../hooks/reactutils";
 import Scrim from "../../../../components/scrim/Scrim";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
@@ -20,6 +22,9 @@ import { createPortal } from "react-dom";
 type GraphMenuContext = {
   ariaControlsId: string;
   menuRef: React.RefObject<HTMLDivElement | null>;
+  rootRef: React.RefObject<HTMLDivElement | null>;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isOpen: boolean;
 };
 
 const GraphMenuContext = createContext<GraphMenuContext | undefined>(undefined);
@@ -27,8 +32,12 @@ const GraphMenuContext = createContext<GraphMenuContext | undefined>(undefined);
 const useGraphMenuContextSetup = (): GraphMenuContext => {
   const id = useId();
   const menuRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  return { menuRef, ariaControlsId: id };
+  usePopulateRef(rootRef, { id: "root" });
+
+  return { menuRef, ariaControlsId: id, isOpen, setIsOpen, rootRef };
 };
 
 const useGraphMenuContext = () => {
@@ -48,8 +57,11 @@ const GraphMenu = ({ children }: { children: ReactNode }) => {
 };
 
 GraphMenu.Toggle = function () {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { ariaControlsId, menuRef } = useGraphMenuContext();
+  const { ariaControlsId, menuRef, isOpen, setIsOpen, rootRef } =
+    useGraphMenuContext();
+  const animationOptions = useRef(
+    new KeyframeAnimationOptionsBuilder().build()
+  );
   const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
   const isAnimating = useRef<boolean>(false);
   const expressionPanelRef = useRef<HTMLDivElement>(null);
@@ -59,9 +71,12 @@ GraphMenu.Toggle = function () {
 
     expressionPanelRef.current!.animate(
       AnimateSlideX("17.625rem", "0"),
-      AnimationOptions
+      animationOptions.current
     );
-    menuRef.current!.animate(AnimateSlideX("0", "-100%"), AnimationOptions);
+    menuRef.current!.animate(
+      AnimateSlideX("0", "-100%"),
+      animationOptions.current
+    );
 
     setIsOpen(!isOpen);
     setTimeout(() => {
@@ -85,11 +100,11 @@ GraphMenu.Toggle = function () {
             isAnimating.current = true;
             expressionPanelRef.current!.animate(
               AnimateSlideX("0px", "17.625rem"),
-              AnimationOptions
+              animationOptions.current
             );
             menuRef.current!.animate(
               AnimateSlideX("-100%", "0"),
-              AnimationOptions
+              animationOptions.current
             );
 
             setIsOpen(!isOpen);
@@ -120,11 +135,11 @@ GraphMenu.Toggle = function () {
               isAnimating.current = true;
               expressionPanelRef.current!.animate(
                 AnimateSlideX("0px", "17.625rem"),
-                AnimationOptions
+                animationOptions.current
               );
               menuRef.current!.animate(
                 AnimateSlideX("-100%", "0"),
-                AnimationOptions
+                animationOptions.current
               );
 
               setIsOpen(!isOpen);
@@ -135,7 +150,7 @@ GraphMenu.Toggle = function () {
           >
             <Menu />
           </ButtonTarget>,
-          document.getElementById("root")!
+          rootRef.current || document.getElementById("root")!
         )}
       {isOpen && (
         <Scrim
@@ -155,18 +170,23 @@ GraphMenu.Toggle = function () {
 };
 
 GraphMenu.Menu = () => {
-  const { ariaControlsId, menuRef } = useGraphMenuContext();
-
-  useEffect(() => {}, []);
+  const { ariaControlsId, menuRef, isOpen, rootRef } = useGraphMenuContext();
+  const isAuthenticated = useAppSelector(
+    (state) => state.globalSlice.isAuthenticated
+  );
 
   return createPortal(
     <div
+      aria-hidden={!isOpen}
       ref={menuRef}
       id={ariaControlsId}
       className="graph-menu"
       role="menu"
-    ></div>,
-    document.getElementById("root")!
+    >
+      {!isAuthenticated && "hello"}
+      {isAuthenticated && "hello sir"}
+    </div>,
+    rootRef.current || document.getElementById("root")!
   );
 };
 

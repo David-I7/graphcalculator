@@ -1,39 +1,78 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import { Close } from "../../../../components/svgs";
 import useDraggable from "../../../../hooks/useDraggable";
-import ExpressionTextarea from "../appbar/ExpressionTextarea";
 import useNextId from "../../hooks/useNextId";
+import ResizableTextarea from "../../../../components/input/ResizableTextarea";
+import { Expression } from "../../../../lib/api/graph";
+import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
+import {
+  createExpression,
+  deleteExpression,
+  updateExpressionContent,
+  updateExpressionPos,
+} from "../../../../state/graph/graph";
+import { CSS_VARIABLES } from "../../../../data/css/variables";
+import {
+  AnimateScale,
+  KeyframeAnimationOptionsBuilder,
+} from "../../../../lib/animations";
 
-type ExpressionListData = {
-  type: "note" | "expression" | "table" | null;
-  payload: string;
-  id: number;
+type ExpressionListProps = {
+  data?: Expression[];
 };
 
 const ExpressionList = () => {
-  const [state, setState] = useState<ExpressionListData[]>([]);
+  const { expressions } = useAppSelector(
+    (state) => state.graphSlice.currentGraph
+  );
+  const dispatch = useAppDispatch();
+  const [nextId, setNextId] = useNextId(expressions);
   const [isDragging, setIsDragging] = useState<boolean>(false);
-  const draggedId = useRef<number>(0);
+  const draggedMetadata = useRef<{ id: number; startPos: number }>({
+    id: 0,
+    startPos: 0,
+  });
   const draggableContainerRef = useRef<HTMLOListElement>(null);
+  const animationOptions = useRef(
+    new KeyframeAnimationOptionsBuilder()
+      .add("duration", CSS_VARIABLES.animationSpeedFast)
+      .build()
+  );
 
   function setup(currentTarget: HTMLOListElement) {
-    draggedId.current = Number(currentTarget.getAttribute("expr-id"));
+    const id = Number(currentTarget.getAttribute("expr-id"));
 
-    if (!draggedId.current || isNaN(draggedId.current)) return;
+    if (!id || isNaN(id)) return;
+
+    let startPos: number | undefined;
+    for (let i = 0; i < expressions.length; ++i) {
+      if (expressions[i].id === id) {
+        startPos = i;
+        break;
+      }
+    }
+    if (!startPos) return;
+
+    draggedMetadata.current = { id, startPos };
     setIsDragging(true);
   }
 
   function cleanup(currentTarget: HTMLOListElement) {
-    const id = draggedId.current;
-    const strId = draggedId.current.toString();
+    const { id, startPos } = draggedMetadata.current;
+    const strId = id.toString();
 
-    let i: number = 0;
+    let endPos: number = 0;
     let found: boolean = false;
-    for (i; i < currentTarget.parentElement!.children.length; ++i) {
+    for (
+      endPos;
+      endPos < currentTarget.parentElement!.children.length;
+      ++endPos
+    ) {
       if (
-        currentTarget.parentElement!.children[i].getAttribute("expr-id") ===
-        strId
+        currentTarget.parentElement!.children[endPos].getAttribute(
+          "expr-id"
+        ) === strId
       ) {
         found = true;
         break;
@@ -41,19 +80,7 @@ const ExpressionList = () => {
     }
     if (!found) return;
 
-    let moved!: ExpressionListData;
-    const newState = state.filter((expr) => {
-      if (expr.id !== id) {
-        return true;
-      } else {
-        moved = expr;
-        return false;
-      }
-    });
-
-    newState.splice(i, 0, moved);
-
-    setState(newState);
+    dispatch(updateExpressionPos({ id, startPos, endPos }));
     setIsDragging(false);
   }
 
@@ -66,26 +93,18 @@ const ExpressionList = () => {
     cleanup,
   });
 
-  const [nextId, setNextId] = useNextId(state);
-
   useEffect(() => {
-    if (state.length === 0) {
-      setState([
-        {
-          type: "expression",
-          id: nextId,
-          payload: "",
-        },
-      ]);
+    if (expressions.length === 0) {
+      dispatch(createExpression({ id: nextId, type: "expr", loc: "end" }));
       setNextId(nextId + 1);
     }
-  }, [state]);
+  }, [expressions]);
 
   return (
     <div className="expression-list">
       <ol ref={draggableContainerRef}>
-        {state.length > 0 &&
-          state.map((item, index) => {
+        {expressions.length > 0 &&
+          expressions.map((item, index) => {
             return (
               <li
                 key={item.id}
@@ -95,7 +114,7 @@ const ExpressionList = () => {
                 <div draggable className="dynamic-island">
                   <div className="dynamic-island__index">{index + 1}</div>
                   <div className="dynamic-island__type">
-                    {item.type === "expression"
+                    {item.type === "expr"
                       ? "f(x)"
                       : item.type === "note"
                       ? '""'
@@ -103,16 +122,35 @@ const ExpressionList = () => {
                   </div>
                 </div>
 
-                <ExpressionTextarea
-                  autoFocus={index === state.length - 1 ? true : false}
-                  defaultValue={item.payload}
+                <ResizableTextarea
+                  container={{
+                    className: "font-medium",
+                    style: { color: CSS_VARIABLES.onSurfaceBodyHigh },
+                  }}
+                  textarea={{
+                    autoFocus: index === expressions.length - 1 ? true : false,
+                    value: item.content,
+                    onChange: (e) => {
+                      dispatch(
+                        updateExpressionContent({
+                          id: item.id,
+                          content: e.target.value,
+                        })
+                      );
+                    },
+                  }}
                 />
 
                 <ButtonTarget
-                  onClick={() => {
-                    setState(
-                      state.filter((filterdItem) => filterdItem.id !== item.id)
+                  onClick={(e) => {
+                    e.currentTarget.disabled = true;
+                    e.currentTarget.parentElement!.animate(
+                      AnimateScale(),
+                      animationOptions.current
                     );
+                    setTimeout(() => {
+                      dispatch(deleteExpression(item.id));
+                    }, CSS_VARIABLES.animationSpeedFast);
                   }}
                   title={`Delete ${item.type} ${index + 1}`}
                   className="button--hovered"
@@ -127,20 +165,17 @@ const ExpressionList = () => {
           <li
             role="button"
             onClick={() => {
-              setState([
-                ...state,
-                {
-                  type: "expression",
-                  payload: "",
-                  id: nextId,
-                },
-              ]);
+              dispatch(
+                createExpression({ id: nextId, type: "expr", loc: "end" })
+              );
               setNextId(nextId + 1);
             }}
             className="expression-list__li--faded"
           >
             <div className="dynamic-island">
-              <div className="dynamic-island__index">{state.length + 1}</div>
+              <div className="dynamic-island__index">
+                {expressions.length + 1}
+              </div>
             </div>
           </li>
         )}

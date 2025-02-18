@@ -11,7 +11,7 @@ import { throttle } from "../../../../helpers/performance";
 import {
   AnimateSlideY,
   AnimateSlideX,
-  AnimationOptions,
+  KeyframeAnimationOptionsBuilder,
 } from "../../../../lib/animations";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { useAppSelector } from "../../../../state/hooks";
@@ -26,6 +26,9 @@ const ExpressionPanelResizer = () => {
   const resizerRef = useRef<HTMLDivElement>(null);
   const graphContainerRef = useRef<HTMLDivElement>(null);
   const expressionPanelRef = useRef<HTMLDivElement>(null);
+  const animationOptions = useRef(
+    new KeyframeAnimationOptionsBuilder().build()
+  );
 
   usePopulateRef(graphContainerRef, { selector: ".graph-container" });
   usePopulateRef(expressionPanelRef, { selector: ".expression-panel" });
@@ -122,13 +125,13 @@ const ExpressionPanelResizer = () => {
               if (isMobile) {
                 expressionPanelRef.current!.animate(
                   AnimateSlideY(),
-                  AnimationOptions
+                  animationOptions.current
                 );
                 graphContainerRef.current!.style.height = "100%";
               } else {
                 expressionPanelRef.current!.animate(
                   AnimateSlideX(),
-                  AnimationOptions
+                  animationOptions.current
                 );
                 graphContainerRef.current!.style.width = "100%";
               }
@@ -150,13 +153,13 @@ const ExpressionPanelResizer = () => {
               if (isMobile) {
                 expressionPanelRef.current!.animate(
                   AnimateSlideY("100%", "0"),
-                  AnimationOptions
+                  animationOptions.current
                 );
                 graphContainerRef.current!.style.height = "50%";
               } else {
                 expressionPanelRef.current!.animate(
                   AnimateSlideX("-100%", "0"),
-                  AnimationOptions
+                  animationOptions.current
                 );
                 graphContainerRef.current!.style.width = `calc(100% - ${
                   expressionPanelRef.current!.offsetWidth
@@ -175,7 +178,7 @@ const ExpressionPanelResizer = () => {
           >
             {isMobile ? <ArrowUp /> : <ArrowRight />}
           </ButtonTarget>,
-          document.body
+          document.getElementById("root")!
         )}
     </>
   );
