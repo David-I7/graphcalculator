@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GraphData, ExpressionType, Expression } from "../../lib/api/graph";
+import { CSS_VARIABLES } from "../../data/css/variables";
 
 interface GraphState {
   currentGraph: GraphData;
@@ -14,11 +15,23 @@ function createNewGraph(): GraphData {
     modifiedAt: createdAt,
     thumb: "",
     name: "Untitled",
-    expressions: [createNewExpression("expr", 1)],
+    expressions: [createNewExpression("expression", 1)],
   };
 }
 
 function createNewExpression(type: ExpressionType, id: number): Expression {
+  if (type === "expression") {
+    return {
+      id,
+      type,
+      content: "",
+      color: `hsl(${Math.floor(Math.random() * 360)},${
+        CSS_VARIABLES.baseSaturation
+      },${CSS_VARIABLES.baseLightness})`,
+      hidden: false,
+    };
+  }
+
   return {
     id,
     type,
@@ -82,36 +95,21 @@ const graphSlice = createSlice({
         }
       }
     ),
-    deleteExpression: create.reducer((state, action: PayloadAction<number>) => {
-      for (let i = 0; i < state.currentGraph.expressions.length; ++i) {
-        if (state.currentGraph.expressions[i].id === action.payload) {
-          state.currentGraph.expressions.splice(i, 1);
-          break;
-        }
+    deleteExpression: create.reducer(
+      (state, action: PayloadAction<{ id: number; idx: number }>) => {
+        if (
+          state.currentGraph.expressions[action.payload.idx].id !==
+          action.payload.id
+        )
+          return;
+        state.currentGraph.expressions.splice(action.payload.idx, 1);
       }
-    }),
+    ),
     updateExpressionPos: create.reducer(
       (
         state,
         action: PayloadAction<{ id: number; startPos: number; endPos: number }>
       ) => {
-        if (
-          state.currentGraph.expressions[action.payload.startPos].id !==
-          action.payload.id
-        )
-          return;
-
-        const exprLength = state.currentGraph.expressions.length;
-        if (
-          !(
-            action.payload.startPos < exprLength &&
-            action.payload.startPos >= 0 &&
-            action.payload.endPos >= 0 &&
-            action.payload.endPos < exprLength
-          )
-        )
-          return;
-
         if (action.payload.startPos < action.payload.endPos) {
           let i = action.payload.startPos;
           while (i < action.payload.startPos) {
@@ -128,13 +126,32 @@ const graphSlice = createSlice({
       }
     ),
     updateExpressionContent: create.reducer(
-      (state, action: PayloadAction<{ content: string; id: number }>) => {
-        for (let i = 0; i < state.currentGraph.expressions.length; ++i) {
-          if (state.currentGraph.expressions[i].id === action.payload.id) {
-            state.currentGraph.expressions[i].content = action.payload.content;
-            break;
-          }
-        }
+      (
+        state,
+        action: PayloadAction<{ content: string; id: number; idx: number }>
+      ) => {
+        if (
+          state.currentGraph.expressions[action.payload.idx].id !==
+          action.payload.id
+        )
+          return;
+        state.currentGraph.expressions[action.payload.idx].content =
+          action.payload.content;
+      }
+    ),
+    toggleExpressionVisibility: create.reducer(
+      (
+        state,
+        action: PayloadAction<{ hidden: boolean; id: number; idx: number }>
+      ) => {
+        if (
+          state.currentGraph.expressions[action.payload.idx].id !==
+          action.payload.id
+        )
+          return;
+
+        state.currentGraph.expressions[action.payload.idx].hidden =
+          !state.currentGraph.expressions[action.payload.idx].hidden;
       }
     ),
   }),
@@ -146,6 +163,7 @@ export const {
   saveGraph,
   updateExpressionContent,
   updateExpressionPos,
+  toggleExpressionVisibility,
   createExpression,
   deleteExpression,
 } = graphSlice.actions;

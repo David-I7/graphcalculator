@@ -27,12 +27,12 @@
 }
 
 .textarea {
+  padding-block: 0.125rem;
   width: 100%;
   outline: none;
   resize: none;
-  // border: none;
   background-color: transparent;
-  height: 1lh;
+  height: calc(1lh + 0.25rem);
   overflow: hidden;
   display: block;
 }

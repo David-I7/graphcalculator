@@ -79,49 +79,6 @@
         color: base.$on-primary-container;
       }
     }
-
-    .dynamic-island {
-      transition: background-color 150ms ease-out, color 150ms ease-out;
-      min-width: 2.5rem;
-      align-self: stretch;
-      padding: 0.125rem;
-      background-color: base.$surface-container-low;
-
-      &:hover {
-        cursor: move;
-      }
-
-      &__index {
-        @extend .font-body-xs;
-        margin-bottom: 0.125rem;
-      }
-      &__type {
-      }
-    }
-  }
-
-  &__textarea-container {
-    @extend .font-body-xl;
-    padding-block: 0.5rem;
-    position: relative;
-    overflow: hidden;
-    flex: 1;
-    padding-right: 3.5rem;
-  }
-
-  &__textarea {
-    width: 100%;
-    outline: none;
-    resize: none;
-    // border: none;
-    background-color: transparent;
-    height: 1lh;
-    overflow: hidden;
-    display: block;
-  }
-
-  &__textarea-container span {
-    font-size: inherit;
   }
 
   &__li--faded {
@@ -165,6 +122,32 @@
   .dynamic-island {
     background-color: base.$primary-container;
     color: base.$on-primary-container;
+  }
+}
+
+.dynamic-island {
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+  min-width: 2.5rem;
+  align-self: stretch;
+  padding: 0.125rem;
+  background-color: base.$surface-container-low;
+
+  &:hover {
+    cursor: move;
+  }
+
+  &__index {
+    @extend .font-body-xs;
+    margin-bottom: 0.125rem;
+  }
+  &__type {
+    cursor: pointer;
+    @include base.gridCenter();
+  }
+  &__type__function {
+    @include base.inlineGridCenter();
+    border-radius: base.$br-round;
+    overflow: hidden;
   }
 }
 
