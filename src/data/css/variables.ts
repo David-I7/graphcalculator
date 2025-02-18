@@ -1,4 +1,8 @@
 export const CSS_VARIABLES = {
+  // COLOR BASE
+  baseLightness: "50%",
+  baseSaturation: "50%",
+
   // TEXT || BUTTONS || ICONS
   primary: "#3d5cc2",
   secondary: "#4d4d4d",

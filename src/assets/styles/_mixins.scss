@@ -13,8 +13,12 @@
   }
 }
 
-@mixin gridCenter {
+@mixin gridCenter() {
   display: grid;
+  place-content: center;
+}
+@mixin inlineGridCenter() {
+  display: inline-grid;
   place-content: center;
 }
 

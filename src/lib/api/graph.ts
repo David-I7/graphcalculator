@@ -5,9 +5,11 @@ export type GraphData = {
   createdAt: string;
   modifiedAt: string;
   expressions: {
-    type: "note" | "expr" | "table";
+    type: "note" | "expression" | "table";
     content: string;
     id: number;
+    color?: string;
+    hidden?: boolean;
   }[];
 };
 

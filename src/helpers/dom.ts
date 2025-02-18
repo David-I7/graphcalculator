@@ -11,3 +11,18 @@ export function calculateTextWidth(text: string, className: string): number {
   document.body.removeChild(div);
   return width;
 }
+
+export function getParentElement<T extends HTMLElement>(
+  element: HTMLElement,
+  cb: (parent: HTMLElement) => boolean
+): T | null {
+  let parent = element.parentElement;
+  while (parent) {
+    if (cb(parent)) {
+      return parent as T;
+    }
+    parent = parent.parentElement!;
+  }
+
+  return parent;
+}
