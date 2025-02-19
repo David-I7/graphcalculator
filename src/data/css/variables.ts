@@ -16,14 +16,14 @@ export const CSS_VARIABLES = {
   inverseOnPrimary: "",
 
   // CONTAINERS (lower emphasis than their non-container values)
-  primaryContainer: "#8195d7",
+  primaryContainer: "#99aff7",
   secondaryContainer: "#8b8b8b",
   onPrimaryContainer: "#0f0f0f",
   onSecondaryContainer: "#0f0f0f",
 
   // SURFACE (large areas, such as navbars)
   surface: "#f0f0f0",
-  surfaceContainerLow: "#d3d3d3",
+  surfaceContainerLow: "#ececec",
   surfaceContainer: "#bcbcbc",
   surfaceContainerHigh: "#aaaaaa",
   onSurfaceBodyLow: "#7a7a7a",

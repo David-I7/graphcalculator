@@ -27,3 +27,20 @@
   align-items: center;
   justify-content: space-between;
 }
+
+@mixin beforeAbsolute($selector: "", $content: "") {
+  #{$selector}::before {
+    content: $content;
+    position: absolute;
+    inset: 0;
+    @content;
+  }
+}
+
+@mixin cssTriangle($bottom, $right, $color) {
+  height: 0;
+  width: 0;
+  border-left: $bottom solid transparent;
+  border-right: $right solid transparent;
+  border-bottom: $right solid $color;
+}

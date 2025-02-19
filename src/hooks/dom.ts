@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-const useClickOutside = <T extends HTMLElement | null>(
+export const useClickOutside = <T extends HTMLElement | null>(
   enabled: boolean = true,
   element: React.RefObject<T>,
   onClose: () => void
@@ -13,6 +13,11 @@ const useClickOutside = <T extends HTMLElement | null>(
       "click",
       (e) => {
         const target = e.target as Node;
+        console.log(
+          element.current?.contains(e.target as Node),
+          element,
+          e.target
+        );
         if (!element.current!.contains(target)) {
           onClose();
           eventController.abort();
@@ -27,4 +32,17 @@ const useClickOutside = <T extends HTMLElement | null>(
   }, [enabled, element, onClose]);
 };
 
-export default useClickOutside;
+export const useSetDynamicProp = <T extends HTMLElement>(
+  ref: React.RefObject<T | null> | (() => T),
+  key: string,
+  value: string | null
+) => {
+  useEffect(() => {
+    if (typeof ref === "function") {
+      const element = ref();
+      element.style.setProperty(key, value);
+    } else {
+      ref.current!.style.setProperty(key, value);
+    }
+  }, [ref]);
+};

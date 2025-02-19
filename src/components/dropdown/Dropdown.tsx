@@ -1,4 +1,5 @@
 import { CSS_VARIABLES } from "../../data/css/variables";
+import { useClickOutside } from "../../hooks/dom";
 import { ChevronDown } from "../svgs";
 import styles from "./dropdown.module.scss";
 import React, {
@@ -7,6 +8,7 @@ import React, {
   SetStateAction,
   useContext,
   useId,
+  useRef,
   useState,
 } from "react";
 
@@ -39,70 +41,119 @@ type DropdownProps = {
   className?: string;
 };
 
-export default function Dropdown({
-  children,
-  style,
-  className,
-}: DropdownProps) {
+type ButtonProps = Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "aria-controls" | "aria-expanded"
+> & { children: ReactNode; ref?: React.ForwardedRef<HTMLButtonElement> };
+
+const Dropdown = ({ children, style, className }: DropdownProps) => {
   const mergedClassname = React.useMemo(() => {
     return className ? `${className} ${styles.dropdown}` : styles.dropdown;
   }, [className]);
 
   return (
     <DropdownContext.Provider value={useInitDropdownContext()}>
-      <div style={style} className={mergedClassname}>
+      <div className={mergedClassname} style={style}>
         {children}
       </div>
     </DropdownContext.Provider>
   );
-}
+};
+
+export default Dropdown;
 
 Dropdown.Label = ({ label }: { label: string }) => {
   return label;
 };
 
-Dropdown.Button = () => {
+Dropdown.Button = ({ children, ref, ...rest }: ButtonProps) => {
   const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
+  const internalRef = useRef<HTMLButtonElement>(null);
+  const mergedRef = ref || internalRef;
+
+  useClickOutside(isOpen, mergedRef as React.RefObject<HTMLButtonElement>, () =>
+    setIsOpen(!isOpen)
+  );
 
   return (
     <button
-      onClick={(e) => setIsOpen(!isOpen)}
+      ref={mergedRef}
+      {...rest}
+      onClick={(e) => {
+        setIsOpen(!isOpen);
+      }}
       aria-controls={ariaControlsID}
       aria-expanded={isOpen}
     >
-      <ChevronDown
-        style={
-          isOpen
-            ? {
-                transform: "rotate(-180deg)",
-                transition: "transform 150ms ease-out",
-              }
-            : {
-                transform: "",
-                transition: "transform 150ms ease-out",
-              }
-        }
-        stroke={CSS_VARIABLES.onSurfaceHeading}
-        width={16}
-        height={16}
-      />
+      {children}
     </button>
   );
 };
 
-interface MenuData {
-  label: string | number;
-}
+Dropdown.Chevron = () => {
+  const { isOpen } = useDropdownContext();
 
-Dropdown.Menu = ({ data }: { data: MenuData[] }) => {
   return (
-    <ul>
-      {data.map((item) => (
-        <Dropdown.MenuItem item={item} />
-      ))}
+    <ChevronDown
+      style={
+        isOpen
+          ? {
+              transform: "rotate(-180deg)",
+              transition: "transform 150ms ease-out",
+            }
+          : {
+              transform: "",
+              transition: "transform 150ms ease-out",
+            }
+      }
+      stroke={CSS_VARIABLES.onSurfaceHeading}
+      width={16}
+      height={16}
+    />
+  );
+};
+
+Dropdown.Menu = <T,>({
+  data,
+  ListItem,
+}: {
+  data: T[];
+  ListItem: ({ data }: { data: T }) => ReactNode;
+}) => {
+  const { isOpen } = useDropdownContext();
+
+  if (!isOpen) return;
+
+  return (
+    <ul className={styles.dropdownMenu}>
+      {data.map((item, i) => {
+        return <ListItem data={item} key={i} />;
+      })}
     </ul>
   );
 };
-Dropdown.MenuItem = ({ item }: { item: MenuData }) => {
-  return <li>{item.label}</li>;
+Dropdown.MenuItem = () => {
+  return <li>{}</li>;
+};
+
+// Convinience component over styling a dropdown as a button
+
+export const DropdownButton = ({
+  children,
+  style,
+  className,
+}: DropdownProps) => {
+  const mergedClassname = React.useMemo(() => {
+    return className
+      ? `${className} ${styles.dropdownButton}`
+      : styles.dropdownButton;
+  }, [className]);
+  className = mergedClassname;
+  return (
+    <DropdownContext.Provider value={useInitDropdownContext()}>
+      <div className={mergedClassname} style={style}>
+        {children}
+      </div>
+    </DropdownContext.Provider>
+  );
 };
