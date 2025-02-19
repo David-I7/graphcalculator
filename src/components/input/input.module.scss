@@ -23,7 +23,6 @@
   position: relative;
   overflow: hidden;
   flex: 1;
-  padding-right: 3.5rem;
 }
 
 .textarea {
@@ -31,6 +30,7 @@
   width: 100%;
   outline: none;
   resize: none;
+  border: none;
   background-color: transparent;
   height: calc(1lh + 0.25rem);
   overflow: hidden;

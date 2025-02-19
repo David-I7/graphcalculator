@@ -1,8 +1,10 @@
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
-import { Edit, Plus } from "../../../../components/svgs";
+import { Edit } from "../../../../components/svgs";
 import ExpressionPanelResizer from "./ExpressionPanelResizer";
 import GraphMenu from "../menu/GraphMenu";
 import { ResizableInput } from "../../../../components/input/ResizableInput";
+import ExpressionPanelNewItem from "./ExpressionPanelNewItem";
+import { CSS_VARIABLES } from "../../../../data/css/variables";
 
 const defaultValue = "Untitled";
 
@@ -16,15 +18,15 @@ const ExpressionTopBar = () => {
         </GraphMenu>
         {/* <h1>{defaultValue}</h1> */}
         <ResizableInput
-          inputProps={{ className: "button--hovered bg-surface-container-low" }}
+          inputProps={{
+            className: "button--hovered bg-surface-container-low",
+          }}
           defaultValue={defaultValue}
           initialValue={defaultValue}
         />
       </div>
       <div className="expression-panel-top-bar__right">
-        <ButtonTarget className="button--hovered bg-surface-container-low">
-          <Plus />
-        </ButtonTarget>
+        <ExpressionPanelNewItem />
         <ButtonTarget className="button--hovered bg-surface-container-low">
           <Edit />
         </ButtonTarget>

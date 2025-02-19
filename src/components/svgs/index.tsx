@@ -1,8 +1,8 @@
 import React from "react";
 
-type Props = React.SVGAttributes<SVGSVGElement>;
+export type SVGProps = React.SVGAttributes<SVGSVGElement>;
 
-export const Plus = (props: Props) => {
+export const Plus = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -16,7 +16,7 @@ export const Plus = (props: Props) => {
     </svg>
   );
 };
-export const Minus = (props: Props) => {
+export const Minus = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -30,7 +30,7 @@ export const Minus = (props: Props) => {
     </svg>
   );
 };
-export const Edit = (props: Props) => {
+export const Edit = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -44,7 +44,7 @@ export const Edit = (props: Props) => {
     </svg>
   );
 };
-export const ArrowLeft = (props: Props) => {
+export const ArrowLeft = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -58,7 +58,7 @@ export const ArrowLeft = (props: Props) => {
     </svg>
   );
 };
-export const ArrowRight = (props: Props) => {
+export const ArrowRight = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -72,7 +72,7 @@ export const ArrowRight = (props: Props) => {
     </svg>
   );
 };
-export const ArrowUp = (props: Props) => {
+export const ArrowUp = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -86,7 +86,7 @@ export const ArrowUp = (props: Props) => {
     </svg>
   );
 };
-export const ArrowDown = (props: Props) => {
+export const ArrowDown = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -100,7 +100,7 @@ export const ArrowDown = (props: Props) => {
     </svg>
   );
 };
-export const ChevronDown = (props: Props) => {
+export const ChevronDown = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -120,7 +120,7 @@ export const ChevronDown = (props: Props) => {
     </svg>
   );
 };
-export const ChevronUp = (props: Props) => {
+export const ChevronUp = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -140,7 +140,7 @@ export const ChevronUp = (props: Props) => {
     </svg>
   );
 };
-export const Close = (props: Props) => {
+export const Close = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -160,7 +160,7 @@ export const Close = (props: Props) => {
     </svg>
   );
 };
-export const Menu = (props: Props) => {
+export const Menu = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -174,7 +174,7 @@ export const Menu = (props: Props) => {
     </svg>
   );
 };
-export const Function = (props: Props) => {
+export const Function = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -193,7 +193,21 @@ export const Function = (props: Props) => {
     </svg>
   );
 };
-export const Quotes = (props: Props) => {
+export const FunctionLiteral = (props: SVGProps) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M11.9687 18.6498C12.2743 18.6498 12.4903 18.4788 12.4903 18.1732C12.4903 18.0382 12.4543 17.9662 12.3553 17.7772C11.2581 16.0779 10.6376 14.1266 10.6376 12.0133C10.6376 9.97206 11.2221 7.93077 12.3553 6.22248C12.4539 6.03391 12.4903 5.96191 12.4903 5.82691C12.4903 5.53891 12.2743 5.35034 11.9687 5.35034C11.6717 5.35034 11.4287 5.48491 11.1416 5.88091C9.79243 7.5982 9.10929 9.73806 9.10929 12.0043C9.10929 14.2706 9.76543 16.3475 11.1411 18.1192C11.4291 18.5148 11.6721 18.6498 11.9687 18.6498ZM21.1491 18.6498C21.4457 18.6498 21.6797 18.5148 21.9677 18.1192C23.3434 16.3475 24 14.2706 24 12.0043C24 9.73848 23.3254 7.59863 21.9677 5.88091C21.6801 5.48491 21.4461 5.35034 21.1496 5.35034C20.844 5.35034 20.628 5.53891 20.628 5.82691C20.628 5.96191 20.655 6.03348 20.754 6.22248C21.8961 7.93077 22.4803 9.97248 22.4803 12.0133C22.4803 14.1262 21.8511 16.0779 20.763 17.7776C20.655 17.9662 20.628 18.0382 20.628 18.1732C20.628 18.4608 20.8436 18.6498 21.1491 18.6498ZM1.21414 18.6318C2.97643 18.6318 3.79457 17.8762 4.21714 15.8529L5.24229 10.9342H6.87C7.39157 10.9342 7.72414 10.6556 7.72414 10.2056C7.72414 9.81948 7.47257 9.57648 7.059 9.57648H5.53929L5.79086 8.35377C6.02486 7.21163 6.38443 6.74406 7.38257 6.74406C7.52657 6.74406 7.67014 6.73506 7.76914 6.72606C8.21914 6.68106 8.41629 6.47406 8.41629 6.08748C8.41629 5.58391 7.99414 5.35891 7.13057 5.35891C5.41329 5.35891 4.53214 6.21348 4.13657 8.13777L3.83057 9.57648H2.71543C2.19429 9.57648 1.85229 9.85506 1.85229 10.3051C1.85229 10.6916 2.11329 10.9342 2.52686 10.9342H3.54257L2.55429 15.6373C2.30143 16.8151 1.93286 17.2466 0.971143 17.2466C0.845143 17.2466 0.728571 17.2556 0.638571 17.2646C0.225 17.3186 0 17.5432 0 17.9212C0 18.4068 0.413571 18.6318 1.21414 18.6318ZM13.848 16.2665C14.1446 16.2665 14.3426 16.1679 14.5671 15.8439L16.5364 13.0385H16.5724L18.5867 15.8889C18.8117 16.2039 19.0273 16.2665 19.2433 16.2665C19.6749 16.2665 19.9629 15.9609 19.9629 15.5923C19.9629 15.4213 19.9089 15.2598 19.7914 15.1068L17.49 11.9773L19.7914 8.89334C19.9089 8.74034 19.9629 8.57834 19.9629 8.38977C19.9629 8.00277 19.6389 7.7332 19.2793 7.7332C18.9557 7.7332 18.7667 7.8952 18.5957 8.15577L16.6984 10.9342H16.6534L14.7471 8.14677C14.5761 7.88577 14.3606 7.7332 14.0186 7.7332C13.605 7.7332 13.29 8.06577 13.29 8.42534C13.29 8.68634 13.3624 8.84834 13.4884 9.00091L15.6733 11.9323L13.3534 15.1423C13.2184 15.3138 13.1914 15.4663 13.1914 15.6463C13.1914 15.9969 13.4884 16.2665 13.848 16.2665Z" />
+    </svg>
+  );
+};
+export const Quotes = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -207,7 +221,7 @@ export const Quotes = (props: Props) => {
     </svg>
   );
 };
-export const Table = (props: Props) => {
+export const Table = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -221,7 +235,7 @@ export const Table = (props: Props) => {
     </svg>
   );
 };
-export const Warning = (props: Props) => {
+export const Warning = (props: SVGProps) => {
   return (
     <svg
       width="24"
@@ -235,7 +249,7 @@ export const Warning = (props: Props) => {
     </svg>
   );
 };
-export const Hidden = (props: Props) => {
+export const Hidden = (props: SVGProps) => {
   return (
     <svg
       width="24"

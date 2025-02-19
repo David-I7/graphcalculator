@@ -7,6 +7,7 @@ const Globalstate = () => {
   return (
     <>
       <MobileState />
+      {/* <TestState /> */}
     </>
   );
 };
@@ -18,15 +19,22 @@ function TestState() {
   const [mutable, setMutable] = useState<number[]>([1, 2, 3]);
 
   // react batches these because they are synchronous
-  if (primitive === 0) {
-    setPrimitive(1);
-  } else if (primitive === 1) {
-    setPrimitive(2);
-  }
+  // if (primitive === 0) {
+  //   setPrimitive(1);
+  // } else if (primitive === 1) {
+  //   setPrimitive(2);
+  // }
   useEffect(() => {
     console.log("Effect with no dep running");
-    console.log(primitive);
   });
+
+  useEffect(() => {
+    if (primitive === 0) {
+      setPrimitive(1);
+    } else if (primitive === 1) {
+      setPrimitive(2);
+    }
+  }, [primitive]);
 
   return (
     <div

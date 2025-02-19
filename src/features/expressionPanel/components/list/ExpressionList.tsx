@@ -119,7 +119,11 @@ const ExpressionList = () => {
                 <ResizableTextarea
                   container={{
                     className: "font-medium",
-                    style: { color: CSS_VARIABLES.onSurfaceBodyHigh },
+                    style: {
+                      color: CSS_VARIABLES.onSurfaceBodyHigh,
+                      paddingRight: "3.5rem",
+                      paddingLeft: "1rem",
+                    },
                   }}
                   textarea={{
                     autoFocus: index === expressions.length - 1 ? true : false,

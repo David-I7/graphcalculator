@@ -26,7 +26,14 @@ const ResizableTextarea = ({ textarea, container }: ResizableTextareaProps) => {
   }, [textarea?.className]);
 
   return (
-    <div style={container?.style} className={mergedClassnameTextAreaContainer}>
+    <div
+      onClick={(e) => {
+        if (e.currentTarget === e.target)
+          (e.currentTarget.children[0] as HTMLTextAreaElement).focus();
+      }}
+      style={container?.style}
+      className={mergedClassnameTextAreaContainer}
+    >
       <textarea
         {...textarea}
         onInput={(e) => {

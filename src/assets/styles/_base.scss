@@ -45,6 +45,9 @@ image {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-width: 0.5rem;
+
+  //   JS VARIABLES
+  //   --dynamic-color: white;
 }
 
 .font-body-xs {
@@ -129,8 +132,14 @@ main {
     filter: brightness(85%);
   }
 }
+.button--focused {
+  transition: filter var.$an-sp-fast ease-out;
+  &:focus {
+    filter: brightness(85%);
+  }
+}
 
-.fade-out {
+.fade-out--bottom {
   background: linear-gradient(
     to bottom,
     rgba(var.$surface, 0) 0%,

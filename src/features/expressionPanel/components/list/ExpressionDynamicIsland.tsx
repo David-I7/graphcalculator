@@ -15,41 +15,14 @@ type ExpressionDynamicIslandProps = {
   dispatch: ReturnType<typeof useAppDispatch>;
 };
 
-const ExpressionDynamicIsland = ({
-  index,
-  item,
-  dispatch,
-}: ExpressionDynamicIslandProps) => {
+const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
   return (
     <div draggable className="dynamic-island">
-      <div className="dynamic-island__index">{index}</div>
+      <div className="dynamic-island__index">{props.index}</div>
       <div className="dynamic-island__type">
-        {item.type === "expression" ? (
-          <button
-            onClick={(e) => {
-              dispatch(
-                toggleExpressionVisibility({
-                  hidden: !item.hidden,
-                  id: item.id,
-                  idx: index - 1,
-                })
-              );
-            }}
-            aria-label={`${item.hidden ? "Show" : "Hide"} ${
-              item.type
-            } ${index}`}
-            style={{
-              backgroundColor: item.hidden ? "transparent" : item.color,
-            }}
-            className="dynamic-island__type__function"
-          >
-            {item.hidden ? (
-              <Hidden style={{ cursor: "pointer" }} />
-            ) : (
-              <Function style={{ cursor: "pointer" }} />
-            )}
-          </button>
-        ) : item.type === "note" ? (
+        {props.item.type === "expression" ? (
+          <ExpressionDynamicIsland.Function {...props} />
+        ) : props.item.type === "note" ? (
           <Quotes />
         ) : (
           <Table />
@@ -60,3 +33,34 @@ const ExpressionDynamicIsland = ({
 };
 
 export default ExpressionDynamicIsland;
+
+ExpressionDynamicIsland.Function = function ({
+  dispatch,
+  index,
+  item,
+}: ExpressionDynamicIslandProps) {
+  return (
+    <button
+      onClick={(e) => {
+        dispatch(
+          toggleExpressionVisibility({
+            hidden: !item.hidden,
+            id: item.id,
+            idx: index - 1,
+          })
+        );
+      }}
+      aria-label={`${item.hidden ? "Show" : "Hide"} ${item.type} ${index}`}
+      style={{
+        backgroundColor: item.hidden ? "transparent" : item.color,
+      }}
+      className="dynamic-island__type__function"
+    >
+      {item.hidden ? (
+        <Hidden style={{ cursor: "pointer" }} />
+      ) : (
+        <Function style={{ cursor: "pointer" }} />
+      )}
+    </button>
+  );
+};
