@@ -19,5 +19,5 @@ export const GraphFunctionExpression = React.memo(
 
     return null;
   },
-  (prev, cur) => prev.expr.id === prev.expr.id
+  (prev, cur) => prev.expr.id === cur.expr.id
 );

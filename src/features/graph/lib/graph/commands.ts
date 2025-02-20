@@ -17,6 +17,7 @@ export class CommandController implements GraphCommandController {
     for (let i = 0; i < this.commands.length; ++i) {
       if (this.commands[i] === command) {
         this.commands.splice(i, 1);
+        break;
       }
     }
   }
