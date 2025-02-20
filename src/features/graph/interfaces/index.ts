@@ -3,6 +3,8 @@ import { Graph } from "../lib/graph/graph";
 
 export type ScaleEventData = {
   zoomDirection: "IN" | "OUT";
+  offsetX: number;
+  offsetY: number;
 };
 
 export type EventDataMap = {
@@ -16,6 +18,7 @@ export interface BusEvent {
   register(cb: Function): void;
   deregister(cb: Function): void;
   execute<T>(data: T): void;
+  destroy(): void;
 }
 
 export interface MessageBus {

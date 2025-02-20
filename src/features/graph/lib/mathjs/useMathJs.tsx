@@ -101,7 +101,7 @@ export class DrawFunctionCommand implements GraphCommand {
             this.graph.scales.scaledStep
           );
         if (isNaN(curY)) {
-          console.log(i, "isNan");
+          // console.log(i, "isNan");
           continue;
         }
 
