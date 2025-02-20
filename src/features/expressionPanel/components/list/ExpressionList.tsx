@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import { Close } from "../../../../components/svgs";
 import useDraggable from "../../../../hooks/useDraggable";
-import useNextId from "../../hooks/useNextId";
 import ResizableTextarea from "../../../../components/input/ResizableTextarea";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import {
@@ -17,13 +16,14 @@ import {
   KeyframeAnimationOptionsBuilder,
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
+import { incrementNextId } from "../../../../state/graph/nextId";
 
 const ExpressionList = () => {
   const { expressions } = useAppSelector(
     (state) => state.graphSlice.currentGraph
   );
+  const nextId = useAppSelector((state) => state.nextIdSlice.nextId);
   const dispatch = useAppDispatch();
-  const [nextId, setNextId] = useNextId(expressions);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const draggedMetadata = useRef<{ id: number; startPos: number }>({
     id: 0,
@@ -94,7 +94,7 @@ const ExpressionList = () => {
       dispatch(
         createExpression({ id: nextId, type: "expression", loc: "end" })
       );
-      setNextId(nextId + 1);
+      dispatch(incrementNextId());
     }
   }, [expressions]);
 
@@ -167,7 +167,7 @@ const ExpressionList = () => {
               dispatch(
                 createExpression({ id: nextId, type: "expression", loc: "end" })
               );
-              setNextId(nextId + 1);
+              dispatch(incrementNextId());
             }}
             className="expression-list__li--faded"
           >

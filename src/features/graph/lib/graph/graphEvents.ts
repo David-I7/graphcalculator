@@ -1,4 +1,4 @@
-import { BusEvent } from "../interfaces";
+import { BusEvent } from "../../interfaces";
 
 export class ScaleEvent implements BusEvent {
   public callbacks: Function[] = [];

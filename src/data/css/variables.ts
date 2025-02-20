@@ -10,8 +10,9 @@ export const CSS_VARIABLES = {
   onSecondary: "#f0f0f0",
 
   // Inverse (contrasting effects)
-  inverseSurface: "",
-  inverseOnSurface: "",
+  inverseSurface: "black",
+  inverseOnSurfaceBody: "#AAAAAA",
+  inverseOnSurfaceHeading: "#F0F0F0",
   inversePrimary: "",
   inverseOnPrimary: "",
 
@@ -22,7 +23,7 @@ export const CSS_VARIABLES = {
   onSecondaryContainer: "#0f0f0f",
 
   // SURFACE (large areas, such as navbars)
-  surface: "#f0f0f0",
+  surface: "white",
   surfaceContainerLow: "#ececec",
   surfaceContainer: "#bcbcbc",
   surfaceContainerHigh: "#aaaaaa",

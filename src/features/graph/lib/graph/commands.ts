@@ -1,5 +1,5 @@
-import { CSS_VARIABLES } from "../../../data/css/variables";
-import { GraphCommand, GraphCommandController } from "../interfaces";
+import { CSS_VARIABLES } from "../../../../data/css/variables";
+import { GraphCommand, GraphCommandController } from "../../interfaces";
 import { Graph } from "./graph";
 
 type DrawData = {
@@ -8,6 +8,38 @@ type DrawData = {
   majorGridLine: number;
   scientificNotation: string[];
 };
+
+export class CommandController implements GraphCommandController {
+  public commands: GraphCommand[] = [];
+  constructor() {}
+
+  remove(command: GraphCommand): void {
+    for (let i = 0; i < this.commands.length; ++i) {
+      if (this.commands[i] === command) {
+        this.commands.splice(i, 1);
+      }
+    }
+  }
+
+  add(command: GraphCommand): void {
+    this.commands.push(command);
+  }
+
+  render() {
+    this.commands.forEach((command) => {
+      command.draw();
+    });
+  }
+
+  clear(graph: Graph): void {
+    graph.ctx.clearRect(
+      -graph.canvasCenterX - graph.offsetX,
+      -graph.canvasCenterY - graph.offsetY,
+      graph.canvas.width,
+      graph.canvas.height
+    );
+  }
+}
 
 export class DrawGridCommand implements GraphCommand {
   protected labelsPadding: number = 14;
@@ -591,37 +623,5 @@ export class DrawAxisCommand implements GraphCommand {
     }
 
     this.graph.ctx.restore();
-  }
-}
-
-export class CommandController implements GraphCommandController {
-  public commands: GraphCommand[] = [];
-  constructor() {}
-
-  remove(command: GraphCommand): void {
-    for (let i = 0; i < this.commands.length; ++i) {
-      if (this.commands[i] === command) {
-        this.commands.splice(i, 1);
-      }
-    }
-  }
-
-  add(command: GraphCommand): void {
-    this.commands.push(command);
-  }
-
-  render() {
-    this.commands.forEach((command) => {
-      command.draw();
-    });
-  }
-
-  clear(graph: Graph): void {
-    graph.ctx.clearRect(
-      -graph.canvasCenterX - graph.offsetX,
-      -graph.canvasCenterY - graph.offsetY,
-      graph.canvas.width,
-      graph.canvas.height
-    );
   }
 }

@@ -183,8 +183,25 @@ GraphMenu.Menu = () => {
       className="graph-menu"
       role="menu"
     >
-      {!isAuthenticated && "hello"}
-      {isAuthenticated && "hello sir"}
+      {!isAuthenticated && (
+        <header>Login to save your beautiful graphs!</header>
+      )}
+      {isAuthenticated && <header>Logout controls; Search controls</header>}
+
+      <button>new blank graph</button>
+      {isAuthenticated && (
+        <>
+          <section>
+            <h2>Current Graph</h2>
+          </section>
+          <section>
+            <h2>Saved Graphs</h2>
+          </section>
+        </>
+      )}
+      <section>
+        <h2>Examples</h2>
+      </section>
     </div>,
     rootRef.current || document.getElementById("root")!
   );

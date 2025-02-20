@@ -13,11 +13,6 @@ export const useClickOutside = <T extends HTMLElement | null>(
       "click",
       (e) => {
         const target = e.target as Node;
-        console.log(
-          element.current?.contains(e.target as Node),
-          element,
-          e.target
-        );
         if (!element.current!.contains(target)) {
           onClose();
           eventController.abort();

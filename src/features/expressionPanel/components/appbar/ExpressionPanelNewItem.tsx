@@ -6,13 +6,13 @@ import {
   SVGProps,
   Table,
 } from "../../../../components/svgs";
-import { useAppDispatch } from "../../../../state/hooks";
+import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import Dropdown, {
   DropdownButton,
 } from "../../../../components/dropdown/Dropdown";
 import { ExpressionType } from "../../../../lib/api/graph";
-import { CSS_VARIABLES } from "../../../../data/css/variables";
-import { useSetDynamicProp } from "../../../../hooks/dom";
+import { createExpression } from "../../../../state/graph/graph";
+import { incrementNextId } from "../../../../state/graph/nextId";
 
 type NewItemPair = [ExpressionType, (props: SVGProps) => ReactNode];
 
@@ -25,18 +25,24 @@ const NewItemDropdownMap = new Map<NewItemPair[0], NewItemPair[1]>([
 const ExpressionPanelNewItem = () => {
   const dispatch = useAppDispatch();
   const data = useMemo(() => [...NewItemDropdownMap.entries()], []);
-  // const ref = useRef<HTMLButtonElement>(null);
-  // useSetDynamicProp(ref, "--dynamic-color", CSS_VARIABLES.surfaceContainer);
+  const nextId = useAppSelector((state) => state.nextIdSlice.nextId);
   return (
     <>
-      <DropdownButton
-      // ref={ref}
-      >
+      <DropdownButton>
         <Dropdown.Button className="button--hovered bg-surface-container-low">
           <Plus />
         </Dropdown.Button>
 
-        <Dropdown.Menu data={data} ListItem={DropdowmMenuItem} />
+        <Dropdown.Menu
+          onClick={(arg) => {
+            dispatch(
+              createExpression({ id: nextId, type: arg[0], loc: "start" })
+            );
+            dispatch(incrementNextId());
+          }}
+          data={data}
+          ListItem={DropdowmMenuItem}
+        />
       </DropdownButton>
     </>
   );
@@ -44,11 +50,23 @@ const ExpressionPanelNewItem = () => {
 
 export default ExpressionPanelNewItem;
 
-function DropdowmMenuItem({ data: [label, SVG] }: { data: NewItemPair }) {
+function DropdowmMenuItem({
+  data: [label, SVG],
+  handleClick,
+}: {
+  data: NewItemPair;
+  handleClick: (arg: NewItemPair) => void;
+}) {
   return (
     <li className="new-graph-item">
-      <SVG />
-      {label}
+      <button
+        onClick={() => {
+          handleClick([label, SVG]);
+        }}
+      >
+        <SVG />
+        {label}
+      </button>
     </li>
   );
 }

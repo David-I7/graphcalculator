@@ -1,7 +1,9 @@
-import { DrawAxisCommand, DrawGridCommand } from "./commands";
-import { Graph } from "./graph";
+import { DrawAxisCommand, DrawGridCommand } from "./graph/commands";
+import { Graph } from "./graph/graph";
 
 // NOTES
+
+let GRAPH!: Graph;
 
 window.addEventListener("load", () => {
   const canvas = document.getElementById(
@@ -12,7 +14,10 @@ window.addEventListener("load", () => {
   setup(canvas, ctx);
 });
 
-function setup(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+export function setup(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D
+) {
   const graph = new Graph(canvas, ctx);
 
   graph.addCommand(new DrawGridCommand(graph));
@@ -24,4 +29,8 @@ function setup(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     requestAnimationFrame(animate);
   }
   animate();
+
+  GRAPH = graph;
 }
+
+export default GRAPH;

@@ -1,12 +1,12 @@
-import { throttle } from "../../../helpers/performance";
-import { eventMap } from "../data/events";
+import { throttle } from "../../../../helpers/performance";
+import { eventMap } from "../../data/events";
 import {
   BusEvent,
   EventDataMap,
   GraphCommand,
   GraphCommandController,
   MessageBus,
-} from "../interfaces";
+} from "../../interfaces";
 import { CommandController } from "./commands";
 import { Scales } from "./scales";
 

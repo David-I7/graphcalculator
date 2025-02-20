@@ -8,5 +8,11 @@
   z-index: 20;
   transform: translateX(-100%);
   width: 17.625rem;
-  background-color: black;
+  background-color: base.$inverse-surface;
+  color: base.$inverse-on-surface-body;
+
+  h2 {
+    @extend .font-body-xl;
+    color: base.$inverse-on-surface-heading;
+  }
 }
