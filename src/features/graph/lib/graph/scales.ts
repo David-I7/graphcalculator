@@ -12,6 +12,7 @@ export class Scales {
   private scalesIndex: number;
   private scalesArray: string[] = [];
   constructor(private graph: Graph, private step: number, private n: number) {
+    this.step = this.step * this.graph.dpr;
     this._scaledStep = this.step;
     this.zoom = 1;
     this.scalesIndex = this.n * 3;

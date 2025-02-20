@@ -117,8 +117,8 @@ export class GraphSettings {
       if (this.graph.destroyed) return;
       if (!this.isDragging) return;
 
-      const dx = Math.round(e.clientX - lastMouseX);
-      const dy = Math.round(e.clientY - lastMouseY);
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
 

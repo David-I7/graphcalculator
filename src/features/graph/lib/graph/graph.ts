@@ -23,9 +23,12 @@ export class Graph implements MessageBus {
   ) {
     this.commandController = new CommandController();
     this.settings = new GraphSettings(this);
-    this.scales = new Scales(this, 30, 15);
+    this.scales = new Scales(this, 25, 15);
   }
 
+  get dpr() {
+    return this.settings.dpr;
+  }
   get offsetX() {
     return this.settings.offsetX;
   }

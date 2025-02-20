@@ -49,7 +49,7 @@ const Graph = () => {
     <GraphContextProvider>
       <div className="graph-container">
         <canvas id="graph-calculator"></canvas>
-        {/* <GraphFunctions /> */}
+        <GraphFunctions />
       </div>
     </GraphContextProvider>
   );
