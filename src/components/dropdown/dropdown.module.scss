@@ -25,7 +25,7 @@
     }
   }
 
-  button {
+  & > button {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -39,7 +39,7 @@
 .dropdownButton {
   @extend .dropdown;
 
-  button {
+  & > button {
     padding-inline: 0.5rem;
     height: 2.5rem;
     border-radius: base.$br-200;

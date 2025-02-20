@@ -1,4 +1,4 @@
-import { ScaleEventData } from "../interfaces";
+import { ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
 
 export class Scales {
@@ -11,7 +11,7 @@ export class Scales {
   protected zoom: number;
   private scalesIndex: number;
   private scalesArray: string[] = [];
-  constructor(public graph: Graph, readonly step: number, readonly n: number) {
+  constructor(private graph: Graph, private step: number, private n: number) {
     this._scaledStep = this.step;
     this.zoom = 1;
     this.scalesIndex = this.n * 3;

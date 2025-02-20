@@ -7,10 +7,11 @@ $on-primary: #f0f0f0;
 $on-secondary: #f0f0f0;
 
 // inverse (contrasting effects)
-$inverse-surface: "";
-$inverse-on-surface: "";
-$inverse-priamry: "";
-$inverse-on-priamry: "";
+$inverse-surface: black;
+$inverse-on-surface-body: #aaaaaa;
+$inverse-on-surface-heading: #f0f0f0;
+$inverse-primary: "";
+$inverse-on-primary: "";
 
 // CONTAINERS (lower emphasis than their non-container values)
 $primary-container: #99aff7;

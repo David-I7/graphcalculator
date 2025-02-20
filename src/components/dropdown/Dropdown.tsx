@@ -6,6 +6,7 @@ import React, {
   createContext,
   ReactNode,
   SetStateAction,
+  useCallback,
   useContext,
   useId,
   useRef,
@@ -116,18 +117,34 @@ Dropdown.Chevron = () => {
 Dropdown.Menu = <T,>({
   data,
   ListItem,
+  onClick,
 }: {
   data: T[];
-  ListItem: ({ data }: { data: T }) => ReactNode;
+  ListItem: ({
+    data,
+    handleClick,
+  }: {
+    data: T;
+    handleClick: (arg: T) => void;
+  }) => ReactNode;
+  onClick: (arg: T) => void;
 }) => {
-  const { isOpen } = useDropdownContext();
+  const { isOpen, setIsOpen } = useDropdownContext();
+
+  const handleClick = useCallback(
+    (arg: T) => {
+      onClick(arg);
+      setIsOpen(false);
+    },
+    [onClick, isOpen]
+  );
 
   if (!isOpen) return;
 
   return (
     <ul className={styles.dropdownMenu}>
       {data.map((item, i) => {
-        return <ListItem data={item} key={i} />;
+        return <ListItem handleClick={handleClick} data={item} key={i} />;
       })}
     </ul>
   );

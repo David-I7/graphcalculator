@@ -62,16 +62,18 @@
 .new-graph-item {
   @extend .font-body-sm;
   text-transform: capitalize;
-  display: flex;
-  align-items: center;
-  height: 2.5rem;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  cursor: pointer;
   background-color: base.$secondary-container;
 
   &:hover {
     @extend .button--hovered;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    height: 2.5rem;
+    gap: 0.25rem;
+    padding: 0.5rem;
   }
 }
 

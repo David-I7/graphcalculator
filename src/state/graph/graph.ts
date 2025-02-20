@@ -5,6 +5,7 @@ import { CSS_VARIABLES } from "../../data/css/variables";
 interface GraphState {
   currentGraph: GraphData;
   savedGraphs: GraphData[];
+  exampleGraphs: GraphData[];
 }
 
 function createNewGraph(): GraphData {
@@ -48,6 +49,7 @@ function swap<T>(a: number, b: number, arr: T[]) {
 const initialState: GraphState = {
   currentGraph: createNewGraph(),
   savedGraphs: [],
+  exampleGraphs: [],
 };
 
 const graphSlice = createSlice({
@@ -112,7 +114,7 @@ const graphSlice = createSlice({
       ) => {
         if (action.payload.startPos < action.payload.endPos) {
           let i = action.payload.startPos;
-          while (i < action.payload.startPos) {
+          while (i < action.payload.endPos) {
             swap(i, i + 1, state.currentGraph.expressions);
             ++i;
           }
@@ -167,3 +169,7 @@ export const {
   createExpression,
   deleteExpression,
 } = graphSlice.actions;
+
+// SELECTORS
+
+const selectExpression = () => {};

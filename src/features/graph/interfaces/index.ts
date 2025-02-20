@@ -1,5 +1,5 @@
 import { GRAPH_EVENT_NAMES } from "../data/events";
-import { Graph } from "../lib/graph";
+import { Graph } from "../lib/graph/graph";
 
 export type ScaleEventData = {
   zoomDirection: "IN" | "OUT";

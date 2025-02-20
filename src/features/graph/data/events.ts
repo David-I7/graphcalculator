@@ -1,5 +1,5 @@
 import { BusEvent, Event_Name } from "../interfaces";
-import { ScaleEvent } from "../lib/graphEvents";
+import { ScaleEvent } from "../lib/graph/graphEvents";
 
 export const GRAPH_EVENT_NAMES = ["scale"] as const;
 
