@@ -3,17 +3,6 @@ import { Graph } from "./graph/graph";
 
 // NOTES
 
-let GRAPH!: Graph;
-
-window.addEventListener("load", () => {
-  const canvas = document.getElementById(
-    "graph-calculator"
-  ) as HTMLCanvasElement;
-  const ctx = canvas.getContext("2d")!;
-
-  setup(canvas, ctx);
-});
-
 export function setup(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D
@@ -24,13 +13,13 @@ export function setup(
   graph.addCommand(new DrawAxisCommand(graph));
 
   function animate() {
-    graph.clearCommands();
-    graph.renderCommands();
-    requestAnimationFrame(animate);
+    if (!graph.destroyed) {
+      graph.clearCommands();
+      graph.renderCommands();
+      requestAnimationFrame(animate);
+    }
   }
   animate();
 
-  GRAPH = graph;
+  return graph;
 }
-
-export default GRAPH;
