@@ -1,23 +1,38 @@
-import { GRAPH_EVENT_NAMES } from "../data/events";
 import { Graph } from "../lib/graph/graph";
+import { MouseEvent, ScaleEvent } from "../lib/graph/graphEvents";
+
+export const eventMap: Record<Event_Name, new (graph: Graph) => BusEvent> = {
+  scale: ScaleEvent,
+  mouseDown: MouseEvent,
+};
+
+type BaseEventDefaults = {
+  preventDefault: () => void;
+  defaultPrevented: boolean;
+};
 
 export type ScaleEventData = {
   zoomDirection: "IN" | "OUT";
   offsetX: number;
   offsetY: number;
-};
+} & BaseEventDefaults;
+export type MouseEventData = {
+  graphX: number;
+  graphY: number;
+} & BaseEventDefaults;
 
 export type EventDataMap = {
   scale: ScaleEventData;
+  mouseDown: MouseEventData;
 };
 
-export type Event_Name = (typeof GRAPH_EVENT_NAMES)[number];
+export type Event_Name = keyof EventDataMap;
 
-export interface BusEvent {
+export interface BusEvent<T extends keyof EventDataMap = keyof EventDataMap> {
   readonly callbacks: Function[];
   register(cb: Function): void;
   deregister(cb: Function): void;
-  execute<T>(data: T): void;
+  execute(event: EventDataMap[T]): void;
   destroy(): void;
 }
 

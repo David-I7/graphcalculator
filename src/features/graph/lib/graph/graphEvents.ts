@@ -1,4 +1,4 @@
-import { BusEvent } from "../../interfaces";
+import { BusEvent, MouseEventData, ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
 
 // TODO
@@ -20,11 +20,17 @@ export class ScaleEvent implements BusEvent {
         e.preventDefault();
         const zoomDirection = e.deltaY > 0 ? "OUT" : "IN";
 
-        this.execute({
+        const event: ScaleEventData = {
           zoomDirection,
           offsetX: e.offsetX,
           offsetY: e.offsetY,
-        });
+          preventDefault() {
+            this.defaultPrevented = true;
+          },
+          defaultPrevented: false,
+        };
+
+        this.execute(event);
       },
       { passive: false, signal: this.destroyController.signal }
     );
@@ -55,9 +61,36 @@ export class ScaleEvent implements BusEvent {
       this.destroy();
     }
   }
-  execute<T>(data: T): void {
+  execute(event: ScaleEventData): void {
     this.callbacks.forEach((callback) => {
-      callback(data);
+      callback(event);
     });
   }
+}
+
+export class MouseEvent implements BusEvent {
+  protected destroyController: AbortController | null = null;
+  public callbacks: Function[] = [];
+  constructor(public graph: Graph) {}
+
+  register(cb: Function): void {
+    this.callbacks.push(cb);
+  }
+
+  deregister(cb: Function): void {
+    for (let i = 0; i < this.callbacks.length; ++i) {
+      if (this.callbacks[i] === cb) {
+        this.callbacks.splice(i, 1);
+      }
+    }
+  }
+
+  execute(event: MouseEventData): void {
+    for (let i = this.callbacks.length - 1; i >= 0; --i) {
+      this.callbacks[i](event);
+      if (event.defaultPrevented) return;
+    }
+  }
+
+  destroy(): void {}
 }

@@ -16,17 +16,21 @@ function createNewGraph(): GraphData {
     modifiedAt: createdAt,
     thumb: "",
     name: "Untitled",
-    expressions: [createNewExpression("expression", 1)],
+    expressions: [createNewExpression("expression", 1, "f(x) = x")],
   };
 }
 
-function createNewExpression(type: ExpressionType, id: number): Expression {
+function createNewExpression(
+  type: ExpressionType,
+  id: number,
+  content?: string
+): Expression {
   if (type === "expression") {
     return {
       id,
       type,
       data: {
-        content: "",
+        content: content ? content : "",
         color: `hsl(${Math.floor(Math.random() * 360)},${
           CSS_VARIABLES.baseSaturation
         },${CSS_VARIABLES.baseLightness})`,

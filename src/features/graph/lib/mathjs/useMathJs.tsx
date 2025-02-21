@@ -68,6 +68,22 @@ export class DrawFunctionCommand implements GraphCommand {
   ) {
     this.color = expr.data.color!;
     this.hidden = expr.data.hidden!;
+    this.graph.on("mouseDown", (e) => {
+      if (this.fn["x"]) {
+        const y = this.fn["x"](e.graphX);
+        if (
+          Math.abs(y) - Math.abs(e.graphY) <
+          0.25 * this.graph.scales.scaler // tolerance
+        ) {
+          e.preventDefault();
+        }
+      }
+      // } else if (this.fn["y"]) {
+      //   console.log(this.fn);
+      //   const x = this.fn["y"](e.graphY);
+      //   console.log(e.graphY, x);
+      // }
+    });
   }
 
   draw(): void {

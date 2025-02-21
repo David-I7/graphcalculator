@@ -158,7 +158,7 @@
   &__type {
     cursor: pointer;
     @include base.gridCenter();
-    padding: 0.125rem;
+    padding: 0 0.125rem 0.125rem;
   }
   &__type__function {
     @include base.inlineGridCenter();

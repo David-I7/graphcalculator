@@ -79,15 +79,8 @@ export class GraphSettings {
           this.clientLeft > this.MAX_TRANSLATE ||
           this.clientRight < -this.MAX_TRANSLATE) &&
         e.zoomDirection === "IN"
-      ) {
-        console.log(
-          this.clientBottom,
-          this.clientTop,
-          this.clientLeft,
-          this.clientRight
-        );
+      )
         return;
-      }
 
       const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
       const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
@@ -115,15 +108,37 @@ export class GraphSettings {
     this.graph.canvas.addEventListener(
       "mousedown",
       (e) => {
+        // determine if a function is being focused
+        // and pass control to tooltip
+        const xTiles =
+          (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
+          this.graph.scales.scaledStep;
+        const graphX = xTiles * this.graph.scales.scaler;
+
+        const yTiles =
+          (e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY)) /
+          this.graph.scales.scaledStep;
+        const graphY = yTiles * this.graph.scales.scaler;
+
+        const cutomEvent = {
+          graphX,
+          graphY,
+          preventDefault() {
+            this.defaultPrevented = true;
+            console.log("default prevented was called");
+          },
+          defaultPrevented: false,
+        };
+
+        this.graph.dispatch("mouseDown", cutomEvent);
+
+        if (cutomEvent.defaultPrevented) {
+          return;
+        }
+
         this.isDragging = true;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
-        console.log(
-          e.offsetX,
-          e.offsetY,
-          this.canvasCenterX,
-          this.canvasCenterY
-        );
       },
       { signal: this.destroyController.signal }
     );
