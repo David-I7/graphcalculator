@@ -184,7 +184,7 @@ const ExpressionListItem = React.memo(
       } catch (err) {
         if (!error && err instanceof SyntaxError) {
           const index = Number(err.message[err.message.length - 2]);
-          console.log(err.message, err.name);
+          console.log(err.message);
           setError({
             message: `You need something on both sides of the '${
               trimmedContent[index - 1] || trimmedContent[index - 2]
@@ -245,7 +245,3 @@ const ExpressionListItem = React.memo(
     return false;
   }
 );
-
-function parseError(err: Error): string {
-  return err.message[err.message.length - 2];
-}

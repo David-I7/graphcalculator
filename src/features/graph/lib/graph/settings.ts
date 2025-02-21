@@ -2,6 +2,7 @@ import { throttle } from "../../../../helpers/performance";
 import { Graph } from "./graph";
 
 export class GraphSettings {
+  protected MAX_TRANSLATE = 1000000;
   protected destroyController: AbortController = new AbortController();
   protected resizeObserver!: ResizeObserver;
   public dpr: number;
@@ -47,6 +48,7 @@ export class GraphSettings {
   private initEvents() {
     //scoped variables
 
+    const ease: number = 10;
     const wheelTolerance: number = 75;
     let prevWidth: number = this.graph.canvas.offsetWidth;
     let prevHeight: number = this.graph.canvas.offsetHeight;
@@ -71,12 +73,28 @@ export class GraphSettings {
     this.resizeObserver.observe(this.graph.canvas.parentElement!);
 
     this.graph.on("scale", (e) => {
+      if (
+        (this.clientBottom < -this.MAX_TRANSLATE ||
+          this.clientTop > this.MAX_TRANSLATE ||
+          this.clientLeft > this.MAX_TRANSLATE ||
+          this.clientRight < -this.MAX_TRANSLATE) &&
+        e.zoomDirection === "IN"
+      ) {
+        console.log(
+          this.clientBottom,
+          this.clientTop,
+          this.clientLeft,
+          this.clientRight
+        );
+        return;
+      }
+
       const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
       const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
 
       if (Math.abs(dx) > wheelTolerance || Math.abs(dy) > wheelTolerance) {
-        const roundedX = Math.round(dx / 10);
-        const roundedY = Math.round(dy / 10);
+        const roundedX = Math.round(dx / ease);
+        const roundedY = Math.round(dy / ease);
         if (e.zoomDirection === "IN") {
           this.offsetX += -roundedX;
           this.offsetY += -roundedY;
