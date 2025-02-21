@@ -25,18 +25,22 @@ function createNewExpression(type: ExpressionType, id: number): Expression {
     return {
       id,
       type,
-      content: "",
-      color: `hsl(${Math.floor(Math.random() * 360)},${
-        CSS_VARIABLES.baseSaturation
-      },${CSS_VARIABLES.baseLightness})`,
-      hidden: false,
+      data: {
+        content: "",
+        color: `hsl(${Math.floor(Math.random() * 360)},${
+          CSS_VARIABLES.baseSaturation
+        },${CSS_VARIABLES.baseLightness})`,
+        hidden: false,
+      },
     };
   }
 
   return {
     id,
     type,
-    content: "",
+    data: {
+      content: "",
+    },
   };
 }
 
@@ -132,13 +136,10 @@ const graphSlice = createSlice({
         state,
         action: PayloadAction<{ content: string; id: number; idx: number }>
       ) => {
-        if (
-          state.currentGraph.expressions[action.payload.idx].id !==
-          action.payload.id
-        )
-          return;
-        state.currentGraph.expressions[action.payload.idx].content =
-          action.payload.content;
+        const expr = state.currentGraph.expressions[action.payload.idx];
+        if (expr.id !== action.payload.id) return;
+        if (expr.data.content === action.payload.content) return;
+        expr.data.content = action.payload.content;
       }
     ),
     toggleExpressionVisibility: create.reducer(
@@ -146,14 +147,13 @@ const graphSlice = createSlice({
         state,
         action: PayloadAction<{ hidden: boolean; id: number; idx: number }>
       ) => {
-        if (
-          state.currentGraph.expressions[action.payload.idx].id !==
-          action.payload.id
-        )
-          return;
+        const expr = state.currentGraph.expressions[
+          action.payload.idx
+        ] as Expression<"expression">;
 
-        state.currentGraph.expressions[action.payload.idx].hidden =
-          !state.currentGraph.expressions[action.payload.idx].hidden;
+        if (expr.id !== action.payload.id) return;
+
+        expr.data.hidden = !expr.data.hidden;
       }
     ),
   }),

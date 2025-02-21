@@ -70,35 +70,26 @@ export class GraphSettings {
     this.resizeObserver = new ResizeObserver(throttleResize.throttleFunc);
     this.resizeObserver.observe(this.graph.canvas.parentElement!);
 
-    this.graph.canvas.addEventListener(
-      "wheel",
-      (e) => {
-        e.preventDefault();
-        const zoomDirection = e.deltaY > 0 ? "OUT" : "IN";
+    this.graph.on("scale", (e) => {
+      const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
+      const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
 
-        const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
-        const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
-
-        if (Math.abs(dx) > wheelTolerance || Math.abs(dy) > wheelTolerance) {
-          const roundedX = Math.round(dx / 10);
-          const roundedY = Math.round(dy / 10);
-          if (zoomDirection === "IN") {
-            this.offsetX += -roundedX;
-            this.offsetY += -roundedY;
-            this.updateClientPosition(this.offsetX, this.offsetY);
-            this.graph.ctx.translate(-roundedX, -roundedY);
-          } else {
-            this.offsetX += roundedX;
-            this.offsetY += roundedY;
-            this.updateClientPosition(this.offsetX, this.offsetY);
-            this.graph.ctx.translate(roundedX, roundedY);
-          }
+      if (Math.abs(dx) > wheelTolerance || Math.abs(dy) > wheelTolerance) {
+        const roundedX = Math.round(dx / 10);
+        const roundedY = Math.round(dy / 10);
+        if (e.zoomDirection === "IN") {
+          this.offsetX += -roundedX;
+          this.offsetY += -roundedY;
+          this.updateClientPosition(this.offsetX, this.offsetY);
+          this.graph.ctx.translate(-roundedX, -roundedY);
+        } else {
+          this.offsetX += roundedX;
+          this.offsetY += roundedY;
+          this.updateClientPosition(this.offsetX, this.offsetY);
+          this.graph.ctx.translate(roundedX, roundedY);
         }
-
-        this.graph.dispatch("scale", { zoomDirection });
-      },
-      { passive: false, signal: this.destroyController.signal }
-    );
+      }
+    });
 
     let lastMouseX = 0;
     let lastMouseY = 0;
@@ -109,6 +100,12 @@ export class GraphSettings {
         this.isDragging = true;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
+        console.log(
+          e.offsetX,
+          e.offsetY,
+          this.canvasCenterX,
+          this.canvasCenterY
+        );
       },
       { signal: this.destroyController.signal }
     );

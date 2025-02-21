@@ -154,11 +154,11 @@
 
   &__index {
     @extend .font-body-xs;
-    margin-bottom: 0.125rem;
   }
   &__type {
     cursor: pointer;
     @include base.gridCenter();
+    padding: 0.125rem;
   }
   &__type__function {
     @include base.inlineGridCenter();

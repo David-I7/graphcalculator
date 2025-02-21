@@ -11,7 +11,7 @@ import { Scales } from "./scales";
 import { GraphSettings } from "./settings";
 
 export class Graph implements MessageBus {
-  readonly events: Record<string, BusEvent> = {};
+  readonly events: Partial<Record<keyof EventDataMap, BusEvent>> = {};
   protected commandController: GraphCommandController;
   protected settings!: GraphSettings;
   readonly scales: Scales;
@@ -21,8 +21,8 @@ export class Graph implements MessageBus {
     public canvas: HTMLCanvasElement,
     public ctx: CanvasRenderingContext2D
   ) {
-    this.commandController = new CommandController();
     this.settings = new GraphSettings(this);
+    this.commandController = new CommandController();
     this.scales = new Scales(this, 25, 15);
   }
 
@@ -72,7 +72,7 @@ export class Graph implements MessageBus {
     if (this.events[eventName]) {
       this.events[eventName].register(cb);
     } else {
-      const busEvent = new eventMap[eventName]();
+      const busEvent = new eventMap[eventName](this);
       busEvent.register(cb);
       this.events[eventName] = busEvent;
     }
@@ -110,5 +110,6 @@ export class Graph implements MessageBus {
   destroy() {
     this.destroyed = true;
     this.settings.destroy();
+    Object.entries(this.events).forEach((entry) => entry[1].destroy());
   }
 }

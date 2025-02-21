@@ -13,11 +13,11 @@ export function setup(
   graph.addCommand(new DrawAxisCommand(graph));
 
   function animate() {
-    if (!graph.destroyed) {
-      graph.clearCommands();
-      graph.renderCommands();
-      requestAnimationFrame(animate);
-    }
+    if (graph.destroyed) return;
+
+    graph.clearCommands();
+    graph.renderCommands();
+    requestAnimationFrame(animate);
   }
   animate();
 
