@@ -1,6 +1,10 @@
 import { BusEvent } from "../../interfaces";
 import { Graph } from "./graph";
 
+// TODO
+// detect if user is clicking on a function,
+// make point labels on mouse down (do not allow dragging while the function is focused)
+
 export class ScaleEvent implements BusEvent {
   protected destroyController: AbortController | null = null;
   public callbacks: Function[] = [];
@@ -16,7 +20,7 @@ export class ScaleEvent implements BusEvent {
         e.preventDefault();
         const zoomDirection = e.deltaY > 0 ? "OUT" : "IN";
 
-        this.graph.dispatch("scale", {
+        this.execute({
           zoomDirection,
           offsetX: e.offsetX,
           offsetY: e.offsetY,

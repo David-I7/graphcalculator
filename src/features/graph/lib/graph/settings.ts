@@ -100,6 +100,12 @@ export class GraphSettings {
         this.isDragging = true;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
+        console.log(
+          e.offsetX,
+          e.offsetY,
+          this.canvasCenterX,
+          this.canvasCenterY
+        );
       },
       { signal: this.destroyController.signal }
     );

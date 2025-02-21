@@ -1,29 +1,34 @@
 import { useEffect } from "react";
 import { Expression } from "../../../../lib/api/graph";
-import { parse } from "mathjs";
+import { FunctionAssignmentNode, parse } from "mathjs";
 import { Graph } from "../graph/graph";
 import { GraphCommand } from "../../interfaces";
 import { useGraphContext } from "../../Graph";
 
-type Scope = { f?: (x: number) => number };
+type Scope = Record<string, (input: number) => number>;
 
-const useMathJs = (expr: Expression) => {
+const useMathJs = (expr: Expression<"expression">) => {
   const graph = useGraphContext();
 
   useEffect(() => {
-    if (!graph || !expr.content) return;
+    // if (Boolean(1) === true) return;
+    if (!graph || !expr.data.content) return;
     let command: DrawFunctionCommand;
 
     try {
-      const node = parse(expr.content);
-      const code = node.compile();
-      const scope: Scope = {};
-      code.evaluate(scope);
-      command = new DrawFunctionCommand(graph, expr, scope);
-      graph.addCommand(command);
-      // console.log(command, graph);
+      const node = parse(expr.data.content);
+      if (node instanceof FunctionAssignmentNode) {
+        const code = node.compile();
+        const scope: Scope = {};
+        code.evaluate(scope);
+        command = new DrawFunctionCommand(graph, expr, {
+          [node.params[0]]: scope.f,
+        });
+        graph.addCommand(command);
+        // console.log(command, graph);
+      }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
     }
 
     return () => {
@@ -56,9 +61,13 @@ export class DrawFunctionCommand implements GraphCommand {
   public color: string;
   public hidden: boolean;
 
-  constructor(public graph: Graph, expr: Expression, public scope: Scope) {
-    this.color = expr.color!;
-    this.hidden = expr.hidden!;
+  constructor(
+    public graph: Graph,
+    expr: Expression<"expression">,
+    public fn: Scope
+  ) {
+    this.color = expr.data.color!;
+    this.hidden = expr.data.hidden!;
   }
 
   draw(): void {
@@ -74,54 +83,90 @@ export class DrawFunctionCommand implements GraphCommand {
       // 1 box = 1 tile
       // x = 1 tile * scaler
 
-      // approaching from the left side
-      const leftTiles =
-        (this.graph.clientLeft || 0.01) / this.graph.scales.scaledStep;
-      const minX = leftTiles * this.graph.scales.scaler;
+      if (this.fn["x"]) {
+        const fn = this.fn["x"];
 
-      // // approaching from the right side
-      const rightTiles =
-        (this.graph.clientRight || -0.01) / this.graph.scales.scaledStep;
-      const maxX = rightTiles * this.graph.scales.scaler;
+        // approaching from the left side
+        const leftTiles =
+          (this.graph.clientLeft || 0.01) / this.graph.scales.scaledStep;
+        const minX = leftTiles * this.graph.scales.scaler;
 
-      let nextX: number | undefined;
-      let nextY: number | undefined;
-      const nextStep: number = 0.01 * this.graph.scales.scaler;
-      // console.log(minX, maxX, nextStep);
+        // // approaching from the right side
+        const rightTiles =
+          (this.graph.clientRight || -0.01) / this.graph.scales.scaledStep;
+        const maxX = rightTiles * this.graph.scales.scaler;
 
-      for (let i = minX; i < maxX; i += nextStep) {
-        this.graph.ctx.beginPath();
-        const curX =
-          nextX ??
-          i * (this.graph.scales.scaledStep / this.graph.scales.scaler);
-        const curY =
-          nextY ??
-          -(
-            (this.scope.f!(i + nextStep) / this.graph.scales.scaler) *
+        let nextX: number | undefined;
+        let nextY: number | undefined;
+        const nextStep: number = 0.01 * this.graph.scales.scaler;
+        // console.log(minX, maxX, nextStep);
+
+        for (let i = minX; i < maxX; i += nextStep) {
+          this.graph.ctx.beginPath();
+          const curX =
+            nextX ??
+            i * (this.graph.scales.scaledStep / this.graph.scales.scaler);
+          const curY =
+            nextY ??
+            -(
+              (fn(i + nextStep) / this.graph.scales.scaler) *
+              this.graph.scales.scaledStep
+            );
+          if (isNaN(curY)) continue;
+
+          nextX =
+            (i + nextStep) *
+            (this.graph.scales.scaledStep / this.graph.scales.scaler);
+
+          nextY = -(
+            (fn(i + nextStep) / this.graph.scales.scaler) *
             this.graph.scales.scaledStep
           );
-        if (isNaN(curY)) {
-          // console.log(i, "isNan");
-          continue;
+          if (isNaN(nextY)) continue;
+
+          this.graph.ctx.moveTo(curX, curY);
+          this.graph.ctx.lineTo(nextX, nextY);
+          this.graph.ctx.stroke();
         }
+      } else if (this.fn["y"]) {
+        const fn = this.fn["y"];
 
-        nextX =
-          (i + nextStep) *
-          (this.graph.scales.scaledStep / this.graph.scales.scaler);
+        // approaching from the left side
+        const topTiles =
+          (this.graph.clientTop || 0.01) / this.graph.scales.scaledStep;
+        const minY = topTiles * this.graph.scales.scaler;
 
-        nextY = -(
-          (this.scope.f!(i + nextStep) / this.graph.scales.scaler) *
-          this.graph.scales.scaledStep
-        );
-        if (isNaN(nextY)) {
-          // console.log(i + nextStep, "isNan");
-          continue;
+        // // approaching from the right side
+        const bottomTiles =
+          (this.graph.clientBottom || -0.01) / this.graph.scales.scaledStep;
+        const maxY = bottomTiles * this.graph.scales.scaler;
+
+        let nextX: number | undefined;
+        let nextY: number | undefined;
+        const nextStep = 0.01 * this.graph.scales.scaler;
+
+        for (let y = minY; y < maxY; y += nextStep) {
+          this.graph.ctx.beginPath();
+          const curY =
+            nextY ??
+            y * (this.graph.scales.scaledStep / this.graph.scales.scaler);
+          const curX =
+            nextX ??
+            (fn(-y) * this.graph.scales.scaledStep) / this.graph.scales.scaler;
+          if (isNaN(curX)) continue;
+
+          nextY =
+            (y + nextStep) *
+            (this.graph.scales.scaledStep / this.graph.scales.scaler);
+          nextX =
+            (fn(-y + nextStep) * this.graph.scales.scaledStep) /
+            this.graph.scales.scaler;
+          if (isNaN(nextX)) continue;
+
+          this.graph.ctx.moveTo(curX, curY);
+          this.graph.ctx.lineTo(nextX, nextY);
+          this.graph.ctx.stroke();
         }
-        // console.log(scaledX, scaledY);
-
-        this.graph.ctx.moveTo(curX, curY);
-        this.graph.ctx.lineTo(nextX, nextY);
-        this.graph.ctx.stroke();
       }
     } catch (err) {
       console.log(err);

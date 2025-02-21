@@ -4,17 +4,29 @@ export type GraphData = {
   thumb: string;
   createdAt: string;
   modifiedAt: string;
-  expressions: {
-    type: "note" | "expression" | "table";
-    content: string;
-    id: number;
-    color?: string;
-    hidden?: boolean;
-  }[];
+  expressions: Expression[];
 };
 
-export type Expression = GraphData["expressions"][0];
-export type ExpressionType = GraphData["expressions"][0]["type"];
+type ExpressionData = {
+  expression: {
+    content: string;
+    color?: string;
+    hidden?: boolean;
+  };
+  note: {
+    content: string;
+  };
+  table: {
+    content: string;
+  };
+};
+
+export type Expression<T extends ExpressionType = ExpressionType> = {
+  type: T;
+  id: number;
+  data: ExpressionData[T];
+};
+export type ExpressionType = keyof ExpressionData;
 
 const baseUrl = "http://localhost:5000/";
 
