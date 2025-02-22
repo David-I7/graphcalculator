@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { Expression } from "../../../../lib/api/graph";
-import { FunctionAssignmentNode, parse } from "mathjs";
+import { AssignmentNode, FunctionAssignmentNode, parse } from "mathjs";
 import { Graph } from "../graph/graph";
-import { GraphCommand } from "../../interfaces";
+import { GraphCommand, MouseEventData } from "../../interfaces";
 import { useGraphContext } from "../../Graph";
 
 type Scope = Record<string, (input: number) => number>;
@@ -17,22 +17,44 @@ const useMathJs = (expr: Expression<"expression">) => {
 
     try {
       const node = parse(expr.data.content);
+      console.log(node);
       if (node instanceof FunctionAssignmentNode) {
         const code = node.compile();
         const scope: Scope = {};
         code.evaluate(scope);
-        command = new DrawFunctionCommand(graph, expr, {
+        const derivedScope = {
           [node.params[0]]: scope.f,
-        });
+        };
+        command = new DrawFunctionCommand(graph, expr, derivedScope);
         graph.addCommand(command);
-        console.log(scope, node);
+      } else if (node instanceof AssignmentNode) {
+        const symbol = node.object.name;
+        // implicit function of x
+        if (symbol === "y" || symbol === "x") {
+          const fn = new FunctionAssignmentNode(
+            "f",
+            [symbol === "x" ? "y" : "x"],
+            node.value
+          );
+          const code = fn.compile();
+          const scope: Scope = {};
+          code.evaluate(scope);
+          const derivedScope = {
+            [fn.params[0]]: scope.f,
+          };
+          command = new DrawFunctionCommand(graph, expr, derivedScope);
+          graph.addCommand(command);
+        }
       }
     } catch (err) {
       // console.log(err);
     }
 
     return () => {
-      graph.removeCommand(command);
+      if (command) {
+        graph.removeCommand(command);
+        command.destroy();
+      }
     };
   }, [expr, graph]);
 };
@@ -60,6 +82,7 @@ class MathJsParser {
 export class DrawFunctionCommand implements GraphCommand {
   public color: string;
   public hidden: boolean;
+  protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
 
   constructor(
     public graph: Graph,
@@ -68,31 +91,8 @@ export class DrawFunctionCommand implements GraphCommand {
   ) {
     this.color = expr.data.color!;
     this.hidden = expr.data.hidden!;
-    this.graph.on("mouseDown", (e) => {
-      if (this.fn["x"]) {
-        const y = this.fn["x"](e.graphX);
-
-        const tolerance = 0.25 * this.graph.scales.scaler;
-        const offset = Math.abs(y) - Math.abs(e.graphY);
-
-        if (offset < tolerance && offset > -tolerance) {
-          e.preventDefault(
-            `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
-          );
-        }
-      } else if (this.fn["y"]) {
-        const x = this.fn["y"](-e.graphY);
-
-        const tolerance = 0.25 * this.graph.scales.scaler;
-        const offset = Math.abs(x) - Math.abs(e.graphX);
-
-        if (offset < tolerance && offset > -tolerance) {
-          e.preventDefault(
-            `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
-          );
-        }
-      }
-    });
+    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
+    this.graph.on("mouseDown", this.boundHandleMouseDown);
   }
 
   draw(): void {
@@ -200,5 +200,35 @@ export class DrawFunctionCommand implements GraphCommand {
     }
   }
 
-  update(): void {}
+  handleMouseDown(e: MouseEventData) {
+    if (this.hidden) return;
+
+    if (this.fn["x"]) {
+      const y = this.fn["x"](e.graphX);
+
+      const tolerance = 0.25 * this.graph.scales.scaler;
+      const offset = Math.abs(y) - Math.abs(e.graphY);
+
+      if (offset < tolerance && offset > -tolerance) {
+        e.preventDefault(
+          `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
+        );
+      }
+    } else if (this.fn["y"]) {
+      const x = this.fn["y"](-e.graphY);
+
+      const tolerance = 0.25 * this.graph.scales.scaler;
+      const offset = Math.abs(x) - Math.abs(e.graphX);
+
+      if (offset < tolerance && offset > -tolerance) {
+        e.preventDefault(
+          `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
+        );
+      }
+    }
+  }
+
+  destroy(): void {
+    this.graph.removeListener("mouseDown", this.boundHandleMouseDown);
+  }
 }

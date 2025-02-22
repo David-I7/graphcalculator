@@ -55,6 +55,7 @@ export interface MessageBus {
 export interface GraphCommand {
   readonly graph: Graph;
   draw(): void;
+  destroy?(): void;
 }
 
 export interface GraphCommandController {
