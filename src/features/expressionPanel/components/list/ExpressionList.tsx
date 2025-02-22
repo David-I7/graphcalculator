@@ -23,6 +23,7 @@ import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import { incrementNextId } from "../../../../state/graph/nextId";
 import { Expression } from "../../../../lib/api/graph";
 import ExpressionTextArea from "./ExpressionTextArea";
+import { destroyError } from "../../../../state/error/error";
 
 const ExpressionList = () => {
   return (
@@ -191,6 +192,7 @@ const ExpressionListItem = React.memo(
             );
             setTimeout(() => {
               dispatch(deleteExpression({ id: item.id, idx: idx }));
+              dispatch(destroyError(item.id));
             }, CSS_VARIABLES.animationSpeedFast);
           }}
           title={`Delete ${item.type} ${idx + 1}`}

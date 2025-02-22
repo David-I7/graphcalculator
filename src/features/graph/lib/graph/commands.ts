@@ -1,5 +1,10 @@
 import { CSS_VARIABLES } from "../../../../data/css/variables";
-import { GraphCommand, GraphCommandController } from "../../interfaces";
+import { Expression } from "../../../../lib/api/graph";
+import {
+  GraphCommand,
+  GraphCommandController,
+  MouseEventData,
+} from "../../interfaces";
 import { Graph } from "./graph";
 
 type DrawData = {
@@ -624,5 +629,251 @@ export class DrawAxisCommand implements GraphCommand {
     }
 
     this.graph.ctx.restore();
+  }
+}
+
+export class DrawFunctionCommand implements GraphCommand {
+  public color: string;
+  public hidden: boolean;
+  protected tooltipCommand: DrawTooltipCommand;
+  protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
+
+  constructor(
+    public graph: Graph,
+    expr: Expression<"expression">,
+    public fn: Record<string, (input: number) => number>
+  ) {
+    this.color = expr.data.color!;
+    this.hidden = expr.data.hidden!;
+    this.tooltipCommand = new DrawTooltipCommand(graph);
+    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
+    this.graph.on("mouseDown", this.boundHandleMouseDown);
+  }
+
+  draw(): void {
+    if (this.hidden) return;
+
+    try {
+      this.graph.ctx.save();
+
+      this.graph.ctx.strokeStyle = this.color;
+      this.graph.ctx.lineWidth = 4;
+
+      // for tooltip
+      // 1 box = 1 tile
+      // x = 1 tile * scaler
+
+      if (this.fn["y"]) {
+        this.drawFunctionOfY();
+      } else {
+        this.drawFunctionOfX();
+      }
+
+      if (this.tooltipCommand.state === "running") {
+        this.tooltipCommand.draw();
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.graph.ctx.restore();
+    }
+  }
+
+  drawFunctionOfY() {
+    const fn = this.fn["y"];
+
+    // approaching from the left side
+    const topTiles =
+      (this.graph.clientTop || 0.01) / this.graph.scales.scaledStep;
+    const minY = topTiles * this.graph.scales.scaler;
+
+    // // approaching from the right side
+    const bottomTiles =
+      (this.graph.clientBottom || -0.01) / this.graph.scales.scaledStep;
+    const maxY = bottomTiles * this.graph.scales.scaler;
+
+    let nextX: number | undefined;
+    let nextY: number | undefined;
+    const nextStep = 0.01 * this.graph.scales.scaler;
+
+    for (let y = minY; y < maxY; y += nextStep) {
+      this.graph.ctx.beginPath();
+      const curY =
+        nextY ?? y * (this.graph.scales.scaledStep / this.graph.scales.scaler);
+      const curX =
+        nextX ??
+        (fn(-y) * this.graph.scales.scaledStep) / this.graph.scales.scaler;
+      if (isNaN(curX)) continue;
+
+      nextY =
+        (y + nextStep) *
+        (this.graph.scales.scaledStep / this.graph.scales.scaler);
+      nextX =
+        (fn(-y + nextStep) * this.graph.scales.scaledStep) /
+        this.graph.scales.scaler;
+      if (isNaN(nextX)) continue;
+
+      this.graph.ctx.moveTo(curX, curY);
+      this.graph.ctx.lineTo(nextX, nextY);
+      this.graph.ctx.stroke();
+    }
+  }
+
+  drawFunctionOfX() {
+    const fn = Object.values(this.fn)[0];
+
+    // approaching from the left side
+    const leftTiles =
+      (this.graph.clientLeft || 0.01) / this.graph.scales.scaledStep;
+    const minX = leftTiles * this.graph.scales.scaler;
+
+    // // approaching from the right side
+    const rightTiles =
+      (this.graph.clientRight || -0.01) / this.graph.scales.scaledStep;
+    const maxX = rightTiles * this.graph.scales.scaler;
+
+    let nextX: number | undefined;
+    let nextY: number | undefined;
+    const nextStep: number = 0.01 * this.graph.scales.scaler;
+
+    for (let i = minX; i < maxX; i += nextStep) {
+      this.graph.ctx.beginPath();
+      const curX =
+        nextX ?? i * (this.graph.scales.scaledStep / this.graph.scales.scaler);
+      const curY =
+        nextY ??
+        -(
+          (fn(i + nextStep) / this.graph.scales.scaler) *
+          this.graph.scales.scaledStep
+        );
+      if (isNaN(curY)) continue;
+
+      nextX =
+        (i + nextStep) *
+        (this.graph.scales.scaledStep / this.graph.scales.scaler);
+
+      nextY = -(
+        (fn(i + nextStep) / this.graph.scales.scaler) *
+        this.graph.scales.scaledStep
+      );
+      if (isNaN(nextY)) continue;
+
+      this.graph.ctx.moveTo(curX, curY);
+      this.graph.ctx.lineTo(nextX, nextY);
+      this.graph.ctx.stroke();
+    }
+  }
+
+  handleMouseDown(e: MouseEventData) {
+    if (this.hidden) return;
+
+    if (this.fn["y"]) {
+      const x = this.fn["y"](-e.graphY);
+
+      const tolerance = 0.15 * this.graph.scales.scaler;
+      const offset = Math.abs(x) - Math.abs(e.graphX);
+
+      if (offset < tolerance && offset > -tolerance) {
+        e.preventDefault(
+          `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
+        );
+        const tooltipInit = {};
+
+        this.tooltipCommand.setState("running", {});
+      }
+    } else {
+      // point coordinates of fn
+      const x = e.graphX / 2 + -e.graphY / 2;
+      const y = this.fn["x"](x);
+      console.log(x, y);
+
+      const rSquared = (0.3 * this.graph.scales.scaler) ** 2;
+      const dx = (e.graphX - x) ** 2;
+      const dy = (e.graphY + y) ** 2;
+
+      if (dx + dy < rSquared) {
+        e.preventDefault(
+          `Calling from function of X because dx + dy (${
+            dx + dy
+          }) < rsquared (${rSquared}) `
+        );
+
+        const tooltipInit = {
+          y,
+          x,
+        };
+
+        this.tooltipCommand.setState("running", tooltipInit);
+      }
+    }
+  }
+
+  destroy(): void {
+    this.graph.removeListener("mouseDown", this.boundHandleMouseDown);
+    this.tooltipCommand.destroy();
+  }
+}
+
+//focused state => expression list is focused
+// and chart is focused showing major points such as
+// x and y intercepts, relative and absolute minimas/maximas
+
+// running state => move move listener, show tooltip coordinates
+
+// idle state => draw() will not be called.
+
+class DrawTooltipCommand implements GraphCommand {
+  protected destroyController: AbortController | null = null;
+  protected _state: "idle" | "running" | "focused" = "idle";
+  constructor(public graph: Graph) {}
+
+  setState(state: typeof this._state, init: {}) {
+    this._state = state;
+    if (state === "idle") {
+      this.destroyController?.abort();
+    } else if (state === "focused") {
+    } else {
+      if (this.destroyController) this.destroyController.abort();
+      this.destroyController = new AbortController();
+      this.init();
+    }
+  }
+
+  get state(): typeof this._state {
+    return this._state;
+  }
+
+  init() {
+    this.graph.canvas.addEventListener(
+      "mousemove",
+      (e) => {
+        if (this.state === "idle") return;
+      },
+      { signal: this.destroyController!.signal }
+    );
+    this.graph.canvas.addEventListener(
+      "mouseup",
+      (e) => {
+        this.state === "idle";
+        this.destroyController!.abort();
+        this.destroyController = null;
+      },
+      { signal: this.destroyController!.signal }
+    );
+    this.graph.canvas.addEventListener(
+      "mouseleave",
+      (e) => {
+        this.state === "idle";
+        this.destroyController!.abort();
+        this.destroyController = null;
+      },
+      { signal: this.destroyController!.signal }
+    );
+  }
+
+  draw(): void {}
+
+  destroy(): void {
+    this.destroyController?.abort();
   }
 }

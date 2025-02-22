@@ -17,7 +17,7 @@ type ExpressionDynamicIslandProps<T extends ExpressionType = ExpressionType> = {
 
 const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
   const error = useAppSelector(
-    (state) => state.errorSlice.errors[props.item.id]
+    (state) => state.errorSlice.errors.expressions[props.item.id]
   );
 
   if (!props.item.data.content.length)
@@ -36,7 +36,13 @@ const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
         <div className="dynamic-island__index">
           {props.index + 1}
           <div className="dynamic-island__type">
-            <Warning width={28} height={28}>
+            <Warning
+              color={
+                error.type === "ExpressionError" ? "currentColor" : "orange"
+              }
+              width={28}
+              height={28}
+            >
               <title>{error.message}</title>
             </Warning>
           </div>
