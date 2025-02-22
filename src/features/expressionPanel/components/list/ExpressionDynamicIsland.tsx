@@ -6,42 +6,60 @@ import {
   Hidden,
   Warning,
 } from "../../../../components/svgs";
-import { useAppDispatch } from "../../../../state/hooks";
+import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { toggleExpressionVisibility } from "../../../../state/graph/graph";
-import { ContentError } from "./ExpressionList";
 
 type ExpressionDynamicIslandProps<T extends ExpressionType = ExpressionType> = {
   index: number;
   item: Expression<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
-  error: ContentError | null;
 };
 
 const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
+  const error = useAppSelector(
+    (state) => state.errorSlice.errors[props.item.id]
+  );
+
+  if (!props.item.data.content.length)
+    return (
+      <div draggable className="dynamic-island">
+        <div className="dynamic-island__index">
+          {props.index + 1}
+          <div className="dynamic-island__type"></div>
+        </div>
+      </div>
+    );
+
+  if (error) {
+    return (
+      <div draggable className="dynamic-island">
+        <div className="dynamic-island__index">
+          {props.index + 1}
+          <div className="dynamic-island__type">
+            <Warning width={28} height={28}>
+              <title>{error.message}</title>
+            </Warning>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div draggable className="dynamic-island">
       <div className="dynamic-island__index">{props.index + 1}</div>
       <div className="dynamic-island__type">
-        {props.error && (
-          <Warning width={28} height={28}>
-            <title>{props.error.message}</title>
-          </Warning>
-        )}
-        {!props.error && (
-          <>
-            {props.item.type === "expression" ? (
-              <>
-                <ExpressionDynamicIsland.Function
-                  {...(props as ExpressionDynamicIslandProps<"expression">)}
-                />
-              </>
-            ) : props.item.type === "note" ? (
-              <Quotes width={28} height={28} />
-            ) : (
-              <Table width={28} height={28} />
-            )}
-          </>
-        )}
+        <>
+          {props.item.type === "expression" ? (
+            <ExpressionDynamicIsland.Function
+              {...(props as ExpressionDynamicIslandProps<"expression">)}
+            />
+          ) : props.item.type === "note" ? (
+            <Quotes width={28} height={28} />
+          ) : (
+            <Table width={28} height={28} />
+          )}
+        </>
       </div>
     </div>
   );

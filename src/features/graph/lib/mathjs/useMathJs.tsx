@@ -1,60 +1,75 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Expression } from "../../../../lib/api/graph";
 import { AssignmentNode, FunctionAssignmentNode, parse } from "mathjs";
 import { Graph } from "../graph/graph";
 import { GraphCommand, MouseEventData } from "../../interfaces";
 import { useGraphContext } from "../../Graph";
+import { ExpressionValidator } from "./validation";
+import { useAppDispatch } from "../../../../state/hooks";
+import { clearError, setError } from "../../../../state/error/error";
 
 type Scope = Record<string, (input: number) => number>;
 
 const useMathJs = (expr: Expression<"expression">) => {
   const graph = useGraphContext();
+  const exprValidator = useRef(new ExpressionValidator());
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     // if (Boolean(1) === true) return;
     if (!graph || !expr.data.content) return;
     let command: DrawFunctionCommand;
 
-    try {
-      const node = parse(expr.data.content);
-      console.log(node);
-      if (node instanceof FunctionAssignmentNode) {
-        const code = node.compile();
-        const scope: Scope = {};
-        code.evaluate(scope);
-        const derivedScope = {
-          [node.params[0]]: scope.f,
-        };
-        command = new DrawFunctionCommand(graph, expr, derivedScope);
-        graph.addCommand(command);
-      } else if (node instanceof AssignmentNode) {
-        const symbol = node.object.name;
-        // implicit function of x
-        if (symbol === "y" || symbol === "x") {
-          const fn = new FunctionAssignmentNode(
-            "f",
-            [symbol === "x" ? "y" : "x"],
-            node.value
-          );
-          const code = fn.compile();
-          const scope: Scope = {};
-          code.evaluate(scope);
-          const derivedScope = {
-            [fn.params[0]]: scope.f,
-          };
-          command = new DrawFunctionCommand(graph, expr, derivedScope);
-          graph.addCommand(command);
-        }
-      }
-    } catch (err) {
-      // console.log(err);
+    const err = exprValidator.current.validateExpression(expr.data.content);
+
+    if (err) {
+      dispatch(setError({ id: expr.id, error: err }));
+    } else {
+      dispatch(clearError(expr.id));
     }
 
+    // try {
+
+    //   const node = parse(expr.data.content);
+    //   console.log(node);
+    //   if (node instanceof FunctionAssignmentNode) {
+    //     if (node.params.length === 2 || !node.params.length) return;
+    //     const code = node.compile();
+    //     const scope: Scope = {};
+    //     code.evaluate(scope);
+    //     const derivedScope = {
+    //       [node.params[0]]: scope[node.name],
+    //     };
+    //     command = new DrawFunctionCommand(graph, expr, derivedScope);
+    //     graph.addCommand(command);
+    //   } else if (node instanceof AssignmentNode) {
+    //     const symbol = node.object.name;
+    //     // implicit function
+    //     if (symbol === "y" || symbol === "x") {
+    //       const fn = new FunctionAssignmentNode(
+    //         "f",
+    //         [symbol === "x" ? "y" : "x"],
+    //         node.value
+    //       );
+    //       const code = fn.compile();
+    //       const scope: Scope = {};
+    //       code.evaluate(scope);
+    //       const derivedScope = {
+    //         [fn.params[0]]: scope.f,
+    //       };
+    //       command = new DrawFunctionCommand(graph, expr, derivedScope);
+    //       graph.addCommand(command);
+    //     }
+    //   }
+    // } catch (err) {
+    //   // console.log(err);
+    // }
+
     return () => {
-      if (command) {
-        graph.removeCommand(command);
-        command.destroy();
-      }
+      // if (command) {
+      //   graph.removeCommand(command);
+      //   command.destroy();
+      // }
     };
   }, [expr, graph]);
 };

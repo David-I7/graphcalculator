@@ -108,8 +108,6 @@ export class GraphSettings {
     this.graph.canvas.addEventListener(
       "mousedown",
       (e) => {
-        // determine if a function is being focused
-        // and pass control to tooltip
         const xTiles =
           (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
           this.graph.scales.scaledStep;
@@ -129,8 +127,6 @@ export class GraphSettings {
           },
           defaultPrevented: false,
         };
-
-        console.log(this.graph);
         this.graph.dispatch("mouseDown", cutomEvent);
 
         if (cutomEvent.defaultPrevented) {

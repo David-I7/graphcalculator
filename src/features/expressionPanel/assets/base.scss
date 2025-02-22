@@ -77,11 +77,11 @@
   }
 }
 
-.expression-list {
+.expression-list-container {
   overflow-y: auto;
   padding-bottom: 2rem;
 
-  &__li {
+  .expression-list__li {
     display: flex;
     align-items: center;
     position: relative;
@@ -98,7 +98,7 @@
     }
   }
 
-  &__li--faded {
+  .expression-list__li--faded {
     min-height: 3.5rem;
     display: flex;
     position: relative;

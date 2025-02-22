@@ -4,20 +4,19 @@ import { useAppSelector } from "../../../state/hooks";
 import useMathJs from "../lib/mathjs/useMathJs";
 
 type GraphFunctionExpressionProps = {
-  expr: Expression;
+  expr: Expression<"expression">;
+  idx: number;
 };
 
 export const GraphFunctionExpression = React.memo(
   (props: GraphFunctionExpressionProps) => {
-    const expr = useAppSelector((state) =>
-      state.graphSlice.currentGraph.expressions.find(
-        (expr) => expr.id === props.expr.id
-      )
-    )!;
+    const expr = useAppSelector(
+      (state) => state.graphSlice.currentGraph.expressions[props.idx]
+    )! as Expression<"expression">;
 
     useMathJs(expr);
 
     return null;
   },
-  (prev, cur) => prev.expr.id === cur.expr.id
+  (prev, cur) => prev.expr.id === cur.expr.id && prev.idx === cur.idx
 );

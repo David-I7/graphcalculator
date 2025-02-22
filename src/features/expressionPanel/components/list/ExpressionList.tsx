@@ -8,12 +8,10 @@ import React, {
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import { Close } from "../../../../components/svgs";
 import useDraggable from "../../../../hooks/useDraggable";
-import ResizableTextarea from "../../../../components/input/ResizableTextarea";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import {
   createExpression,
   deleteExpression,
-  updateExpressionContent,
   updateExpressionPos,
 } from "../../../../state/graph/graph";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
@@ -25,9 +23,18 @@ import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import { incrementNextId } from "../../../../state/graph/nextId";
 import { Expression } from "../../../../lib/api/graph";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { parse } from "mathjs";
 
 const ExpressionList = () => {
+  return (
+    <div className="expression-list-container">
+      <ExpressionListRenderer />
+    </div>
+  );
+};
+
+export default ExpressionList;
+
+function ExpressionListRenderer() {
   const { expressions } = useAppSelector(
     (state) => state.graphSlice.currentGraph
   );
@@ -108,45 +115,41 @@ const ExpressionList = () => {
   }, [expressions.length]);
 
   return (
-    <div className="expression-list">
-      <ol ref={draggableContainerRef}>
-        {expressions.length > 0 &&
-          expressions.map((item, index) => {
-            return (
-              <ExpressionListItem
-                key={item.id}
-                item={item}
-                idx={index}
-                autoFocus={index === expressions.length - 1 ? true : false}
-                dispatch={dispatch}
-                animationOptions={animationOptions.current}
-              />
+    <ol className="expression-list" ref={draggableContainerRef}>
+      {expressions.length > 0 &&
+        expressions.map((item, index) => {
+          return (
+            <ExpressionListItem
+              key={item.id}
+              item={item}
+              idx={index}
+              autoFocus={index === expressions.length - 1 ? true : false}
+              dispatch={dispatch}
+              animationOptions={animationOptions.current}
+            />
+          );
+        })}
+      {!isDragging && (
+        <li
+          role="button"
+          onClick={() => {
+            dispatch(
+              createExpression({ id: nextId, type: "expression", loc: "end" })
             );
-          })}
-        {!isDragging && (
-          <li
-            role="button"
-            onClick={() => {
-              dispatch(
-                createExpression({ id: nextId, type: "expression", loc: "end" })
-              );
-              dispatch(incrementNextId());
-            }}
-            className="expression-list__li--faded"
-          >
-            <div className="dynamic-island">
-              <div className="dynamic-island__index">
-                {expressions.length + 1}
-              </div>
+            dispatch(incrementNextId());
+          }}
+          className="expression-list__li--faded"
+        >
+          <div className="dynamic-island">
+            <div className="dynamic-island__index">
+              {expressions.length + 1}
             </div>
-          </li>
-        )}
-      </ol>
-    </div>
+          </div>
+        </li>
+      )}
+    </ol>
   );
-};
-
-export default ExpressionList;
+}
 
 type ExpressionListItemProps = {
   item: Expression;
@@ -154,10 +157,6 @@ type ExpressionListItemProps = {
   dispatch: ReturnType<typeof useAppDispatch>;
   animationOptions: KeyframeAnimationOptions;
   autoFocus: boolean;
-};
-
-export type ContentError = {
-  message: string;
 };
 
 const ExpressionListItem = React.memo(
@@ -168,44 +167,13 @@ const ExpressionListItem = React.memo(
     animationOptions,
     autoFocus,
   }: ExpressionListItemProps) => {
-    const [error, setError] = useState<ContentError | null>(null);
-
-    useEffect(() => {
-      if (item.type !== "expression") return;
-
-      let trimmedContent = item.data.content.trim();
-
-      try {
-        parse(trimmedContent);
-        if (error) {
-          setError(null);
-        }
-      } catch (err) {
-        if (!error && err instanceof SyntaxError) {
-          const index = Number(err.message[err.message.length - 2]);
-          console.log(err.message);
-          setError({
-            message: `You need something on both sides of the '${
-              trimmedContent[index - 1] || trimmedContent[index - 2]
-            }' symbol.`,
-          });
-        }
-      }
-    }, [item.data.content, error]);
-
     return (
       <li
-        key={item.id}
         className="expression-list__li draggable"
         expr-id={item.id}
         item-idx={idx}
       >
-        <ExpressionDynamicIsland
-          error={error}
-          dispatch={dispatch}
-          item={item}
-          index={idx}
-        />
+        <ExpressionDynamicIsland dispatch={dispatch} item={item} index={idx} />
 
         <ExpressionTextArea
           item={item}
