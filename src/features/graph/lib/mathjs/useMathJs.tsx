@@ -25,7 +25,7 @@ const useMathJs = (expr: Expression<"expression">) => {
           [node.params[0]]: scope.f,
         });
         graph.addCommand(command);
-        // console.log(command, graph);
+        console.log(scope, node);
       }
     } catch (err) {
       // console.log(err);
@@ -71,18 +71,27 @@ export class DrawFunctionCommand implements GraphCommand {
     this.graph.on("mouseDown", (e) => {
       if (this.fn["x"]) {
         const y = this.fn["x"](e.graphX);
-        if (
-          Math.abs(y) - Math.abs(e.graphY) <
-          0.25 * this.graph.scales.scaler // tolerance
-        ) {
-          e.preventDefault();
+
+        const tolerance = 0.25 * this.graph.scales.scaler;
+        const offset = Math.abs(y) - Math.abs(e.graphY);
+
+        if (offset < tolerance && offset > -tolerance) {
+          e.preventDefault(
+            `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
+          );
+        }
+      } else if (this.fn["y"]) {
+        const x = this.fn["y"](-e.graphY);
+
+        const tolerance = 0.25 * this.graph.scales.scaler;
+        const offset = Math.abs(x) - Math.abs(e.graphX);
+
+        if (offset < tolerance && offset > -tolerance) {
+          e.preventDefault(
+            `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
+          );
         }
       }
-      // } else if (this.fn["y"]) {
-      //   console.log(this.fn);
-      //   const x = this.fn["y"](e.graphY);
-      //   console.log(e.graphY, x);
-      // }
     });
   }
 

@@ -176,8 +176,7 @@ const ExpressionListItem = React.memo(
       let trimmedContent = item.data.content.trim();
 
       try {
-        const node = parse(trimmedContent);
-        console.log(node);
+        parse(trimmedContent);
         if (error) {
           setError(null);
         }

@@ -16,7 +16,7 @@ function createNewGraph(): GraphData {
     modifiedAt: createdAt,
     thumb: "",
     name: "Untitled",
-    expressions: [createNewExpression("expression", 1, "f(x) = x")],
+    expressions: [createNewExpression("expression", 1)],
   };
 }
 

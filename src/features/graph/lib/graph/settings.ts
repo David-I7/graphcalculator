@@ -123,13 +123,14 @@ export class GraphSettings {
         const cutomEvent = {
           graphX,
           graphY,
-          preventDefault() {
+          preventDefault(debug?: string) {
             this.defaultPrevented = true;
-            console.log("default prevented was called");
+            console.log(debug);
           },
           defaultPrevented: false,
         };
 
+        console.log(this.graph);
         this.graph.dispatch("mouseDown", cutomEvent);
 
         if (cutomEvent.defaultPrevented) {
