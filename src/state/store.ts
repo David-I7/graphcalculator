@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import globalSlice from "./global/global";
 import graphSlice from "./graph/graph";
 import nextIdSlice from "./graph/nextId";
+import errorSlice from "./error/error";
 
 export const store = configureStore({
   reducer: {
     globalSlice,
     graphSlice,
     nextIdSlice,
+    errorSlice,
   },
 });
 

@@ -2,7 +2,8 @@ import { ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
 
 export class Scales {
-  private ZOOM_FACTOR = 1.1;
+  private ZOOM_IN_FACTOR = 1.05;
+  private ZOOM_OUT_FACTOR = 0.95;
   private MAX_ZOOM = 1.8;
   private MIN_ZOOM = 0.8;
   private _scaler!: number;
@@ -57,9 +58,23 @@ export class Scales {
   }
 
   protected handleScale(e: ScaleEventData) {
-    this.zoom *=
-      e.zoomDirection === "OUT" ? 1 / this.ZOOM_FACTOR : this.ZOOM_FACTOR;
+    const newZoom =
+      this.zoom *
+      (e.zoomDirection === "OUT" ? this.ZOOM_OUT_FACTOR : this.ZOOM_IN_FACTOR);
+    if (
+      this.scalesIndex === 0 &&
+      newZoom > this.MAX_ZOOM &&
+      e.zoomDirection === "IN"
+    )
+      return;
+    if (
+      this.scalesIndex === this.scalesArray.length - 1 &&
+      newZoom < this.MIN_ZOOM &&
+      e.zoomDirection === "OUT"
+    )
+      return;
 
+    this.zoom = newZoom;
     this._scaledStep = this.step * this.zoom;
 
     // zoom out

@@ -1,4 +1,4 @@
-import { eventMap } from "../../data/events";
+import { eventMap } from "../../interfaces";
 import {
   BusEvent,
   EventDataMap,
@@ -23,7 +23,7 @@ export class Graph implements MessageBus {
   ) {
     this.settings = new GraphSettings(this);
     this.commandController = new CommandController();
-    this.scales = new Scales(this, 25, 15);
+    this.scales = new Scales(this, 25, 100);
   }
 
   get dpr() {
@@ -57,7 +57,7 @@ export class Graph implements MessageBus {
   dispatch<K extends keyof EventDataMap>(
     eventName: K,
     data: EventDataMap[K]
-  ): void {
+  ): ReturnType<BusEvent["execute"]> {
     const busEvent = this.events[eventName];
 
     if (!busEvent) return;

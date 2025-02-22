@@ -12,12 +12,27 @@ type ExpressionTextAreaProps<T extends ExpressionType = ExpressionType> = {
   idx: number;
 };
 
-const ExpressionTextArea = ({
+const ExpressionTextArea = (props: ExpressionTextAreaProps) => {
+  switch (props.item.type) {
+    case "expression":
+      return (
+        <FunctionTextArea
+          {...(props as ExpressionTextAreaProps<"expression">)}
+        />
+      );
+    case "note":
+      return <NoteTextArea {...(props as ExpressionTextAreaProps<"note">)} />;
+  }
+};
+
+export default ExpressionTextArea;
+
+const FunctionTextArea = ({
   autoFocus,
   item,
   dispatch,
   idx,
-}: ExpressionTextAreaProps) => {
+}: ExpressionTextAreaProps<"expression">) => {
   return (
     <ResizableTextarea
       container={{
@@ -44,18 +59,35 @@ const ExpressionTextArea = ({
     />
   );
 };
-
-export default ExpressionTextArea;
-
-//    try {
-//   const node = parse(expr.data.content);
-//   // console.log(node.toTex());
-//   const code = node.compile();
-//   const scope: Scope = {};
-//   code.evaluate(scope);
-//   command = new DrawFunctionCommand(graph, expr, Object.values(scope)[0]);
-//   graph.addCommand(command);
-//   // console.log(command, graph);
-// } catch (err) {
-//   console.log(err);
-//}
+const NoteTextArea = ({
+  autoFocus,
+  item,
+  dispatch,
+  idx,
+}: ExpressionTextAreaProps<"note">) => {
+  return (
+    <ResizableTextarea
+      container={{
+        className: "font-medium",
+        style: {
+          color: CSS_VARIABLES.onSurfaceBodyHigh,
+          paddingRight: "3.5rem",
+          paddingLeft: "1rem",
+        },
+      }}
+      textarea={{
+        autoFocus: autoFocus,
+        value: item.data.content,
+        onChange: (e) => {
+          dispatch(
+            updateExpressionContent({
+              id: item.id,
+              content: e.target.value,
+              idx: idx,
+            })
+          );
+        },
+      }}
+    />
+  );
+};
