@@ -6,6 +6,7 @@ import {
   MouseEventData,
 } from "../../interfaces";
 import { Graph } from "./graph";
+import { drawRoundedRect } from "./utils";
 
 type DrawData = {
   scaledStep: number;
@@ -313,7 +314,7 @@ export class DrawGridCommand implements GraphCommand {
       }
 
       if (exponent >= -4 && exponent < 3) {
-        // sign is negative if exponent is <=4 always
+        // sign is negative if exponent is negative
         if (scaler < 0.1) {
           if (sign === "neg") {
             label = `-${(count * scaler).toFixed(
@@ -627,7 +628,7 @@ export class DrawFunctionCommand implements GraphCommand {
 
       this.graph.ctx.strokeStyle = this.color;
       this.graph.ctx.fillStyle = this.color;
-      this.graph.ctx.lineWidth = 4;
+      this.graph.ctx.lineWidth = 2 * this.graph.dpr;
 
       // for tooltip
       // 1 box = 1 tile
@@ -747,15 +748,40 @@ export class DrawFunctionCommand implements GraphCommand {
 
 // idle state => draw() will not be called.
 
+type TooltipSettings = {
+  textHeight: number;
+  padding: number;
+  shadowColor: string;
+  shadowBlur: number;
+  pointRadius: number;
+  font: string;
+  borderRadius: number;
+};
+
+type TooltipData = {
+  coord: { x: number; y: number };
+  val: { x: number; y: number };
+};
+
 class DrawTooltipCommand implements GraphCommand {
   protected destroyController: AbortController | null = null;
   protected _state: "idle" | "running" | "focused" = "idle";
-  protected tooltipCoord: { x: number; y: number } = { x: 0, y: 0 };
+  protected data: TooltipData = { coord: { x: 0, y: 0 }, val: { x: 0, y: 0 } };
   protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
+  protected settings: TooltipSettings;
   constructor(
     public graph: Graph,
     public functionCommand: DrawFunctionCommand
   ) {
+    this.settings = {
+      textHeight: this.graph.dpr * 18,
+      padding: this.graph.dpr * 16,
+      shadowColor: CSS_VARIABLES.shadowLevel1,
+      shadowBlur: 8,
+      pointRadius: this.graph.dpr * 4,
+      font: `400 ${this.graph.dpr * 18}px Inter`,
+      borderRadius: this.graph.dpr * 4,
+    };
     this.boundHandleMouseDown = this.handleMouseDown.bind(this);
     this.graph.on("mouseDown", this.boundHandleMouseDown);
   }
@@ -794,7 +820,7 @@ class DrawTooltipCommand implements GraphCommand {
           `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
         );
 
-        this.setTooltipPosition(x, y);
+        this.setData(x, y);
         this.setState("running");
       }
     } else {
@@ -811,16 +837,19 @@ class DrawTooltipCommand implements GraphCommand {
           `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
         );
 
-        this.setTooltipPosition(x, y);
+        this.setData(x, y);
         this.setState("running");
       }
     }
   }
 
-  setTooltipPosition(x: number, y: number) {
-    this.tooltipCoord!.x =
+  setData(x: number, y: number) {
+    this.data.val.x = x;
+    this.data.val.y = y;
+
+    this.data.coord.x =
       (x * this.graph.scales.scaledStep) / this.graph.scales.scaler;
-    this.tooltipCoord!.y =
+    this.data.coord.y =
       (-y * this.graph.scales.scaledStep) / this.graph.scales.scaler;
   }
 
@@ -829,13 +858,12 @@ class DrawTooltipCommand implements GraphCommand {
   }
 
   run() {
-    let lastMouseX = this.tooltipCoord.x;
-    let lastMouseY = this.tooltipCoord.y;
-
     this.graph.canvas.addEventListener(
       "mousemove",
       (e) => {
         if (this.state === "idle") return;
+
+        console.log(e.offsetY + this.graph.dpr);
 
         if (this.functionCommand.fn["y"]) {
           const fn = this.functionCommand.fn["y"];
@@ -851,7 +879,7 @@ class DrawTooltipCommand implements GraphCommand {
 
           const precision = 0.01 * 10 ** this.graph.scales.exponent;
 
-          this.setTooltipPosition(x, y);
+          this.setData(x, y);
         } else {
           const fn = Object.values(this.functionCommand.fn)[0];
 
@@ -868,7 +896,7 @@ class DrawTooltipCommand implements GraphCommand {
 
           console.log(x, y);
 
-          this.setTooltipPosition(x, y);
+          this.setData(x, y);
         }
       },
       { signal: this.destroyController!.signal }
@@ -883,17 +911,50 @@ class DrawTooltipCommand implements GraphCommand {
   }
 
   draw(): void {
+    // Point
+
     this.graph.ctx.beginPath();
     this.graph.ctx.arc(
-      this.tooltipCoord!.x,
-      this.tooltipCoord!.y,
-      10,
+      this.data.coord.x,
+      this.data.coord.y,
+      this.settings.pointRadius,
       0,
       Math.PI * 2
     );
     this.graph.ctx.fill();
 
-    // console.log(this.tooltipCoord);
+    // Tooltip text
+
+    const tooltipX = this.data.coord.x - 16;
+    const tooltipY = this.data.coord.y - 16;
+
+    this.graph.ctx.font = this.settings.font;
+
+    const tooltipText = `(${this.data.val.x}, ${this.data.val.y})`;
+    const textMetrics = this.graph.ctx.measureText(tooltipText);
+
+    this.graph.ctx.save();
+    this.graph.ctx.fillStyle = "white";
+    this.graph.ctx.shadowColor = this.settings.shadowColor;
+    this.graph.ctx.shadowBlur = this.settings.shadowBlur;
+
+    drawRoundedRect(
+      this.graph.ctx,
+      tooltipX - textMetrics.width - this.settings.padding,
+      tooltipY - this.settings.textHeight - this.settings.padding,
+      textMetrics.width + this.settings.padding,
+      this.settings.textHeight + this.settings.padding,
+      this.settings.borderRadius
+    );
+    this.graph.ctx.fill();
+    this.graph.ctx.restore();
+
+    this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceHeading;
+    this.graph.ctx.fillText(
+      tooltipText,
+      tooltipX - textMetrics.width / 2 - this.settings.padding / 2,
+      tooltipY - this.settings.textHeight / 2 - this.settings.padding / 2
+    );
   }
 
   destroy(): void {
