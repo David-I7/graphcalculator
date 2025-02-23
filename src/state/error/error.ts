@@ -1,43 +1,51 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface Error {
+export interface ApplicationError {
   message: string;
   type: string;
 }
 
 interface ErrorState {
-  errors: Record<number, Error | null>;
+  errors: {
+    expressions: Record<number, ApplicationError | null>;
+  };
 }
 
 const initialState: ErrorState = {
-  errors: {},
+  errors: {
+    expressions: {},
+  },
 };
 
 const errorSlice = createSlice({
   name: "error",
   initialState,
   reducers: {
-    setError: (state, action: PayloadAction<{ id: number; error: Error }>) => {
-      const errorRef = state.errors[action.payload.id];
+    setError: (
+      state,
+      action: PayloadAction<{ id: number; error: ApplicationError }>
+    ) => {
+      const errorRef = state.errors.expressions[action.payload.id];
 
       if (errorRef) {
         if (errorRef.message === action.payload.error.message) return;
-        state.errors[action.payload.id] = action.payload.error;
+        state.errors.expressions[action.payload.id] = action.payload.error;
       } else {
-        state.errors[action.payload.id] = action.payload.error;
+        state.errors.expressions[action.payload.id] = action.payload.error;
       }
     },
     clearError: (state, action: PayloadAction<number>) => {
-      if (state.errors[action.payload]) {
-        state.errors[action.payload] = null;
+      if (state.errors.expressions[action.payload]) {
+        state.errors.expressions[action.payload] = null;
       }
     },
     destroyError: (state, action: PayloadAction<number>) => {
-      if (state.errors[action.payload]) delete state.errors[action.payload];
+      if (state.errors.expressions[action.payload])
+        delete state.errors.expressions[action.payload];
     },
   },
 });
 
 export default errorSlice.reducer;
 
-export const { setError, clearError } = errorSlice.actions;
+export const { setError, clearError, destroyError } = errorSlice.actions;
