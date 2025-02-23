@@ -31,8 +31,9 @@ export function roundToNeareastMultiple(
   base: number,
   exponent: number
 ) {
-  const rounded = Math.floor(target / base ** exponent);
-  return rounded * base ** exponent;
+  const multiple = base ** exponent;
+  const rounded = Math.floor(target / multiple);
+  return rounded * multiple;
 }
 
 export function toScientificNotation(nr: number, precision: number) {
