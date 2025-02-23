@@ -73,30 +73,30 @@ export class DrawGridCommand implements GraphCommand {
 
     this.graph.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
 
-    this.drawHorizontalTop(drawData);
+    this.drawHorizontalTop();
     this.drawHorizontalBottom(drawData);
 
     this.graph.ctx.restore();
   }
 
-  drawHorizontalTop(data: DrawData) {
+  drawHorizontalTop() {
     if (this.graph.clientTop > 0) return;
 
     let count: number = 1;
-    let y = -data.scaledStep;
+    let y = -this.graph.scales.scaledStep;
 
     // reduce unnecessary computations
 
     if (this.graph.clientBottom < 0) {
       const stepMultiple = Math.floor(
-        Math.abs(this.graph.clientBottom) / data.scaledStep
+        Math.abs(this.graph.clientBottom) / this.graph.scales.scaledStep
       );
-      y = -data.scaledStep * stepMultiple;
+      y = -this.graph.scales.scaledStep * stepMultiple;
       count = stepMultiple;
     }
 
-    for (y; y > this.graph.clientTop; y -= data.scaledStep) {
-      if (count % data.majorGridLine === 0) {
+    for (y; y > this.graph.clientTop; y -= this.graph.scales.scaledStep) {
+      if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -110,12 +110,7 @@ export class DrawGridCommand implements GraphCommand {
 
         // text
 
-        const label = this.generateLabel(
-          count,
-          data.scaler,
-          data.scientificNotation,
-          "pos"
-        );
+        const label = this.generateLabel(count, "pos");
 
         // sticky labels
 
@@ -140,20 +135,20 @@ export class DrawGridCommand implements GraphCommand {
     if (this.graph.clientBottom < 0) return;
 
     let count: number = 1;
-    let y = data.scaledStep;
+    let y = this.graph.scales.scaledStep;
 
     // // reduce unnecessary computations
 
     if (this.graph.clientTop > 0) {
       const stepMultiple = Math.floor(
-        Math.abs(this.graph.clientTop) / data.scaledStep
+        Math.abs(this.graph.clientTop) / this.graph.scales.scaledStep
       );
-      y = data.scaledStep * stepMultiple;
+      y = this.graph.scales.scaledStep * stepMultiple;
       count = stepMultiple;
     }
 
-    for (y; y < this.graph.clientBottom; y += data.scaledStep) {
-      if (count % data.majorGridLine === 0) {
+    for (y; y < this.graph.clientBottom; y += this.graph.scales.scaledStep) {
+      if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -167,12 +162,7 @@ export class DrawGridCommand implements GraphCommand {
 
         // text
 
-        const label = this.generateLabel(
-          count,
-          data.scaler,
-          data.scientificNotation,
-          "neg"
-        );
+        const label = this.generateLabel(count, "neg");
 
         // sticky labels
 
@@ -198,20 +188,20 @@ export class DrawGridCommand implements GraphCommand {
     if (this.graph.clientLeft > 0) return;
 
     let count: number = 1;
-    let x = -data.scaledStep;
+    let x = -this.graph.scales.scaledStep;
 
     // // reduce unnecessary computations
 
     if (this.graph.clientRight < 0) {
       const stepMultiple = Math.floor(
-        Math.abs(this.graph.clientRight) / data.scaledStep
+        Math.abs(this.graph.clientRight) / this.graph.scales.scaledStep
       );
-      x = -data.scaledStep * stepMultiple;
+      x = -this.graph.scales.scaledStep * stepMultiple;
       count = stepMultiple;
     }
 
-    for (x; x > this.graph.clientLeft; x -= data.scaledStep) {
-      if (count % data.majorGridLine === 0) {
+    for (x; x > this.graph.clientLeft; x -= this.graph.scales.scaledStep) {
+      if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -225,12 +215,7 @@ export class DrawGridCommand implements GraphCommand {
 
         // text
 
-        const label = this.generateLabel(
-          count,
-          data.scaler,
-          data.scientificNotation,
-          "neg"
-        );
+        const label = this.generateLabel(count, "neg");
 
         // sticky labels
 
@@ -255,20 +240,20 @@ export class DrawGridCommand implements GraphCommand {
     if (this.graph.clientRight < 0) return;
 
     let count: number = 1;
-    let x = data.scaledStep;
+    let x = this.graph.scales.scaledStep;
 
     // reduce unnecessary computations
 
     if (this.graph.clientLeft > 0) {
       const stepMultiple = Math.floor(
-        Math.abs(this.graph.clientLeft) / data.scaledStep
+        Math.abs(this.graph.clientLeft) / this.graph.scales.scaledStep
       );
-      x = data.scaledStep * stepMultiple;
+      x = this.graph.scales.scaledStep * stepMultiple;
       count = stepMultiple;
     }
 
-    for (x; x < this.graph.clientRight; x += data.scaledStep) {
-      if (count % data.majorGridLine === 0) {
+    for (x; x < this.graph.clientRight; x += this.graph.scales.scaledStep) {
+      if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
         this.graph.ctx.lineWidth = 1;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
@@ -282,12 +267,7 @@ export class DrawGridCommand implements GraphCommand {
 
         // text
 
-        const label = this.generateLabel(
-          count,
-          data.scaler,
-          data.scientificNotation,
-          "pos"
-        );
+        const label = this.generateLabel(count, "pos");
 
         // sticky labels
 
@@ -309,22 +289,18 @@ export class DrawGridCommand implements GraphCommand {
     }
   }
 
-  generateLabel(
-    count: number,
-    scaler: number,
-    scientificNotation: string[],
-    sign: "neg" | "pos"
-  ): string | string[] {
+  generateLabel(count: number, sign: "neg" | "pos"): string | string[] {
     if (count === 0) return "";
 
     let label: string = "";
-    const scalerCoefficient = Number(scientificNotation[0]);
+    const scaler = this.graph.scales.scaler;
+    const scalerCoefficient = this.graph.scales.coefficient;
+    let exponent = this.graph.scales.exponent;
 
     // 5 * 10^5 is min
     if (scaler < 1e-5 || scaler > 2e4) {
       const labels: string[] = [];
-      let exponent = Number(scientificNotation[1]);
-      let labelCoefficient = count * Number(scientificNotation[0]);
+      let labelCoefficient = count * this.graph.scales.coefficient;
       let labelCoefficientPower: number = 1;
 
       if (labelCoefficient >= 10) {
@@ -341,13 +317,11 @@ export class DrawGridCommand implements GraphCommand {
         if (scaler < 0.1) {
           if (sign === "neg") {
             label = `-${(count * scaler).toFixed(
-              Math.abs(Number(scientificNotation[1])) -
-                (scalerCoefficient === 1 ? 0 : 1)
+              Math.abs(exponent) - (scalerCoefficient === 1 ? 0 : 1)
             )}`;
           } else {
             label = `${(count * scaler).toFixed(
-              Math.abs(Number(scientificNotation[1])) -
-                (scalerCoefficient === 1 ? 0 : 1)
+              Math.abs(exponent) - (scalerCoefficient === 1 ? 0 : 1)
             )}`;
           }
         } else {
@@ -379,13 +353,11 @@ export class DrawGridCommand implements GraphCommand {
     if (scaler < 0.1) {
       if (sign === "neg") {
         label = `-${(count * scaler).toFixed(
-          Math.abs(Number(scientificNotation[1])) -
-            (scalerCoefficient === 1 ? 0 : 1)
+          Math.abs(exponent) - (scalerCoefficient === 1 ? 0 : 1)
         )}`;
       } else {
         label = `${(count * scaler).toFixed(
-          Math.abs(Number(scientificNotation[1])) -
-            (scalerCoefficient === 1 ? 0 : 1)
+          Math.abs(exponent) - (scalerCoefficient === 1 ? 0 : 1)
         )}`;
       }
     } else {
@@ -636,7 +608,6 @@ export class DrawFunctionCommand implements GraphCommand {
   public color: string;
   public hidden: boolean;
   protected tooltipCommand: DrawTooltipCommand;
-  protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
 
   constructor(
     public graph: Graph,
@@ -645,9 +616,7 @@ export class DrawFunctionCommand implements GraphCommand {
   ) {
     this.color = expr.data.color!;
     this.hidden = expr.data.hidden!;
-    this.tooltipCommand = new DrawTooltipCommand(graph);
-    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
-    this.graph.on("mouseDown", this.boundHandleMouseDown);
+    this.tooltipCommand = new DrawTooltipCommand(graph, this);
   }
 
   draw(): void {
@@ -657,6 +626,7 @@ export class DrawFunctionCommand implements GraphCommand {
       this.graph.ctx.save();
 
       this.graph.ctx.strokeStyle = this.color;
+      this.graph.ctx.fillStyle = this.color;
       this.graph.ctx.lineWidth = 4;
 
       // for tooltip
@@ -669,7 +639,7 @@ export class DrawFunctionCommand implements GraphCommand {
         this.drawFunctionOfX();
       }
 
-      if (this.tooltipCommand.state === "running") {
+      if (!(this.tooltipCommand.state === "idle")) {
         this.tooltipCommand.draw();
       }
     } catch (err) {
@@ -764,52 +734,7 @@ export class DrawFunctionCommand implements GraphCommand {
     }
   }
 
-  handleMouseDown(e: MouseEventData) {
-    if (this.hidden) return;
-
-    if (this.fn["y"]) {
-      const x = this.fn["y"](-e.graphY);
-
-      const tolerance = 0.15 * this.graph.scales.scaler;
-      const offset = Math.abs(x) - Math.abs(e.graphX);
-
-      if (offset < tolerance && offset > -tolerance) {
-        e.preventDefault(
-          `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
-        );
-        const tooltipInit = {};
-
-        this.tooltipCommand.setState("running", {});
-      }
-    } else {
-      // point coordinates of fn
-      const x = e.graphX / 2 + -e.graphY / 2;
-      const y = this.fn["x"](x);
-      console.log(x, y);
-
-      const rSquared = (0.3 * this.graph.scales.scaler) ** 2;
-      const dx = (e.graphX - x) ** 2;
-      const dy = (e.graphY + y) ** 2;
-
-      if (dx + dy < rSquared) {
-        e.preventDefault(
-          `Calling from function of X because dx + dy (${
-            dx + dy
-          }) < rsquared (${rSquared}) `
-        );
-
-        const tooltipInit = {
-          y,
-          x,
-        };
-
-        this.tooltipCommand.setState("running", tooltipInit);
-      }
-    }
-  }
-
   destroy(): void {
-    this.graph.removeListener("mouseDown", this.boundHandleMouseDown);
     this.tooltipCommand.destroy();
   }
 }
@@ -825,17 +750,28 @@ export class DrawFunctionCommand implements GraphCommand {
 class DrawTooltipCommand implements GraphCommand {
   protected destroyController: AbortController | null = null;
   protected _state: "idle" | "running" | "focused" = "idle";
-  constructor(public graph: Graph) {}
+  protected tooltipCoord: { x: number; y: number } = { x: 0, y: 0 };
+  protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
+  constructor(
+    public graph: Graph,
+    public functionCommand: DrawFunctionCommand
+  ) {
+    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
+    this.graph.on("mouseDown", this.boundHandleMouseDown);
+  }
 
-  setState(state: typeof this._state, init: {}) {
+  setState<T extends typeof this._state>(state: T) {
     this._state = state;
     if (state === "idle") {
-      this.destroyController?.abort();
+      this.destroyController!.abort();
+      this.destroyController = null;
     } else if (state === "focused") {
+      this.focus();
     } else {
+      state;
       if (this.destroyController) this.destroyController.abort();
       this.destroyController = new AbortController();
-      this.init();
+      this.run();
     }
   }
 
@@ -843,37 +779,125 @@ class DrawTooltipCommand implements GraphCommand {
     return this._state;
   }
 
-  init() {
+  handleMouseDown(e: MouseEventData) {
+    if (this.functionCommand.hidden) return;
+
+    if (this.functionCommand.fn["y"]) {
+      const y = -e.graphY;
+      const x = this.functionCommand.fn["y"](y);
+
+      const tolerance = 0.15 * this.graph.scales.scaler;
+      const offset = Math.abs(x) - Math.abs(e.graphX);
+
+      if (offset < tolerance && offset > -tolerance) {
+        e.preventDefault(
+          `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
+        );
+
+        this.setTooltipPosition(x, y);
+        this.setState("running");
+      }
+    } else {
+      const fn = Object.values(this.functionCommand.fn)[0];
+
+      const x = e.graphX;
+      const y = fn(x);
+
+      const tolerance = 0.25 * this.graph.scales.scaler;
+      const offset = Math.abs(y) - Math.abs(e.graphY);
+
+      if (offset < tolerance && offset > -tolerance) {
+        e.preventDefault(
+          `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
+        );
+
+        this.setTooltipPosition(x, y);
+        this.setState("running");
+      }
+    }
+  }
+
+  setTooltipPosition(x: number, y: number) {
+    this.tooltipCoord!.x =
+      (x * this.graph.scales.scaledStep) / this.graph.scales.scaler;
+    this.tooltipCoord!.y =
+      (-y * this.graph.scales.scaledStep) / this.graph.scales.scaler;
+  }
+
+  focus() {
+    // calc critical points
+  }
+
+  run() {
+    let lastMouseX = this.tooltipCoord.x;
+    let lastMouseY = this.tooltipCoord.y;
+
     this.graph.canvas.addEventListener(
       "mousemove",
       (e) => {
         if (this.state === "idle") return;
+
+        if (this.functionCommand.fn["y"]) {
+          const fn = this.functionCommand.fn["y"];
+
+          const yTiles =
+            (e.offsetY * this.graph.dpr -
+              (this.graph.canvasCenterY + this.graph.offsetY)) /
+            this.graph.scales.scaledStep;
+          const graphY = yTiles * this.graph.scales.scaler;
+
+          const y = -graphY;
+          const x = fn(y);
+
+          const precision = 0.01 * 10 ** this.graph.scales.exponent;
+
+          this.setTooltipPosition(x, y);
+        } else {
+          const fn = Object.values(this.functionCommand.fn)[0];
+
+          // const dx = e.offsetX * this.graph.dpr - lastMouseX
+
+          const xTiles =
+            (e.offsetX * this.graph.dpr -
+              (this.graph.canvasCenterX + this.graph.offsetX)) /
+            this.graph.scales.scaledStep;
+          const graphX = xTiles * this.graph.scales.scaler;
+
+          const x = graphX;
+          const y = fn(x);
+
+          console.log(x, y);
+
+          this.setTooltipPosition(x, y);
+        }
       },
       { signal: this.destroyController!.signal }
     );
-    this.graph.canvas.addEventListener(
+    window.addEventListener(
       "mouseup",
       (e) => {
-        this.state === "idle";
-        this.destroyController!.abort();
-        this.destroyController = null;
-      },
-      { signal: this.destroyController!.signal }
-    );
-    this.graph.canvas.addEventListener(
-      "mouseleave",
-      (e) => {
-        this.state === "idle";
-        this.destroyController!.abort();
-        this.destroyController = null;
+        this.setState("idle");
       },
       { signal: this.destroyController!.signal }
     );
   }
 
-  draw(): void {}
+  draw(): void {
+    this.graph.ctx.beginPath();
+    this.graph.ctx.arc(
+      this.tooltipCoord!.x,
+      this.tooltipCoord!.y,
+      10,
+      0,
+      Math.PI * 2
+    );
+    this.graph.ctx.fill();
+
+    // console.log(this.tooltipCoord);
+  }
 
   destroy(): void {
     this.destroyController?.abort();
+    this.graph.removeListener("mouseDown", this.boundHandleMouseDown);
   }
 }

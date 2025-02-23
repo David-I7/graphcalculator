@@ -8,6 +8,8 @@ export class Scales {
   private MIN_ZOOM = 0.8;
   private _scaler!: number;
   private _majorGridLine!: number;
+  private _exponent!: number;
+  private _coefficient!: number;
   protected _scaledStep: number;
   protected zoom: number;
   private scalesIndex: number;
@@ -28,6 +30,13 @@ export class Scales {
     return this._majorGridLine;
   }
 
+  get exponent() {
+    return this._exponent;
+  }
+  get coefficient() {
+    return this._coefficient;
+  }
+
   getRawScaler(): string {
     return this.scalesArray[this.scalesIndex];
   }
@@ -35,6 +44,9 @@ export class Scales {
   private updateScales() {
     this._scaler = parseFloat(this.scalesArray[this.scalesIndex]);
     this._majorGridLine = this.scalesArray[this.scalesIndex][0] === "5" ? 4 : 5;
+    const rawScaler = this.getRawScaler().split("e");
+    this._exponent = Number(rawScaler[1]);
+    this._coefficient = Number(rawScaler[0]);
   }
 
   get scaledStep(): number {
