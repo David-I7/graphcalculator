@@ -14,3 +14,31 @@ export function drawRoundedRect(
   ctx.arcTo(x, y, x + width, y, radius);
   ctx.closePath();
 }
+
+export function clampNumber(nr: number, fractionDigits: number) {
+  const str = nr.toString();
+  const decimalIdx = str.indexOf(".");
+
+  if (decimalIdx !== -1 && str.length - 1 - decimalIdx > fractionDigits) {
+    return Number(nr.toFixed(fractionDigits));
+  }
+
+  return nr;
+}
+
+export function roundToNeareastMultiple(
+  target: number,
+  base: number,
+  exponent: number
+) {
+  const rounded = Math.floor(target / base ** exponent);
+  return rounded * base ** exponent;
+}
+
+export function toScientificNotation(nr: number, precision: number) {
+  const exp = nr.toExponential().split("e");
+  return [
+    `${clampNumber(Number(exp[0]), precision)} x 10`,
+    `${Number(exp[1])}`,
+  ];
+}
