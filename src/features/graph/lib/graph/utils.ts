@@ -28,9 +28,17 @@ export function clampNumber(nr: number, fractionDigits: number) {
 
 export function roundToNeareastMultiple(
   target: number,
-  nr: number,
-  multiple: number
+  base: number,
+  exponent: number
 ) {
-  const rounded = Math.floor(target / nr ** multiple);
-  return rounded * nr ** multiple;
+  const rounded = Math.floor(target / base ** exponent);
+  return rounded * base ** exponent;
+}
+
+export function toScientificNotation(nr: number, precision: number) {
+  const exp = nr.toExponential().split("e");
+  return [
+    `${clampNumber(Number(exp[0]), precision)} x 10`,
+    `${Number(exp[1])}`,
+  ];
 }

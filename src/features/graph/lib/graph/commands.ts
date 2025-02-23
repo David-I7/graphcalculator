@@ -6,7 +6,12 @@ import {
   MouseEventData,
 } from "../../interfaces";
 import { Graph } from "./graph";
-import { clampNumber, drawRoundedRect } from "./utils";
+import {
+  clampNumber,
+  drawRoundedRect,
+  roundToNeareastMultiple,
+  toScientificNotation,
+} from "./utils";
 
 type DrawData = {
   scaledStep: number;
@@ -290,6 +295,18 @@ export class DrawGridCommand implements GraphCommand {
     }
   }
 
+  genLabel(count: number, sign: "neg" | "pos"): string | string[] {
+    if (count === 0) return "";
+
+    const scaler = this.graph.scales.scaler;
+
+    if (scaler < 1e-5 || scaler > 2e4) {
+      const label = toScientificNotation(count * scaler, 2);
+    }
+
+    return "";
+  }
+
   generateLabel(count: number, sign: "neg" | "pos"): string | string[] {
     if (count === 0) return "";
 
@@ -318,11 +335,13 @@ export class DrawGridCommand implements GraphCommand {
         if (scaler < 0.1) {
           if (sign === "neg") {
             label = `-${(count * scaler).toFixed(
-              Math.abs(exponent) - (scalerCoefficient === 1 ? 0 : 1)
+              Math.abs(this.graph.scales.exponent) -
+                (scalerCoefficient === 1 ? 0 : 1)
             )}`;
           } else {
             label = `${(count * scaler).toFixed(
-              Math.abs(exponent) - (scalerCoefficient === 1 ? 0 : 1)
+              Math.abs(this.graph.scales.exponent) -
+                (scalerCoefficient === 1 ? 0 : 1)
             )}`;
           }
         } else {
@@ -501,13 +520,14 @@ export class DrawGridCommand implements GraphCommand {
     let x: number = xStart;
     let y: number = yStart;
     let measuredText!: TextMetrics;
+    const gap = this.graph.dpr * 6;
 
     if (axis === "x") {
       this.graph.ctx.strokeText(labels[0], x, y);
       this.graph.ctx.fillText(labels[0], x, y);
       measuredText = this.graph.ctx.measureText(labels[0]);
-      x += measuredText.width / 2 + 8;
-      y -= 8;
+      x += measuredText.width / 2 + gap;
+      y -= gap;
 
       this.graph.ctx.strokeText(labels[1], x, y);
       this.graph.ctx.fillText(labels[1], x, y);
@@ -518,17 +538,17 @@ export class DrawGridCommand implements GraphCommand {
         this.graph.ctx.strokeText(labels[0], x, y);
         this.graph.ctx.fillText(labels[0], x, y);
 
-        x += measuredText.width / 2 + 8;
-        y -= 8;
+        x += measuredText.width / 2 + gap;
+        y -= gap;
         this.graph.ctx.strokeText(labels[1], x, y);
         this.graph.ctx.fillText(labels[1], x, y);
       } else {
-        x -= measuredText.width / 2 + 8;
+        x -= measuredText.width / 2 + gap;
         this.graph.ctx.strokeText(labels[0], x, y);
         this.graph.ctx.fillText(labels[0], x, y);
 
         x = xStart;
-        y -= 8;
+        y -= gap;
         this.graph.ctx.strokeText(labels[1], x, y);
         this.graph.ctx.fillText(labels[1], x, y);
       }
@@ -766,7 +786,10 @@ type TooltipData = {
 class DrawTooltipCommand implements GraphCommand {
   protected destroyController: AbortController | null = null;
   protected _state: "idle" | "running" | "focused" = "idle";
-  protected data: TooltipData = { coord: { x: 0, y: 0 }, val: { x: 0, y: 0 } };
+  protected data: TooltipData = {
+    coord: { x: 0, y: 0 },
+    val: { x: 0, y: 0 },
+  };
   protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
   protected settings: TooltipSettings;
   constructor(
@@ -776,7 +799,7 @@ class DrawTooltipCommand implements GraphCommand {
     this.settings = {
       textHeight: this.graph.dpr * 18,
       padding: this.graph.dpr * 16,
-      shadowColor: CSS_VARIABLES.shadowLevel1,
+      shadowColor: CSS_VARIABLES.shadowLevel2,
       shadowBlur: 8,
       pointRadius: this.graph.dpr * 4,
       font: `400 ${this.graph.dpr * 18}px Inter`,
@@ -809,10 +832,9 @@ class DrawTooltipCommand implements GraphCommand {
     if (this.functionCommand.hidden) return;
 
     if (this.functionCommand.fn["y"]) {
-      let y = -e.graphY;
-      let x = this.functionCommand.fn["y"](y);
+      const { x, y } = this.calculateValues(e, "y");
 
-      const tolerance = 0.15 * this.graph.scales.scaler;
+      const tolerance = 0.25 * this.graph.scales.scaler;
       const offset = Math.abs(x) - Math.abs(e.graphX);
 
       if (offset < tolerance && offset > -tolerance) {
@@ -820,22 +842,11 @@ class DrawTooltipCommand implements GraphCommand {
           `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
         );
 
-        const precision = Math.min(
-          Math.max(2 - this.graph.scales.exponent, 0),
-          7
-        );
-
-        x = clampNumber(x, 7);
-        y = clampNumber(y, precision);
-
         this.setData(x, y);
         this.setState("running");
       }
     } else {
-      const fn = Object.values(this.functionCommand.fn)[0];
-
-      let x = e.graphX;
-      let y = fn(x);
+      const { x, y } = this.calculateValues(e, "x");
 
       const tolerance = 0.25 * this.graph.scales.scaler;
       const offset = Math.abs(y) - Math.abs(e.graphY);
@@ -845,21 +856,57 @@ class DrawTooltipCommand implements GraphCommand {
           `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
         );
 
-        const precision = Math.min(
-          Math.max(2 - this.graph.scales.exponent, 0),
-          7
-        );
-
-        x = clampNumber(x, precision);
-        y = clampNumber(y, 7);
-
         this.setData(x, y);
         this.setState("running");
       }
     }
   }
 
-  setData(x: number, y: number) {
+  private calculateValues<T extends "x" | "y">(
+    e: T extends "x"
+      ? { graphX: number; graphY?: number }
+      : { graphY: number; graphX?: number },
+    fnName: T
+  ): { x: number; y: number } {
+    const maxFractionDigits = 7;
+    const precision = 2 - this.graph.scales.exponent;
+    let x: number = e["graphX"]! ? e["graphX"]! : 0;
+    let y: number = -e["graphY"]! ? -e["graphY"]! : 0;
+
+    if (fnName === "y") {
+      if (precision <= 0) {
+        y = roundToNeareastMultiple(y, 10, this.graph.scales.exponent - 2);
+        x = this.functionCommand.fn["y"](y);
+        x = roundToNeareastMultiple(x, 10, this.graph.scales.exponent - 2);
+      } else if (precision > 0 && precision < 7) {
+        y = clampNumber(y, precision);
+        x = this.functionCommand.fn["y"](y);
+        x = clampNumber(x, maxFractionDigits);
+      } else {
+        y = clampNumber(y, precision);
+        x = this.functionCommand.fn["y"](y);
+      }
+    } else {
+      const fn = Object.values(this.functionCommand.fn)[0];
+
+      if (precision <= 0) {
+        x = roundToNeareastMultiple(x, 10, this.graph.scales.exponent - 2);
+        y = fn(x);
+        y = roundToNeareastMultiple(y, 10, this.graph.scales.exponent - 2);
+      } else if (precision > 0 && precision < 7) {
+        x = clampNumber(x, precision);
+        y = fn(x);
+        y = clampNumber(y, maxFractionDigits);
+      } else {
+        x = clampNumber(x, precision);
+        y = fn(x);
+      }
+    }
+
+    return { x, y };
+  }
+
+  private setData(x: number, y: number) {
     this.data.val.x = x;
     this.data.val.y = y;
 
@@ -880,49 +927,23 @@ class DrawTooltipCommand implements GraphCommand {
         if (this.state === "idle") return;
 
         if (this.functionCommand.fn["y"]) {
-          const fn = this.functionCommand.fn["y"];
-
           const yTiles =
             (e.offsetY * this.graph.dpr -
               (this.graph.canvasCenterY + this.graph.offsetY)) /
             this.graph.scales.scaledStep;
           const graphY = yTiles * this.graph.scales.scaler;
 
-          let y = -graphY;
-          let x = fn(y);
-
-          const precision = Math.min(
-            Math.max(2 - this.graph.scales.exponent, 0),
-            7
-          );
-
-          x = clampNumber(x, 7);
-          y = clampNumber(y, precision);
+          const { x, y } = this.calculateValues({ graphY }, "y");
 
           this.setData(x, y);
         } else {
-          const fn = Object.values(this.functionCommand.fn)[0];
-
-          // const dx = e.offsetX * this.graph.dpr - lastMouseX
-
           const xTiles =
             (e.offsetX * this.graph.dpr -
               (this.graph.canvasCenterX + this.graph.offsetX)) /
             this.graph.scales.scaledStep;
           const graphX = xTiles * this.graph.scales.scaler;
 
-          let x = graphX;
-          let y = fn(x);
-
-          console.log(x, y);
-
-          const precision = Math.min(
-            Math.max(2 - this.graph.scales.exponent, 0),
-            7
-          );
-
-          x = clampNumber(x, precision);
-          y = clampNumber(y, 7);
+          const { x, y } = this.calculateValues({ graphX }, "x");
 
           this.setData(x, y);
         }
@@ -940,7 +961,6 @@ class DrawTooltipCommand implements GraphCommand {
 
   draw(): void {
     // Point
-
     this.graph.ctx.beginPath();
     this.graph.ctx.arc(
       this.data.coord.x,
@@ -951,38 +971,109 @@ class DrawTooltipCommand implements GraphCommand {
     );
     this.graph.ctx.fill();
 
-    // Tooltip text
+    // Tooltip
+    this.drawTooltip();
+  }
 
+  createTooltipText() {
+    if (this.graph.scales.scaler < 1e-5 || this.graph.scales.scaler > 2e4) {
+      const x = toScientificNotation(this.data.val.x, 2);
+      const y = toScientificNotation(this.data.val.y, 2);
+
+      return {
+        x,
+        y,
+      };
+    } else {
+      return `(${this.data.val.x}, ${this.data.val.y})`;
+    }
+  }
+
+  drawTooltip() {
     const tooltipX = this.data.coord.x - 16;
     const tooltipY = this.data.coord.y - 16;
 
     this.graph.ctx.font = this.settings.font;
+    this.graph.ctx.textAlign = "start";
 
-    const tooltipText = `(${this.data.val.x}, ${this.data.val.y})`;
-    const textMetrics = this.graph.ctx.measureText(tooltipText);
+    let tooltipText = this.createTooltipText();
+    if (typeof tooltipText === "object") {
+      const textX = `(${tooltipText.x[0]}`;
+      const textMetricsX = this.graph.ctx.measureText(textX);
+      const textMetricsExpX = this.graph.ctx.measureText(tooltipText.x[1]);
 
-    this.graph.ctx.save();
-    this.graph.ctx.fillStyle = "white";
-    this.graph.ctx.shadowColor = this.settings.shadowColor;
-    this.graph.ctx.shadowBlur = this.settings.shadowBlur;
+      const textY = `, ${tooltipText.y[0]}`;
+      const textMetricsY = this.graph.ctx.measureText(textY);
+      const textMetricsExpY = this.graph.ctx.measureText(tooltipText.y[1]);
 
-    drawRoundedRect(
-      this.graph.ctx,
-      tooltipX - textMetrics.width - this.settings.padding,
-      tooltipY - this.settings.textHeight - this.settings.padding,
-      textMetrics.width + this.settings.padding,
-      this.settings.textHeight + this.settings.padding,
-      this.settings.borderRadius
-    );
-    this.graph.ctx.fill();
-    this.graph.ctx.restore();
+      const endParenthesis = ")";
+      const endParenthesisMetrics = this.graph.ctx.measureText(endParenthesis);
 
-    this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceHeading;
-    this.graph.ctx.fillText(
-      tooltipText,
-      tooltipX - textMetrics.width / 2 - this.settings.padding / 2,
-      tooltipY - this.settings.textHeight / 2 - this.settings.padding / 2
-    );
+      const totalMetricsWidth =
+        textMetricsX.width +
+        textMetricsExpX.width +
+        textMetricsY.width +
+        textMetricsExpY.width +
+        endParenthesisMetrics.width;
+
+      this.graph.ctx.save();
+      this.graph.ctx.fillStyle = "white";
+      this.graph.ctx.shadowColor = this.settings.shadowColor;
+      this.graph.ctx.shadowBlur = this.settings.shadowBlur;
+
+      drawRoundedRect(
+        this.graph.ctx,
+        tooltipX - totalMetricsWidth - this.settings.padding,
+        tooltipY - this.settings.textHeight - this.settings.padding,
+        totalMetricsWidth + this.settings.padding,
+        this.settings.textHeight + this.settings.padding,
+        this.settings.borderRadius
+      );
+      this.graph.ctx.fill();
+      this.graph.ctx.restore();
+
+      this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceHeading;
+
+      const startX = totalMetricsWidth + this.settings.padding / 2;
+      let curX = tooltipX - startX;
+      const y =
+        tooltipY - this.settings.textHeight / 2 - this.settings.padding / 2;
+
+      this.graph.ctx.fillText(textX, curX, y);
+      curX += textMetricsX.width;
+      this.graph.ctx.fillText(tooltipText.x[1], curX, y - 4);
+      curX += textMetricsExpX.width;
+      this.graph.ctx.fillText(textY, curX, y);
+      curX += textMetricsY.width;
+      this.graph.ctx.fillText(tooltipText.y[1], curX, y - 4);
+      curX += textMetricsExpY.width;
+      this.graph.ctx.fillText(endParenthesis, curX, y);
+    } else {
+      const textMetrics = this.graph.ctx.measureText(tooltipText);
+
+      this.graph.ctx.save();
+      this.graph.ctx.fillStyle = "white";
+      this.graph.ctx.shadowColor = this.settings.shadowColor;
+      this.graph.ctx.shadowBlur = this.settings.shadowBlur;
+
+      drawRoundedRect(
+        this.graph.ctx,
+        tooltipX - textMetrics.width - this.settings.padding,
+        tooltipY - this.settings.textHeight - this.settings.padding,
+        textMetrics.width + this.settings.padding,
+        this.settings.textHeight + this.settings.padding,
+        this.settings.borderRadius
+      );
+      this.graph.ctx.fill();
+      this.graph.ctx.restore();
+
+      this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceHeading;
+      this.graph.ctx.fillText(
+        tooltipText,
+        tooltipX - textMetrics.width - this.settings.padding / 2,
+        tooltipY - this.settings.textHeight / 2 - this.settings.padding / 2
+      );
+    }
   }
 
   destroy(): void {
