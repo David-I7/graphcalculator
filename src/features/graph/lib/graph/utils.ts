@@ -14,3 +14,23 @@ export function drawRoundedRect(
   ctx.arcTo(x, y, x + width, y, radius);
   ctx.closePath();
 }
+
+export function clampNumber(nr: number, fractionDigits: number) {
+  const str = nr.toString();
+  const decimalIdx = str.indexOf(".");
+
+  if (decimalIdx !== -1 && str.length - 1 - decimalIdx > fractionDigits) {
+    return Number(nr.toFixed(fractionDigits));
+  }
+
+  return nr;
+}
+
+export function roundToNeareastMultiple(
+  target: number,
+  nr: number,
+  multiple: number
+) {
+  const rounded = Math.floor(target / nr ** multiple);
+  return rounded * nr ** multiple;
+}

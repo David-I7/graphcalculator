@@ -6,7 +6,7 @@ import {
   MouseEventData,
 } from "../../interfaces";
 import { Graph } from "./graph";
-import { drawRoundedRect } from "./utils";
+import { clampNumber, drawRoundedRect } from "./utils";
 
 type DrawData = {
   scaledStep: number;
@@ -809,8 +809,8 @@ class DrawTooltipCommand implements GraphCommand {
     if (this.functionCommand.hidden) return;
 
     if (this.functionCommand.fn["y"]) {
-      const y = -e.graphY;
-      const x = this.functionCommand.fn["y"](y);
+      let y = -e.graphY;
+      let x = this.functionCommand.fn["y"](y);
 
       const tolerance = 0.15 * this.graph.scales.scaler;
       const offset = Math.abs(x) - Math.abs(e.graphX);
@@ -820,14 +820,22 @@ class DrawTooltipCommand implements GraphCommand {
           `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
         );
 
+        const precision = Math.min(
+          Math.max(2 - this.graph.scales.exponent, 0),
+          7
+        );
+
+        x = clampNumber(x, 7);
+        y = clampNumber(y, precision);
+
         this.setData(x, y);
         this.setState("running");
       }
     } else {
       const fn = Object.values(this.functionCommand.fn)[0];
 
-      const x = e.graphX;
-      const y = fn(x);
+      let x = e.graphX;
+      let y = fn(x);
 
       const tolerance = 0.25 * this.graph.scales.scaler;
       const offset = Math.abs(y) - Math.abs(e.graphY);
@@ -836,6 +844,14 @@ class DrawTooltipCommand implements GraphCommand {
         e.preventDefault(
           `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
         );
+
+        const precision = Math.min(
+          Math.max(2 - this.graph.scales.exponent, 0),
+          7
+        );
+
+        x = clampNumber(x, precision);
+        y = clampNumber(y, 7);
 
         this.setData(x, y);
         this.setState("running");
@@ -863,8 +879,6 @@ class DrawTooltipCommand implements GraphCommand {
       (e) => {
         if (this.state === "idle") return;
 
-        console.log(e.offsetY + this.graph.dpr);
-
         if (this.functionCommand.fn["y"]) {
           const fn = this.functionCommand.fn["y"];
 
@@ -874,10 +888,16 @@ class DrawTooltipCommand implements GraphCommand {
             this.graph.scales.scaledStep;
           const graphY = yTiles * this.graph.scales.scaler;
 
-          const y = -graphY;
-          const x = fn(y);
+          let y = -graphY;
+          let x = fn(y);
 
-          const precision = 0.01 * 10 ** this.graph.scales.exponent;
+          const precision = Math.min(
+            Math.max(2 - this.graph.scales.exponent, 0),
+            7
+          );
+
+          x = clampNumber(x, 7);
+          y = clampNumber(y, precision);
 
           this.setData(x, y);
         } else {
@@ -891,10 +911,18 @@ class DrawTooltipCommand implements GraphCommand {
             this.graph.scales.scaledStep;
           const graphX = xTiles * this.graph.scales.scaler;
 
-          const x = graphX;
-          const y = fn(x);
+          let x = graphX;
+          let y = fn(x);
 
           console.log(x, y);
+
+          const precision = Math.min(
+            Math.max(2 - this.graph.scales.exponent, 0),
+            7
+          );
+
+          x = clampNumber(x, precision);
+          y = clampNumber(y, 7);
 
           this.setData(x, y);
         }

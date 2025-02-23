@@ -64,8 +64,7 @@ export class Scales {
       }
     }
 
-    this._scaler = parseFloat(this.scalesArray[this.scalesIndex]);
-    this._majorGridLine = this.scalesArray[this.scalesIndex][0] === "5" ? 4 : 5;
+    this.updateScales();
     this.graph.on("scale", this.handleScale.bind(this));
   }
 
