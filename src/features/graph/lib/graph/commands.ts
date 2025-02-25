@@ -759,10 +759,6 @@ export class DrawFunctionCommand implements GraphCommand {
       );
       if (isNaN(nextY)) continue;
 
-      // if (fn(i) < 0.1 && fn(i) > -0.1) {
-      //   console.log(i, fn(i));
-      // }
-
       this.graph.ctx.moveTo(curX, curY);
       this.graph.ctx.lineTo(nextX, nextY);
       this.graph.ctx.stroke();
@@ -791,6 +787,7 @@ type TooltipSettings = {
   font: string;
   borderRadius: number;
   margin: number;
+  maxFractionDigits: number;
 };
 
 type TooltipData = {
@@ -812,6 +809,7 @@ class DrawTooltipCommand implements GraphCommand {
     public functionCommand: DrawFunctionCommand
   ) {
     this.settings = {
+      maxFractionDigits: 7,
       textHeight: this.graph.dpr * 18,
       padding: this.graph.dpr * 16,
       shadowColor: CSS_VARIABLES.shadowLevel2,
@@ -883,7 +881,7 @@ class DrawTooltipCommand implements GraphCommand {
       : { graphY: number; graphX?: number },
     fnName: T
   ): { x: number; y: number } {
-    const maxFractionDigits = 7;
+    const maxFractionDigits = this.settings.maxFractionDigits;
     const precision = 2 - this.graph.scales.exponent;
     let x: number = e["graphX"]! ? e["graphX"]! : 0;
     let y: number = -e["graphY"]! ? -e["graphY"]! : 0;
@@ -992,7 +990,7 @@ class DrawTooltipCommand implements GraphCommand {
   private calculateCriticalPointsY() {
     // there are no xIntercepts if the function is contant
     if (this.functionCommand.data.f.node.expr instanceof ConstantNode) return;
-    if (this.functionCommand.data.f.outputIntercepts.length) return;
+
     this.functionCommand.data.f.outputIntercepts = [];
     this.functionCommand.data.df.criticalPoints = [];
 
@@ -1047,11 +1045,6 @@ class DrawTooltipCommand implements GraphCommand {
       prevX = x;
       prevDX = dx;
     }
-
-    console.log(
-      this.functionCommand.data.f.outputIntercepts,
-      this.functionCommand.data.df.criticalPoints
-    );
   }
 
   run() {
@@ -1159,16 +1152,27 @@ class DrawTooltipCommand implements GraphCommand {
     }
   }
 
-  createTooltipText() {
+  createTooltipText(xVal: number, yVal: number) {
     if (this.graph.scales.scaler < 1e-5 || this.graph.scales.scaler > 2e4) {
-      const x = toScientificNotation(this.data.val.x, 2);
-      const y = toScientificNotation(this.data.val.y, 2);
+      const x = toScientificNotation(xVal, 2);
+      const y = toScientificNotation(xVal, 2);
       return {
         x,
         y,
       };
     } else {
-      return `(${this.data.val.x}, ${this.data.val.y})`;
+      // for values <= 1e-7 js converts then to
+      // scientific notation
+
+      return `(${
+        Math.abs(xVal) >= 1e-7
+          ? xVal.toFixed(this.settings.maxFractionDigits)
+          : xVal
+      }, ${
+        Math.abs(yVal) >= 1e-7
+          ? yVal.toFixed(this.settings.maxFractionDigits)
+          : yVal
+      })`;
     }
   }
 
@@ -1221,7 +1225,7 @@ class DrawTooltipCommand implements GraphCommand {
     this.graph.ctx.font = this.settings.font;
     this.graph.ctx.textAlign = "start";
 
-    let tooltipText = this.createTooltipText();
+    let tooltipText = this.createTooltipText(this.data.val.x, this.data.val.y);
     if (typeof tooltipText === "object") {
       const textX = `(${tooltipText.x[0]}`;
       const textMetricsX = this.graph.ctx.measureText(textX);
