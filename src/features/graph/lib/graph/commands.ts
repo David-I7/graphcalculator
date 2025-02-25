@@ -7,6 +7,7 @@ import {
 } from "../../interfaces";
 import { Graph } from "./graph";
 import {
+  bisection,
   clampNumber,
   drawRoundedRect,
   roundToNeareastMultiple,
@@ -612,11 +613,12 @@ export class DrawAxisCommand implements GraphCommand {
 type FnData = {
   fn: {
     param: string;
-    paramIntercept: number;
-    outputIntercepts?: number[];
+    inputIntercept: number;
+    outputIntercepts: number[];
     f: (input: number) => number;
   };
   derivative: {
+    criticalPoints: [number, number][];
     param: string;
     f: (input: number) => number;
   };
@@ -919,11 +921,64 @@ class DrawTooltipCommand implements GraphCommand {
       (-y * this.graph.scales.scaledStep) / this.graph.scales.scaler;
   }
 
+  private calculateCriticalPointsX() {
+    this.functionCommand.data.fn.outputIntercepts = [];
+    this.functionCommand.data.derivative.criticalPoints = [];
+
+    const fn = this.functionCommand.data.fn.f;
+    const df = this.functionCommand.data.derivative.f;
+
+    // approaching from the left side
+    const leftTiles =
+      (this.graph.clientLeft || 0.01) / this.graph.scales.scaledStep;
+    const minX = leftTiles * this.graph.scales.scaler;
+
+    // // approaching from the right side
+    const rightTiles =
+      (this.graph.clientRight || -0.01) / this.graph.scales.scaledStep;
+    const maxX = rightTiles * this.graph.scales.scaler;
+
+    let prevDY: number | undefined;
+    let prevY: number | undefined;
+    const nextStep: number = 0.01 * this.graph.scales.scaler;
+
+    for (let i = minX; i < maxX; i += nextStep) {
+      const y = fn(i);
+      const dy = df(i);
+
+      if (
+        typeof prevY === "number" &&
+        ((prevY < 0 && y > 0) || (prevY > 0 && y < 0))
+      ) {
+        // console.log(prevY, y);
+        const root = bisection(i - nextStep, i, fn);
+        root ? this.functionCommand.data.fn.outputIntercepts.push(root) : null;
+      }
+      if (
+        typeof prevDY === "number" &&
+        ((prevDY < 0 && dy > 0) || (prevDY > 0 && dy < 0))
+      ) {
+        const root = bisection(i - nextStep, i, df);
+        root
+          ? this.functionCommand.data.derivative.criticalPoints.push([
+              root,
+              fn(root),
+            ])
+          : null;
+      }
+
+      prevY = y;
+      prevDY = dy;
+    }
+
+    console.log(
+      this.functionCommand.data.fn.outputIntercepts,
+      this.functionCommand.data.derivative.criticalPoints
+    );
+  }
+
   focus() {
-    // calc critical points
-    // if (this.functionCommand.data.fn["y"]) {
-    // } else {
-    // }
+    this.calculateCriticalPointsX();
   }
 
   run() {
@@ -993,7 +1048,7 @@ class DrawTooltipCommand implements GraphCommand {
       } else {
         this.graph.ctx.arc(
           0,
-          (-this.functionCommand.data.fn.paramIntercept *
+          (-this.functionCommand.data.fn.inputIntercept *
             this.graph.scales.scaledStep) /
             this.graph.scales.scaler,
           this.settings.pointRadius,
@@ -1001,6 +1056,36 @@ class DrawTooltipCommand implements GraphCommand {
           Math.PI * 2
         );
         this.graph.ctx.fill();
+
+        const xIntercepts = this.functionCommand.data.fn.outputIntercepts;
+        for (let i = 0; i < xIntercepts.length; i++) {
+          this.graph.ctx.beginPath();
+          this.graph.ctx.arc(
+            (xIntercepts[i] * this.graph.scales.scaledStep) /
+              this.graph.scales.scaler,
+            0,
+            this.settings.pointRadius,
+            0,
+            Math.PI * 2
+          );
+          this.graph.ctx.fill();
+        }
+
+        const criticalPoints =
+          this.functionCommand.data.derivative.criticalPoints;
+        for (let i = 0; i < criticalPoints.length; i++) {
+          this.graph.ctx.beginPath();
+          this.graph.ctx.arc(
+            (criticalPoints[i][0] * this.graph.scales.scaledStep) /
+              this.graph.scales.scaler,
+            (-criticalPoints[i][1] * this.graph.scales.scaledStep) /
+              this.graph.scales.scaler,
+            this.settings.pointRadius,
+            0,
+            Math.PI * 2
+          );
+          this.graph.ctx.fill();
+        }
       }
     }
   }

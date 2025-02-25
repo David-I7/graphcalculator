@@ -100,9 +100,14 @@ class MathJsParser {
     code.evaluate(scope);
 
     //y or x intercept
-    const paramIntercept = node.expr.evaluate({ [node.params[0]]: 0 });
+    const inputIntercept = node.expr.evaluate({ [node.params[0]]: 0 });
 
-    return { param: node.params[0], f: scope[node.name], paramIntercept };
+    return {
+      param: node.params[0],
+      f: scope[node.name],
+      inputIntercept,
+      outputIntercepts: [],
+    };
   }
 
   createDerivativeData(node: FunctionAssignmentNode) {
@@ -115,13 +120,14 @@ class MathJsParser {
       derivativeNode
     );
 
-    const code = node.compile();
+    const code = derivativeFunctionAssignmentNode.compile();
     const scope: FunctionDeclaration = {};
     code.evaluate(scope);
 
     return {
       param: derivativeFunctionAssignmentNode.params[0],
       f: scope[derivativeFunctionAssignmentNode.name],
+      criticalPoints: [],
     };
   }
 }

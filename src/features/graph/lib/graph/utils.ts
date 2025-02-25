@@ -43,3 +43,44 @@ export function toScientificNotation(nr: number, precision: number) {
     `${Number(exp[1])}`,
   ];
 }
+
+export function bisection(
+  xStart: number,
+  xEnd: number,
+  f: (input: number) => number,
+  tolerance: number = 1e-7,
+  maxIterations: number = 100
+) {
+  let x1 = xStart;
+  let x2 = xEnd;
+  let y1 = f(x1);
+  let y2 = f(x2);
+  let mean = (x1 + x2) / 2;
+
+  if (y1 * y2 >= 0)
+    throw new Error(`Bisection requires opposite signs.\n
+  (x1: ${x1}, y1: ${y1})\n
+  (x2: ${x2}, y2:${y2})\n
+  }`);
+
+  while (maxIterations > 0) {
+    mean = (x1 + x2) / 2;
+    y1 = f(x1);
+    const y3 = f(mean);
+    // const y2 = f(x2)
+
+    if (Math.abs(y3) < tolerance) {
+      return mean;
+    }
+
+    if (y1 * y3 < 0) {
+      x2 = mean;
+    } else {
+      x1 = mean;
+    }
+
+    maxIterations--;
+  }
+
+  return mean;
+}
