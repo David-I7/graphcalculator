@@ -7,7 +7,7 @@ export const eventMap: Record<Event_Name, new (graph: Graph) => BusEvent> = {
 };
 
 type BaseEventDefaults = {
-  preventDefault: (debug?: string) => void;
+  preventDefault: () => void;
   defaultPrevented: boolean;
 };
 

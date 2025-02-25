@@ -15,7 +15,7 @@ import { useGraphContext } from "../../Graph";
 import { ExpressionValidator } from "./validation";
 import { useAppDispatch } from "../../../../state/hooks";
 import { clearError, setError } from "../../../../state/error/error";
-import { DrawFunctionCommand } from "../graph/commands";
+import { DrawFunctionCommand, FnData } from "../graph/commands";
 
 type FunctionDeclaration = Record<string, (input: number) => number>;
 
@@ -63,9 +63,12 @@ class MathJsParser {
 
     console.log(node);
     if (node instanceof FunctionAssignmentNode) {
-      const fnData = {
-        fn: this.createFunctionData(node),
-        derivative: this.createDerivativeData(node),
+      const df = this.createDerivativeData(node);
+
+      const fnData: FnData = {
+        f: this.createFunctionData(node),
+        df: this.createDerivativeData(node),
+        ddf: this.createDerivativeData(df.node),
       };
 
       return new DrawFunctionCommand(graph, expr, fnData);
@@ -80,9 +83,12 @@ class MathJsParser {
           node.value
         );
 
-        const fnData = {
-          fn: this.createFunctionData(fn),
-          derivative: this.createDerivativeData(fn),
+        const df = this.createDerivativeData(fn);
+
+        const fnData: FnData = {
+          f: this.createFunctionData(fn),
+          df,
+          ddf: this.createDerivativeData(df.node),
         };
 
         return new DrawFunctionCommand(graph, expr, fnData);
@@ -94,7 +100,7 @@ class MathJsParser {
     ).err;
   }
 
-  createFunctionData(node: FunctionAssignmentNode) {
+  createFunctionData(node: FunctionAssignmentNode): FnData["f"] {
     const code = node.compile();
     const scope: FunctionDeclaration = {};
     code.evaluate(scope);
@@ -107,10 +113,11 @@ class MathJsParser {
       f: scope[node.name],
       inputIntercept,
       outputIntercepts: [],
+      node,
     };
   }
 
-  createDerivativeData(node: FunctionAssignmentNode) {
+  createDerivativeData(node: FunctionAssignmentNode): FnData["df"] {
     const derivativeNode = derivative(node, node.params["0"], {
       simplify: false,
     });
@@ -125,6 +132,7 @@ class MathJsParser {
     code.evaluate(scope);
 
     return {
+      node: derivativeFunctionAssignmentNode,
       param: derivativeFunctionAssignmentNode.params[0],
       f: scope[derivativeFunctionAssignmentNode.name],
       criticalPoints: [],

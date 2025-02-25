@@ -1,3 +1,4 @@
+import { ConstantNode, FunctionAssignmentNode } from "mathjs";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { Expression } from "../../../../lib/api/graph";
 import {
@@ -10,6 +11,7 @@ import {
   bisection,
   clampNumber,
   drawRoundedRect,
+  newtonsMethod,
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
@@ -610,14 +612,22 @@ export class DrawAxisCommand implements GraphCommand {
   }
 }
 
-type FnData = {
-  fn: {
+export type FnData = {
+  f: {
+    node: FunctionAssignmentNode;
     param: string;
     inputIntercept: number;
     outputIntercepts: number[];
     f: (input: number) => number;
   };
-  derivative: {
+  df: {
+    node: FunctionAssignmentNode;
+    criticalPoints: [number, number][];
+    param: string;
+    f: (input: number) => number;
+  };
+  ddf: {
+    node: FunctionAssignmentNode;
     criticalPoints: [number, number][];
     param: string;
     f: (input: number) => number;
@@ -654,7 +664,7 @@ export class DrawFunctionCommand implements GraphCommand {
       // 1 box = 1 tile
       // x = 1 tile * scaler
 
-      if (this.data.fn.param === "y") {
+      if (this.data.f.param === "y") {
         this.drawFunctionOfY();
       } else {
         this.drawFunctionOfX();
@@ -671,7 +681,7 @@ export class DrawFunctionCommand implements GraphCommand {
   }
 
   drawFunctionOfY() {
-    const fn = this.data.fn.f;
+    const f = this.data.f.f;
 
     // approaching from the left side
     const topTiles =
@@ -693,14 +703,14 @@ export class DrawFunctionCommand implements GraphCommand {
         nextY ?? y * (this.graph.scales.scaledStep / this.graph.scales.scaler);
       const curX =
         nextX ??
-        (fn(-y) * this.graph.scales.scaledStep) / this.graph.scales.scaler;
+        (f(-y) * this.graph.scales.scaledStep) / this.graph.scales.scaler;
       if (isNaN(curX)) continue;
 
       nextY =
         (y + nextStep) *
         (this.graph.scales.scaledStep / this.graph.scales.scaler);
       nextX =
-        (fn(-y + nextStep) * this.graph.scales.scaledStep) /
+        (f(-y + nextStep) * this.graph.scales.scaledStep) /
         this.graph.scales.scaler;
       if (isNaN(nextX)) continue;
 
@@ -711,7 +721,7 @@ export class DrawFunctionCommand implements GraphCommand {
   }
 
   drawFunctionOfX() {
-    const fn = this.data.fn.f;
+    const f = this.data.f.f;
 
     // approaching from the left side
     const leftTiles =
@@ -734,7 +744,7 @@ export class DrawFunctionCommand implements GraphCommand {
       const curY =
         nextY ??
         -(
-          (fn(i + nextStep) / this.graph.scales.scaler) *
+          (f(i + nextStep) / this.graph.scales.scaler) *
           this.graph.scales.scaledStep
         );
       if (isNaN(curY)) continue;
@@ -744,14 +754,10 @@ export class DrawFunctionCommand implements GraphCommand {
         (this.graph.scales.scaledStep / this.graph.scales.scaler);
 
       nextY = -(
-        (fn(i + nextStep) / this.graph.scales.scaler) *
+        (f(i + nextStep) / this.graph.scales.scaler) *
         this.graph.scales.scaledStep
       );
       if (isNaN(nextY)) continue;
-
-      // if (fn(i) < 0.1 && fn(i) > -0.1) {
-      //   console.log(i, fn(i));
-      // }
 
       this.graph.ctx.moveTo(curX, curY);
       this.graph.ctx.lineTo(nextX, nextY);
@@ -781,6 +787,7 @@ type TooltipSettings = {
   font: string;
   borderRadius: number;
   margin: number;
+  maxFractionDigits: number;
 };
 
 type TooltipData = {
@@ -802,6 +809,7 @@ class DrawTooltipCommand implements GraphCommand {
     public functionCommand: DrawFunctionCommand
   ) {
     this.settings = {
+      maxFractionDigits: 7,
       textHeight: this.graph.dpr * 18,
       padding: this.graph.dpr * 16,
       shadowColor: CSS_VARIABLES.shadowLevel2,
@@ -821,7 +829,6 @@ class DrawTooltipCommand implements GraphCommand {
       this.destroyController!.abort();
       this.destroyController = null;
     } else if (state === "focused") {
-      this.focus();
     } else {
       state;
       if (this.destroyController) this.destroyController.abort();
@@ -837,33 +844,33 @@ class DrawTooltipCommand implements GraphCommand {
   handleMouseDown(e: MouseEventData) {
     if (this.functionCommand.hidden) return;
 
-    if (this.functionCommand.data.fn.param === "y") {
+    const tolerance = 0.25 * this.graph.scales.scaler;
+    let outerX!: number;
+    let outerY!: number;
+    let offset!: number;
+
+    if (this.functionCommand.data.f.param === "y") {
       const { x, y } = this.calculateValues(e, "y");
+      outerX = x;
+      outerY = y;
 
-      const tolerance = 0.25 * this.graph.scales.scaler;
-      const offset = Math.abs(x) - Math.abs(e.graphX);
-
-      if (offset < tolerance && offset > -tolerance) {
-        e.preventDefault(
-          `Calling from function of Y because ${tolerance} > ${offset} > ${-tolerance} `
-        );
-
-        this.setData(x, y);
-        this.setState("running");
-      }
+      offset = Math.abs(x) - Math.abs(e.graphX);
     } else {
       const { x, y } = this.calculateValues(e, "x");
+      outerX = x;
+      outerY = y;
 
-      const tolerance = 0.25 * this.graph.scales.scaler;
-      const offset = Math.abs(y) - Math.abs(e.graphY);
+      offset = Math.abs(y) - Math.abs(e.graphY);
+    }
 
-      if (offset < tolerance && offset > -tolerance) {
-        e.preventDefault(
-          `Calling from function of X because ${tolerance} > ${offset} > ${-tolerance} `
-        );
+    if (offset < tolerance && offset > -tolerance) {
+      e.preventDefault();
 
-        this.setData(x, y);
-        this.setState("running");
+      this.setData(outerX, outerY);
+      this.setState("running");
+    } else {
+      if (this.state !== "idle") {
+        this.setState("idle");
       }
     }
   }
@@ -874,7 +881,7 @@ class DrawTooltipCommand implements GraphCommand {
       : { graphY: number; graphX?: number },
     fnName: T
   ): { x: number; y: number } {
-    const maxFractionDigits = 7;
+    const maxFractionDigits = this.settings.maxFractionDigits;
     const precision = 2 - this.graph.scales.exponent;
     let x: number = e["graphX"]! ? e["graphX"]! : 0;
     let y: number = -e["graphY"]! ? -e["graphY"]! : 0;
@@ -882,18 +889,18 @@ class DrawTooltipCommand implements GraphCommand {
     if (fnName === "y") {
       if (precision <= 0) {
         y = roundToNeareastMultiple(y, 10, this.graph.scales.exponent - 2);
-        x = this.functionCommand.data.fn.f(y);
+        x = this.functionCommand.data.f.f(y);
         x = roundToNeareastMultiple(x, 10, this.graph.scales.exponent - 2);
       } else if (precision > 0 && precision < 7) {
         y = clampNumber(y, precision);
-        x = this.functionCommand.data.fn.f(y);
+        x = this.functionCommand.data.f.f(y);
         x = clampNumber(x, maxFractionDigits);
       } else {
         y = clampNumber(y, precision);
-        x = this.functionCommand.data.fn.f(y);
+        x = this.functionCommand.data.f.f(y);
       }
     } else {
-      const fn = this.functionCommand.data.fn.f;
+      const fn = this.functionCommand.data.f.f;
 
       if (precision <= 0) {
         x = roundToNeareastMultiple(x, 10, this.graph.scales.exponent - 2);
@@ -922,11 +929,15 @@ class DrawTooltipCommand implements GraphCommand {
   }
 
   private calculateCriticalPointsX() {
-    this.functionCommand.data.fn.outputIntercepts = [];
-    this.functionCommand.data.derivative.criticalPoints = [];
+    // there are no xIntercepts if the function is contant
+    if (this.functionCommand.data.f.node.expr instanceof ConstantNode) return;
 
-    const fn = this.functionCommand.data.fn.f;
-    const df = this.functionCommand.data.derivative.f;
+    this.functionCommand.data.f.outputIntercepts = [];
+    this.functionCommand.data.df.criticalPoints = [];
+
+    const f = this.functionCommand.data.f.f;
+    const df = this.functionCommand.data.df.f;
+    const ddf = this.functionCommand.data.ddf.f;
 
     // approaching from the left side
     const leftTiles =
@@ -943,42 +954,97 @@ class DrawTooltipCommand implements GraphCommand {
     const nextStep: number = 0.01 * this.graph.scales.scaler;
 
     for (let i = minX; i < maxX; i += nextStep) {
-      const y = fn(i);
+      const y = f(i);
       const dy = df(i);
 
       if (
         typeof prevY === "number" &&
         ((prevY < 0 && y > 0) || (prevY > 0 && y < 0))
       ) {
-        // console.log(prevY, y);
-        const root = bisection(i - nextStep, i, fn);
-        root ? this.functionCommand.data.fn.outputIntercepts.push(root) : null;
+        const root = newtonsMethod(i, f, df);
+        root ? this.functionCommand.data.f.outputIntercepts.push(root) : null;
       }
+
       if (
         typeof prevDY === "number" &&
         ((prevDY < 0 && dy > 0) || (prevDY > 0 && dy < 0))
       ) {
-        const root = bisection(i - nextStep, i, df);
+        let root!: number;
+
+        // if df is constant ddf is 0 so we can't use
+        // newtons method
+        if (this.functionCommand.data.df.node instanceof ConstantNode) {
+          root = bisection(i - nextStep, i, df);
+        } else {
+          root = newtonsMethod(i, df, ddf);
+        }
+
         root
-          ? this.functionCommand.data.derivative.criticalPoints.push([
-              root,
-              fn(root),
-            ])
+          ? this.functionCommand.data.df.criticalPoints.push([root, f(root)])
           : null;
       }
-
       prevY = y;
       prevDY = dy;
     }
-
-    console.log(
-      this.functionCommand.data.fn.outputIntercepts,
-      this.functionCommand.data.derivative.criticalPoints
-    );
   }
+  private calculateCriticalPointsY() {
+    // there are no xIntercepts if the function is contant
+    if (this.functionCommand.data.f.node.expr instanceof ConstantNode) return;
 
-  focus() {
-    this.calculateCriticalPointsX();
+    this.functionCommand.data.f.outputIntercepts = [];
+    this.functionCommand.data.df.criticalPoints = [];
+
+    const f = this.functionCommand.data.f.f;
+    const df = this.functionCommand.data.df.f;
+    const ddf = this.functionCommand.data.ddf.f;
+
+    // approaching from the left side
+    const topTiles =
+      (this.graph.clientTop || 0.01) / this.graph.scales.scaledStep;
+    const minY = topTiles * this.graph.scales.scaler;
+
+    // // approaching from the right side
+    const bottomTiles =
+      (this.graph.clientBottom || -0.01) / this.graph.scales.scaledStep;
+    const maxY = bottomTiles * this.graph.scales.scaler;
+
+    let prevX: number | undefined;
+    let prevDX: number | undefined;
+    const nextStep = 0.01 * this.graph.scales.scaler;
+
+    for (let i = minY; i < maxY; i += nextStep) {
+      const x = f(i);
+      const dx = df(i);
+
+      if (
+        typeof prevX === "number" &&
+        ((prevX < 0 && x > 0) || (prevX > 0 && x < 0))
+      ) {
+        const root = newtonsMethod(i, f, df);
+        root ? this.functionCommand.data.f.outputIntercepts.push(root) : null;
+      }
+
+      if (
+        typeof prevDX === "number" &&
+        ((prevDX < 0 && dx > 0) || (prevDX > 0 && dx < 0))
+      ) {
+        let root!: number;
+
+        // if df is constant ddf is 0 so we can't use
+        // newtons method
+        if (this.functionCommand.data.df.node instanceof ConstantNode) {
+          root = bisection(i - nextStep, i, df);
+        } else {
+          root = newtonsMethod(i, df, ddf);
+        }
+
+        root
+          ? this.functionCommand.data.df.criticalPoints.push([f(root), root])
+          : null;
+      }
+      prevX = x;
+      prevDX = dx;
+    }
   }
 
   run() {
@@ -987,7 +1053,7 @@ class DrawTooltipCommand implements GraphCommand {
       (e) => {
         if (this.state !== "running") return;
 
-        if (this.functionCommand.data.fn.param === "y") {
+        if (this.functionCommand.data.f.param === "y") {
           const yTiles =
             (e.offsetY * this.graph.dpr -
               (this.graph.canvasCenterY + this.graph.offsetY)) /
@@ -1021,8 +1087,20 @@ class DrawTooltipCommand implements GraphCommand {
   }
 
   draw(): void {
+    this.graph.ctx.fillStyle = CSS_VARIABLES.secondaryContainer;
+
+    this.graph.ctx.beginPath();
+    if (this.functionCommand.data.f.param === "y") {
+      this.calculateCriticalPointsY();
+      this.drawCriticalPoints("y");
+    } else {
+      this.calculateCriticalPointsX();
+      this.drawCriticalPoints("x");
+    }
+
     if (this.state === "running") {
       // Point
+      this.graph.ctx.fillStyle = this.functionCommand.color;
       this.graph.ctx.beginPath();
       this.graph.ctx.arc(
         this.data.coord.x,
@@ -1035,71 +1113,66 @@ class DrawTooltipCommand implements GraphCommand {
 
       // Tooltip
       this.drawTooltip();
-    } else if (this.state === "focused") {
-      this.graph.ctx.beginPath();
-      if (this.functionCommand.data.fn.param === "y") {
-        this.graph.ctx.arc(
-          10,
-          this.data.coord.y,
-          this.settings.pointRadius,
-          0,
-          Math.PI * 2
-        );
-      } else {
-        this.graph.ctx.arc(
-          0,
-          (-this.functionCommand.data.fn.inputIntercept *
-            this.graph.scales.scaledStep) /
-            this.graph.scales.scaler,
-          this.settings.pointRadius,
-          0,
-          Math.PI * 2
-        );
-        this.graph.ctx.fill();
-
-        const xIntercepts = this.functionCommand.data.fn.outputIntercepts;
-        for (let i = 0; i < xIntercepts.length; i++) {
-          this.graph.ctx.beginPath();
-          this.graph.ctx.arc(
-            (xIntercepts[i] * this.graph.scales.scaledStep) /
-              this.graph.scales.scaler,
-            0,
-            this.settings.pointRadius,
-            0,
-            Math.PI * 2
-          );
-          this.graph.ctx.fill();
-        }
-
-        const criticalPoints =
-          this.functionCommand.data.derivative.criticalPoints;
-        for (let i = 0; i < criticalPoints.length; i++) {
-          this.graph.ctx.beginPath();
-          this.graph.ctx.arc(
-            (criticalPoints[i][0] * this.graph.scales.scaledStep) /
-              this.graph.scales.scaler,
-            (-criticalPoints[i][1] * this.graph.scales.scaledStep) /
-              this.graph.scales.scaler,
-            this.settings.pointRadius,
-            0,
-            Math.PI * 2
-          );
-          this.graph.ctx.fill();
-        }
-      }
     }
   }
 
-  createTooltipText() {
+  drawCriticalPoints(param: "x" | "y") {
+    const tiles = this.graph.scales.scaledStep / this.graph.scales.scaler;
+
+    let x: number =
+      param === "x" ? 0 : this.functionCommand.data.f.inputIntercept * tiles;
+    let y: number =
+      param === "x" ? -this.functionCommand.data.f.inputIntercept * tiles : 0;
+
+    this.graph.ctx.arc(x, y, this.settings.pointRadius, 0, Math.PI * 2);
+    this.graph.ctx.fill();
+
+    const outputIntercepts = this.functionCommand.data.f.outputIntercepts;
+    for (let i = 0; i < outputIntercepts.length; i++) {
+      x = param === "x" ? outputIntercepts[i] * tiles : 0;
+
+      y = param === "x" ? 0 : -outputIntercepts[i] * tiles;
+
+      this.graph.ctx.beginPath();
+      this.graph.ctx.arc(x, y, this.settings.pointRadius, 0, Math.PI * 2);
+      this.graph.ctx.fill();
+    }
+
+    const criticalPoints = this.functionCommand.data.df.criticalPoints;
+    for (let i = 0; i < criticalPoints.length; i++) {
+      this.graph.ctx.beginPath();
+      this.graph.ctx.arc(
+        criticalPoints[i][0] * tiles,
+        -criticalPoints[i][1] * tiles,
+        this.settings.pointRadius,
+        0,
+        Math.PI * 2
+      );
+      this.graph.ctx.fill();
+    }
+  }
+
+  createTooltipText(xVal: number, yVal: number) {
     if (this.graph.scales.scaler < 1e-5 || this.graph.scales.scaler > 2e4) {
-      const x = toScientificNotation(this.data.val.x, 2);
-      const y = toScientificNotation(this.data.val.y, 2);
+      const x = toScientificNotation(xVal, 2);
+      const y = toScientificNotation(xVal, 2);
       return {
         x,
         y,
       };
     } else {
-      return `(${this.data.val.x}, ${this.data.val.y})`;
+      // for values <= 1e-7 js converts then to
+      // scientific notation
+
+      return `(${
+        Math.abs(xVal) >= 1e-7
+          ? xVal.toFixed(this.settings.maxFractionDigits)
+          : xVal
+      }, ${
+        Math.abs(yVal) >= 1e-7
+          ? yVal.toFixed(this.settings.maxFractionDigits)
+          : yVal
+      })`;
     }
   }
 
@@ -1152,7 +1225,7 @@ class DrawTooltipCommand implements GraphCommand {
     this.graph.ctx.font = this.settings.font;
     this.graph.ctx.textAlign = "start";
 
-    let tooltipText = this.createTooltipText();
+    let tooltipText = this.createTooltipText(this.data.val.x, this.data.val.y);
     if (typeof tooltipText === "object") {
       const textX = `(${tooltipText.x[0]}`;
       const textMetricsX = this.graph.ctx.measureText(textX);
