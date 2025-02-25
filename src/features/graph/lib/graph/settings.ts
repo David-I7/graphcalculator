@@ -123,7 +123,6 @@ export class GraphSettings {
           graphY,
           preventDefault(debug?: string) {
             this.defaultPrevented = true;
-            console.log(debug);
           },
           defaultPrevented: false,
         };

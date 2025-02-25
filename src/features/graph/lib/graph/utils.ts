@@ -49,7 +49,7 @@ export function bisection(
   xEnd: number,
   f: (input: number) => number,
   tolerance: number = 1e-7,
-  maxIterations: number = 100
+  maxIterations: number = 50
 ) {
   let x1 = xStart;
   let x2 = xEnd;
@@ -83,4 +83,29 @@ export function bisection(
   }
 
   return mean;
+}
+
+export function newtonsMethod(
+  x: number,
+  f: (input: number) => number,
+  df: (input: number) => number,
+  tolerance: number = 1e-7,
+  maxIterations: number = 10
+) {
+  let curX: number = x;
+
+  while (maxIterations > 0) {
+    const curY: number = f(curX);
+    const curDY: number = df(curX);
+
+    if (curY < tolerance && curY > -tolerance) {
+      return curX;
+    }
+
+    curX = curX - curY / curDY;
+
+    maxIterations--;
+  }
+
+  return curX;
 }
