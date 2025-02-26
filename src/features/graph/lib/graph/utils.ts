@@ -109,3 +109,40 @@ export function newtonsMethod(
 
   return curX;
 }
+
+export function binarySearchClosest<T>(
+  searchValue: number,
+  arr: T[],
+  cb?: (val: T) => number
+): T | null {
+  if (!arr.length) return null;
+
+  let start = 0;
+  let end = arr.length - 1;
+  let mean = Math.floor((start + end) / 2);
+  let closest: number = mean;
+  let closestVal: number = Math.abs(
+    searchValue - (cb ? cb(arr[mean]) : (arr[mean] as number))
+  );
+
+  while (start <= end) {
+    const curVal = cb ? cb(arr[mean]) : (arr[mean] as number);
+    if (curVal === searchValue) {
+      return arr[mean];
+    } else if (searchValue < curVal) {
+      end = mean - 1;
+    } else {
+      start = mean + 1;
+    }
+
+    const curdif = Math.abs(searchValue - curVal);
+    if (curdif < closestVal) {
+      closest = mean;
+      closestVal = curdif;
+    }
+
+    mean = Math.floor((start + end) / 2);
+  }
+
+  return arr[closest];
+}

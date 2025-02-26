@@ -8,6 +8,7 @@ import {
 } from "../../interfaces";
 import { Graph } from "./graph";
 import {
+  binarySearchClosest,
   bisection,
   clampNumber,
   drawRoundedRect,
@@ -875,43 +876,51 @@ class DrawTooltipCommand implements GraphCommand {
     }
   }
 
+  private roundValue(val: number, precision: number) {
+    if (precision <= 0) {
+      return roundToNeareastMultiple(val, 10, -precision + 2);
+    } else {
+      return clampNumber(val, precision);
+    }
+  }
+
   private calculateValues<T extends "x" | "y">(
     e: T extends "x"
       ? { graphX: number; graphY?: number }
       : { graphY: number; graphX?: number },
-    fnName: T
+    param: T
   ): { x: number; y: number } {
     const maxFractionDigits = this.settings.maxFractionDigits;
     const precision = 2 - this.graph.scales.exponent;
     let x: number = e["graphX"]! ? e["graphX"]! : 0;
     let y: number = -e["graphY"]! ? -e["graphY"]! : 0;
 
-    if (fnName === "y") {
+    if (param === "y") {
       if (precision <= 0) {
-        y = roundToNeareastMultiple(y, 10, this.graph.scales.exponent - 2);
+        y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
-        x = roundToNeareastMultiple(x, 10, this.graph.scales.exponent - 2);
-      } else if (precision > 0 && precision < 7) {
-        y = clampNumber(y, precision);
+        x = this.roundValue(x, precision);
+      } else if (precision > 0 && precision <= 7) {
+        y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
         x = clampNumber(x, maxFractionDigits);
       } else {
-        y = clampNumber(y, precision);
+        y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
       }
     } else {
       const fn = this.functionCommand.data.f.f;
 
       if (precision <= 0) {
-        x = roundToNeareastMultiple(x, 10, this.graph.scales.exponent - 2);
+        x = this.roundValue(x, precision);
         y = fn(x);
-        y = roundToNeareastMultiple(y, 10, this.graph.scales.exponent - 2);
-      } else if (precision > 0 && precision < 7) {
-        x = clampNumber(x, precision);
+        y = this.roundValue(y, precision);
+      } else if (precision > 0 && precision <= 7) {
+        x = this.roundValue(x, precision);
         y = fn(x);
         y = clampNumber(y, maxFractionDigits);
       } else {
-        x = clampNumber(x, precision);
+        x = this.roundValue(x, precision);
         y = fn(x);
       }
     }
@@ -962,7 +971,7 @@ class DrawTooltipCommand implements GraphCommand {
         ((prevY < 0 && y > 0) || (prevY > 0 && y < 0))
       ) {
         const root = newtonsMethod(i, f, df);
-        root ? this.functionCommand.data.f.outputIntercepts.push(root) : null;
+        this.functionCommand.data.f.outputIntercepts.push(root);
       }
 
       if (
@@ -973,22 +982,22 @@ class DrawTooltipCommand implements GraphCommand {
 
         // if df is constant ddf is 0 so we can't use
         // newtons method
-        if (this.functionCommand.data.df.node instanceof ConstantNode) {
+        if (
+          this.functionCommand.data.ddf.node.expr instanceof ConstantNode &&
+          this.functionCommand.data.ddf.node.expr.value === 0
+        ) {
           root = bisection(i - nextStep, i, df);
         } else {
           root = newtonsMethod(i, df, ddf);
         }
-
-        root
-          ? this.functionCommand.data.df.criticalPoints.push([root, f(root)])
-          : null;
+        this.functionCommand.data.df.criticalPoints.push([root, f(root)]);
       }
       prevY = y;
       prevDY = dy;
     }
   }
   private calculateCriticalPointsY() {
-    // there are no xIntercepts if the function is contant
+    // there are no yIntercepts if the function is contant
     if (this.functionCommand.data.f.node.expr instanceof ConstantNode) return;
 
     this.functionCommand.data.f.outputIntercepts = [];
@@ -1001,12 +1010,13 @@ class DrawTooltipCommand implements GraphCommand {
     // approaching from the left side
     const topTiles =
       (this.graph.clientTop || 0.01) / this.graph.scales.scaledStep;
-    const minY = topTiles * this.graph.scales.scaler;
-
-    // // approaching from the right side
+    // approaching from the right side
     const bottomTiles =
       (this.graph.clientBottom || -0.01) / this.graph.scales.scaledStep;
-    const maxY = bottomTiles * this.graph.scales.scaler;
+
+    // minY is based on actual minY, not canvas minY (graphY)
+    const minY = -bottomTiles * this.graph.scales.scaler;
+    const maxY = -topTiles * this.graph.scales.scaler;
 
     let prevX: number | undefined;
     let prevDX: number | undefined;
@@ -1021,7 +1031,7 @@ class DrawTooltipCommand implements GraphCommand {
         ((prevX < 0 && x > 0) || (prevX > 0 && x < 0))
       ) {
         const root = newtonsMethod(i, f, df);
-        root ? this.functionCommand.data.f.outputIntercepts.push(root) : null;
+        this.functionCommand.data.f.outputIntercepts.push(root);
       }
 
       if (
@@ -1029,18 +1039,17 @@ class DrawTooltipCommand implements GraphCommand {
         ((prevDX < 0 && dx > 0) || (prevDX > 0 && dx < 0))
       ) {
         let root!: number;
-
         // if df is constant ddf is 0 so we can't use
         // newtons method
-        if (this.functionCommand.data.df.node instanceof ConstantNode) {
+        if (
+          this.functionCommand.data.ddf.node.expr instanceof ConstantNode &&
+          this.functionCommand.data.ddf.node.expr.value === 0
+        ) {
           root = bisection(i - nextStep, i, df);
         } else {
           root = newtonsMethod(i, df, ddf);
         }
-
-        root
-          ? this.functionCommand.data.df.criticalPoints.push([f(root), root])
-          : null;
+        this.functionCommand.data.df.criticalPoints.push([f(root), root]);
       }
       prevX = x;
       prevDX = dx;
@@ -1051,28 +1060,77 @@ class DrawTooltipCommand implements GraphCommand {
     this.graph.canvas.addEventListener(
       "mousemove",
       (e) => {
-        if (this.state !== "running") return;
+        if (this._state === "idle") return;
+
+        const yTiles =
+          (e.offsetY * this.graph.dpr -
+            (this.graph.canvasCenterY + this.graph.offsetY)) /
+          this.graph.scales.scaledStep;
+        const graphY = yTiles * this.graph.scales.scaler;
+
+        const xTiles =
+          (e.offsetX * this.graph.dpr -
+            (this.graph.canvasCenterX + this.graph.offsetX)) /
+          this.graph.scales.scaledStep;
+        const graphX = xTiles * this.graph.scales.scaler;
 
         if (this.functionCommand.data.f.param === "y") {
-          const yTiles =
-            (e.offsetY * this.graph.dpr -
-              (this.graph.canvasCenterY + this.graph.offsetY)) /
-            this.graph.scales.scaledStep;
-          const graphY = yTiles * this.graph.scales.scaler;
-
           const { x, y } = this.calculateValues({ graphY }, "y");
 
-          this.setData(x, y);
-        } else {
-          const xTiles =
-            (e.offsetX * this.graph.dpr -
-              (this.graph.canvasCenterX + this.graph.offsetX)) /
-            this.graph.scales.scaledStep;
-          const graphX = xTiles * this.graph.scales.scaler;
+          if (this.state === "running") {
+            this.setData(x, y);
+          } else {
+            const closest = this.getClosestPoint({ graphY }, "y");
 
+            if (!closest) return;
+
+            const pointX = closest.x;
+            const pointY = -closest.y;
+
+            const dx = pointX - graphX;
+            const dy = pointY - graphY;
+
+            // console.log(dx, dy, pointY, graphY);
+
+            if (dx ** 2 + dy ** 2 < this.graph.scales.scaler ** 2 * 0.1) {
+              document.body.style.cursor = "pointer";
+              // this.drawTooltip(pointX, pointY, closest.xCoord, closest.yCoord);
+            } else {
+              document.body.style.cursor = "default";
+            }
+          }
+        } else {
           const { x, y } = this.calculateValues({ graphX }, "x");
 
-          this.setData(x, y);
+          if (this.state === "running") {
+            this.setData(x, y);
+          } else {
+            const closest = this.getClosestPoint({ graphX }, "x");
+
+            if (!closest) return;
+
+            const pointX = closest.x;
+            const pointY = closest.y;
+
+            const dx = pointX - graphX;
+            const dy = pointY + graphY;
+
+            // console.log(dx, dy, pointY, graphY);
+
+            if (dx ** 2 + dy ** 2 < this.graph.scales.scaler ** 2 * 0.1) {
+              document.body.style.cursor = "pointer";
+              this.graph.ctx.save();
+              this.drawTooltip(
+                this.roundValue(closest.x, this.settings.maxFractionDigits),
+                this.roundValue(closest.y, this.settings.maxFractionDigits),
+                closest.xCoord,
+                closest.yCoord
+              );
+              this.graph.ctx.restore();
+            } else {
+              document.body.style.cursor = "default";
+            }
+          }
         }
       },
       { signal: this.destroyController!.signal }
@@ -1084,6 +1142,175 @@ class DrawTooltipCommand implements GraphCommand {
       },
       { signal: this.destroyController!.signal }
     );
+  }
+
+  // ISSUE:
+  // CRITICAL POINTS ARE NOT CORRECTLY
+  // CALCULATED FOR FUNCTIONS IN TERMS OF Y
+
+  getClosestPoint<T extends "x" | "y">(
+    e: T extends "x"
+      ? { graphX: number; graphY?: number }
+      : { graphY: number; graphX?: number },
+    param: T
+  ): { x: number; y: number; xCoord: number; yCoord: number } | null {
+    const inputPoint: number = this.functionCommand.data.f.inputIntercept;
+    let closestOutputPoint: number | null;
+    let closestCriticalPoint: [number, number] | null;
+
+    if (param === "y") {
+      closestOutputPoint = binarySearchClosest(
+        -e.graphY!,
+        this.functionCommand.data.f.outputIntercepts
+      );
+
+      closestCriticalPoint = binarySearchClosest(
+        -e.graphY!,
+        this.functionCommand.data.df.criticalPoints,
+        (val) => val[1]
+      );
+    } else {
+      closestOutputPoint = binarySearchClosest(
+        e.graphX!,
+        this.functionCommand.data.f.outputIntercepts
+      );
+
+      closestCriticalPoint = binarySearchClosest(
+        e.graphX!,
+        this.functionCommand.data.df.criticalPoints,
+        (val) => val[0]
+      );
+    }
+
+    const tiles = this.graph.scales.scaledStep / this.graph.scales.scaler;
+    let x!: number;
+    let xCoord!: number;
+    let y!: number;
+    let yCoord!: number;
+
+    if (param === "y") {
+      if (!closestOutputPoint && !closestCriticalPoint) {
+        // y intercept
+
+        x = inputPoint;
+        y = 0;
+        xCoord = x * tiles;
+        yCoord = -y * tiles;
+      } else if (!closestOutputPoint) {
+        const closest =
+          Math.abs(-e.graphY! - 0) <
+          Math.abs(-e.graphY! - closestCriticalPoint![1])
+            ? inputPoint
+            : closestCriticalPoint!;
+
+        if (typeof closest === "number") {
+          x = closest;
+          y = 0;
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        } else {
+          x = closest[0];
+          y = closest[1];
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        }
+      } else if (!closestCriticalPoint) {
+        if (
+          Math.abs(-e.graphY! - 0) < Math.abs(-e.graphY! - closestOutputPoint!)
+        ) {
+          x = inputPoint;
+          y = 0;
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        } else {
+          x = this.functionCommand.data.f.f(closestOutputPoint);
+          y = closestOutputPoint;
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        }
+      } else {
+        let closest: [number, number];
+
+        Math.abs(-e.graphY! - 0) <
+        Math.abs(-e.graphY! - closestCriticalPoint[1])
+          ? (closest = [inputPoint, 0])
+          : (closest = closestCriticalPoint);
+
+        Math.abs(-e.graphY! - closest[1]) <
+        Math.abs(-e.graphY! - closestOutputPoint!)
+          ? null
+          : (closest = [
+              this.functionCommand.data.f.f(closestOutputPoint),
+              closestOutputPoint,
+            ]);
+
+        x = closest[0];
+        y = closest[1];
+        xCoord = x * tiles;
+        yCoord = -y * tiles;
+      }
+    } else {
+      if (!closestOutputPoint && !closestCriticalPoint) {
+        // x intercept
+        x = 0;
+        y = inputPoint;
+        xCoord = x * tiles;
+        yCoord = -y * tiles;
+      } else if (!closestOutputPoint) {
+        const closest =
+          Math.abs(e.graphX! - 0) <
+          Math.abs(e.graphX! - closestCriticalPoint![0])
+            ? inputPoint
+            : closestCriticalPoint!;
+
+        if (typeof closest === "number") {
+          x = 0;
+          y = closest;
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        } else {
+          x = closest[0];
+          y = closest[1];
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        }
+      } else if (!closestCriticalPoint) {
+        if (
+          Math.abs(e.graphX! - 0) < Math.abs(e.graphX! - closestOutputPoint!)
+        ) {
+          x = 0;
+          y = inputPoint;
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        } else {
+          x = closestOutputPoint;
+          y = this.functionCommand.data.f.f(closestOutputPoint);
+          xCoord = x * tiles;
+          yCoord = -y * tiles;
+        }
+      } else {
+        let closest: [number, number];
+
+        Math.abs(e.graphX! - 0) < Math.abs(e.graphX! - closestCriticalPoint[0])
+          ? (closest = [0, inputPoint])
+          : (closest = closestCriticalPoint);
+
+        Math.abs(e.graphX! - closest[0]) <
+        Math.abs(e.graphX! - closestOutputPoint!)
+          ? null
+          : (closest = [
+              closestOutputPoint,
+              this.functionCommand.data.f.f(closestOutputPoint),
+            ]);
+
+        x = closest[0];
+        y = closest[1];
+        xCoord = x * tiles;
+        yCoord = -y * tiles;
+      }
+    }
+
+    return { x, y, xCoord, yCoord };
   }
 
   draw(): void {
@@ -1112,7 +1339,12 @@ class DrawTooltipCommand implements GraphCommand {
       this.graph.ctx.fill();
 
       // Tooltip
-      this.drawTooltip();
+      this.drawTooltip(
+        this.data.val.x,
+        this.data.val.y,
+        this.data.coord.x,
+        this.data.coord.y
+      );
     }
   }
 
@@ -1164,21 +1396,11 @@ class DrawTooltipCommand implements GraphCommand {
       // for values <= 1e-7 js converts then to
       // scientific notation
 
-      return `(${
-        Math.abs(xVal) >= 1e-7
-          ? xVal.toFixed(this.settings.maxFractionDigits)
-          : xVal
-      }, ${
-        Math.abs(yVal) >= 1e-7
-          ? yVal.toFixed(this.settings.maxFractionDigits)
-          : yVal
-      })`;
+      return `(${xVal}, ${yVal})`;
     }
   }
 
-  getTooltipCoord(textWidth: number) {
-    const pointX = this.data.coord.x;
-    const pointY = this.data.coord.y;
+  getTooltipCoord(textWidth: number, pointX: number, pointY: number) {
     const margin = this.settings.margin;
     const height = this.settings.textHeight;
 
@@ -1187,7 +1409,7 @@ class DrawTooltipCommand implements GraphCommand {
     let tooltipW: number = textWidth + this.settings.padding;
     let tooltipH: number = height + this.settings.padding;
 
-    //default postion TopLeft
+    //default postion Top Left
 
     const tooltipLeft = pointX - margin - tooltipW;
     const tooltipTop = pointY - margin - tooltipH;
@@ -1197,7 +1419,7 @@ class DrawTooltipCommand implements GraphCommand {
       tooltipTop > this.graph.clientTop
     ) {
       tooltipX = tooltipLeft;
-      tooltipY = pointY - margin - tooltipH;
+      tooltipY = tooltipTop;
     } else if (
       tooltipLeft > this.graph.clientLeft &&
       tooltipTop < this.graph.clientTop
@@ -1209,7 +1431,7 @@ class DrawTooltipCommand implements GraphCommand {
       tooltipTop > this.graph.clientTop
     ) {
       tooltipX = pointX + margin;
-      tooltipY = pointY - margin - tooltipH;
+      tooltipY = tooltipTop;
     } else if (
       tooltipLeft < this.graph.clientLeft &&
       tooltipTop < this.graph.clientTop
@@ -1218,14 +1440,16 @@ class DrawTooltipCommand implements GraphCommand {
       tooltipY = pointY + margin;
     }
 
+    console.log(tooltipW, tooltipH, tooltipX, tooltipY, tooltipW, tooltipH);
     return { tooltipX, tooltipY, tooltipW, tooltipH };
   }
 
-  drawTooltip() {
+  drawTooltip(valX: number, valY: number, pointX: number, pointY: number) {
     this.graph.ctx.font = this.settings.font;
     this.graph.ctx.textAlign = "start";
 
-    let tooltipText = this.createTooltipText(this.data.val.x, this.data.val.y);
+    let tooltipText = this.createTooltipText(valX, valY);
+    console.log(tooltipText);
     if (typeof tooltipText === "object") {
       const textX = `(${tooltipText.x[0]}`;
       const textMetricsX = this.graph.ctx.measureText(textX);
@@ -1245,8 +1469,11 @@ class DrawTooltipCommand implements GraphCommand {
         textMetricsExpY.width +
         endParenthesisMetrics.width;
 
-      const { tooltipX, tooltipY, tooltipW, tooltipH } =
-        this.getTooltipCoord(totalMetricsWidth);
+      const { tooltipX, tooltipY, tooltipW, tooltipH } = this.getTooltipCoord(
+        totalMetricsWidth,
+        pointX,
+        pointY
+      );
 
       this.graph.ctx.save();
       this.graph.ctx.fillStyle = "white";
@@ -1282,7 +1509,9 @@ class DrawTooltipCommand implements GraphCommand {
       const textMetrics = this.graph.ctx.measureText(tooltipText);
 
       const { tooltipX, tooltipY, tooltipH, tooltipW } = this.getTooltipCoord(
-        textMetrics.width
+        textMetrics.width,
+        pointX,
+        pointY
       );
 
       this.graph.ctx.save();
