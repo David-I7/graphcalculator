@@ -37,9 +37,7 @@ const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
           {props.index + 1}
           <div className="dynamic-island__type">
             <Warning
-              color={
-                error.type === "ExpressionError" ? "currentColor" : "orange"
-              }
+              color={error.type !== "unknown" ? "currentColor" : "orange"}
               width={28}
               height={28}
             >

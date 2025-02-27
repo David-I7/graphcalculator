@@ -1363,7 +1363,8 @@ class DrawTooltipCommand implements GraphCommand {
           point.val.x,
           point.val.y,
           point.coord.x,
-          point.coord.y
+          point.coord.y,
+          false
         );
       });
     }
@@ -1373,7 +1374,8 @@ class DrawTooltipCommand implements GraphCommand {
         this.hoveredPoint.val.x,
         this.hoveredPoint.val.y,
         this.hoveredPoint.coord.x,
-        this.hoveredPoint.coord.y
+        this.hoveredPoint.coord.y,
+        false
       );
     }
 
@@ -1440,7 +1442,11 @@ class DrawTooltipCommand implements GraphCommand {
     }
   }
 
-  createTooltipText(xVal: number, yVal: number) {
+  createTooltipText(
+    xVal: number,
+    yVal: number,
+    showFullPrecision: boolean = true
+  ) {
     if (this.graph.scales.scaler < 1e-5 || this.graph.scales.scaler > 2e4) {
       const x = toScientificNotation(xVal, 2);
       const y = toScientificNotation(xVal, 2);
@@ -1453,12 +1459,16 @@ class DrawTooltipCommand implements GraphCommand {
       // scientific notation, don't have a solution yet
 
       return `(${
-        xVal !== 0 && Math.abs(xVal) <= 9.99e-7
-          ? xVal.toFixed(this.settings.maxFractionDigits)
+        Math.abs(xVal) <= 9.99e-7
+          ? showFullPrecision
+            ? xVal.toFixed(this.settings.maxFractionDigits)
+            : 0
           : xVal
       }, ${
-        yVal !== 0 && Math.abs(yVal) <= 9.99e-7
-          ? yVal.toFixed(this.settings.maxFractionDigits)
+        Math.abs(yVal) <= 9.99e-7
+          ? showFullPrecision
+            ? yVal.toFixed(this.settings.maxFractionDigits)
+            : 0
           : yVal
       })`;
     }
@@ -1507,11 +1517,17 @@ class DrawTooltipCommand implements GraphCommand {
     return { tooltipX, tooltipY, tooltipW, tooltipH };
   }
 
-  drawTooltip(valX: number, valY: number, pointX: number, pointY: number) {
+  drawTooltip(
+    valX: number,
+    valY: number,
+    pointX: number,
+    pointY: number,
+    showFullPrecision: boolean = true
+  ) {
     this.graph.ctx.font = this.settings.font;
     this.graph.ctx.textAlign = "start";
 
-    let tooltipText = this.createTooltipText(valX, valY);
+    let tooltipText = this.createTooltipText(valX, valY, showFullPrecision);
     if (typeof tooltipText === "object") {
       const textX = `(${tooltipText.x[0]}`;
       const textMetricsX = this.graph.ctx.measureText(textX);

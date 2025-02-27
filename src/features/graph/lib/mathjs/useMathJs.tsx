@@ -12,30 +12,41 @@ import {
 } from "mathjs";
 import { Graph } from "../graph/graph";
 import { useGraphContext } from "../../Graph";
-import { ExpressionValidator } from "./validation";
+import { ExpressionValidationResult, ExpressionValidator } from "./validation";
 import { useAppDispatch } from "../../../../state/hooks";
-import { clearError, setError } from "../../../../state/error/error";
+import {
+  ApplicationError,
+  clearError,
+  setError,
+} from "../../../../state/error/error";
 import { DrawFunctionCommand, FnData } from "../graph/commands";
+import { ExpressionTransformer } from "./transformer";
 
 type FunctionDeclaration = Record<string, (input: number) => number>;
 
 const useMathJs = (expr: Expression<"expression">) => {
   const graph = useGraphContext();
-  const exprValidator = useRef(new MathJsParser());
+  const exprParser = useRef(new MathJsParser());
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (!graph || !expr.data.content) return;
     let command: DrawFunctionCommand | undefined;
 
-    const res = exprValidator.current.parse(expr, graph);
+    const { err, node } = exprParser.current.transform(expr.data.content);
 
-    if (!(res instanceof DrawFunctionCommand)) {
-      dispatch(setError({ id: expr.id, error: res }));
+    let parsedCommand!: DrawFunctionCommand | ApplicationError;
+    if (node) {
+      parsedCommand = exprParser.current.parse(node!, expr, graph);
+    }
+
+    if (err) {
+      dispatch(setError({ id: expr.id, error: err }));
+    } else if (!(parsedCommand instanceof DrawFunctionCommand)) {
+      dispatch(setError({ id: expr.id, error: parsedCommand }));
     } else {
       dispatch(clearError(expr.id));
-
-      command = res;
+      command = parsedCommand;
       graph.addCommand(command);
     }
 
@@ -52,16 +63,21 @@ export default useMathJs;
 
 class MathJsParser {
   protected validator: ExpressionValidator = new ExpressionValidator();
+  protected transformer: ExpressionTransformer = new ExpressionTransformer();
   constructor() {}
 
-  parse(expr: Expression<"expression">, graph: Graph) {
-    const { node, err } = this.validator.validate(expr.data.content);
+  transform(expr: string): {
+    err: ApplicationError | undefined;
+    node: MathNode | undefined;
+  } {
+    return this.transformer.transform(expr);
+  }
 
-    if (err) {
-      return err;
-    }
-
-    console.log(node);
+  parse(
+    node: MathNode,
+    expr: Expression<"expression">,
+    graph: Graph
+  ): ApplicationError | DrawFunctionCommand {
     if (node instanceof FunctionAssignmentNode) {
       const df = this.createDerivativeData(node);
 
@@ -95,9 +111,10 @@ class MathJsParser {
       }
     }
 
+    console.log(node);
     return this.validator.makeDebugError(
-      `Edge case not defined. \nDebug:\n${node}`
-    ).err;
+      `Edge case not defined at parse. \nDebug:\n${node}`
+    ).err as ApplicationError;
   }
 
   createFunctionData(node: FunctionAssignmentNode): FnData["f"] {
@@ -118,6 +135,8 @@ class MathJsParser {
   }
 
   createDerivativeData(node: FunctionAssignmentNode): FnData["df"] {
+    // derivative can be undefined! if function is not continuous
+
     const derivativeNode = derivative(node, node.params["0"], {
       simplify: false,
     });
