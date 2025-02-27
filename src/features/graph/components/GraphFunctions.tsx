@@ -4,7 +4,7 @@ import { GraphFunctionExpression } from "./GraphFunctionExpression";
 import { Expression } from "../../../lib/api/graph";
 
 const GraphFunctions = () => {
-  const expressions = useAppSelector(
+  const { data: expressions, focusedId } = useAppSelector(
     (state) => state.graphSlice.currentGraph.expressions
   );
 
@@ -24,6 +24,7 @@ const GraphFunctions = () => {
       {functionExpressions.map((expr, index) => (
         <GraphFunctionExpression
           idx={functionIndexes[index]}
+          focused={focusedId === expr.id}
           key={expr.id}
           expr={expr}
         />

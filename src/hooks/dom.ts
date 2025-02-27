@@ -41,3 +41,23 @@ export const useSetDynamicProp = <T extends HTMLElement>(
     }
   }, [ref]);
 };
+
+export function useFocus<T extends HTMLElement>(
+  toggle: boolean,
+  ref: React.RefObject<T | null>,
+  onFocus?: () => void,
+  onBlur?: () => void
+) {
+  useEffect(() => {
+    if (!ref.current) return;
+
+    if (toggle) {
+      ref.current.focus();
+      onFocus?.();
+    }
+
+    if (!toggle) {
+      onBlur?.();
+    }
+  }, [toggle, onFocus]);
+}

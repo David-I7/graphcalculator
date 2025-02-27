@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { Expression, ExpressionType } from "../../../../lib/api/graph";
 import { useAppDispatch } from "../../../../state/hooks";
-import { updateExpressionContent } from "../../../../state/graph/graph";
+import {
+  setFocusedExpression,
+  updateExpressionContent,
+} from "../../../../state/graph/graph";
 import ResizableTextarea from "../../../../components/input/ResizableTextarea";
+import { useFocus } from "../../../../hooks/dom";
 
 type ExpressionTextAreaProps<T extends ExpressionType = ExpressionType> = {
-  autoFocus: boolean;
+  focused: boolean;
   item: Expression<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
   idx: number;
@@ -28,13 +32,32 @@ const ExpressionTextArea = (props: ExpressionTextAreaProps) => {
 export default ExpressionTextArea;
 
 const FunctionTextArea = ({
-  autoFocus,
+  focused,
   item,
   dispatch,
   idx,
 }: ExpressionTextAreaProps<"expression">) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const handleFocus = () => {
+    const listItem = document.querySelector(
+      `[expr-id="${item.id}"]`
+    ) as HTMLLIElement;
+    listItem.classList.add("expression-list__li--focused");
+  };
+
+  const handleBlur = () => {
+    const listItem = document.querySelector(
+      `[expr-id="${item.id}"]`
+    ) as HTMLLIElement;
+    listItem.classList.remove("expression-list__li--focused");
+  };
+
+  useFocus(focused, ref, handleFocus, handleBlur);
+
   return (
     <ResizableTextarea
+      ref={ref}
       container={{
         className: "font-medium",
         style: {
@@ -44,8 +67,13 @@ const FunctionTextArea = ({
         },
       }}
       textarea={{
-        autoFocus: autoFocus,
+        autoFocus: focused,
         value: item.data.content,
+        onFocus: () => {
+          if (!focused) {
+            dispatch(setFocusedExpression(item.id));
+          }
+        },
         onChange: (e) => {
           dispatch(
             updateExpressionContent({
@@ -60,7 +88,7 @@ const FunctionTextArea = ({
   );
 };
 const NoteTextArea = ({
-  autoFocus,
+  focused,
   item,
   dispatch,
   idx,
@@ -76,7 +104,7 @@ const NoteTextArea = ({
         },
       }}
       textarea={{
-        autoFocus: autoFocus,
+        autoFocus: focused,
         value: item.data.content,
         onChange: (e) => {
           dispatch(

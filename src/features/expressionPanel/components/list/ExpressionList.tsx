@@ -20,7 +20,6 @@ import {
   KeyframeAnimationOptionsBuilder,
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
-import { incrementNextId } from "../../../../state/graph/nextId";
 import { Expression } from "../../../../lib/api/graph";
 import ExpressionTextArea from "./ExpressionTextArea";
 import { destroyError } from "../../../../state/error/error";
@@ -36,10 +35,9 @@ const ExpressionList = () => {
 export default ExpressionList;
 
 function ExpressionListRenderer() {
-  const { expressions } = useAppSelector(
-    (state) => state.graphSlice.currentGraph
+  const { data: expressions, focusedId } = useAppSelector(
+    (state) => state.graphSlice.currentGraph.expressions
   );
-  const nextId = useAppSelector((state) => state.nextIdSlice.nextId);
   const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const draggedMetadata = useRef<{ id: number; startPos: number }>({
@@ -108,10 +106,7 @@ function ExpressionListRenderer() {
 
   useEffect(() => {
     if (expressions.length === 0) {
-      dispatch(
-        createExpression({ id: nextId, type: "expression", loc: "end" })
-      );
-      dispatch(incrementNextId());
+      dispatch(createExpression({ type: "expression", loc: "end" }));
     }
   }, [expressions.length]);
 
@@ -121,10 +116,10 @@ function ExpressionListRenderer() {
         expressions.map((item, index) => {
           return (
             <ExpressionListItem
+              focused={focusedId === item.id}
               key={item.id}
               item={item}
               idx={index}
-              autoFocus={index === expressions.length - 1 ? true : false}
               dispatch={dispatch}
               animationOptions={animationOptions.current}
             />
@@ -134,10 +129,7 @@ function ExpressionListRenderer() {
         <li
           role="button"
           onClick={() => {
-            dispatch(
-              createExpression({ id: nextId, type: "expression", loc: "end" })
-            );
-            dispatch(incrementNextId());
+            dispatch(createExpression({ type: "expression", loc: "end" }));
           }}
           className="expression-list__li--faded"
         >
@@ -154,10 +146,10 @@ function ExpressionListRenderer() {
 
 type ExpressionListItemProps = {
   item: Expression;
+  focused: boolean;
   idx: number;
   dispatch: ReturnType<typeof useAppDispatch>;
   animationOptions: KeyframeAnimationOptions;
-  autoFocus: boolean;
 };
 
 const ExpressionListItem = React.memo(
@@ -166,7 +158,7 @@ const ExpressionListItem = React.memo(
     idx,
     dispatch,
     animationOptions,
-    autoFocus,
+    focused,
   }: ExpressionListItemProps) => {
     return (
       <li
@@ -180,7 +172,7 @@ const ExpressionListItem = React.memo(
           item={item}
           idx={idx}
           dispatch={dispatch}
-          autoFocus={autoFocus}
+          focused={focused}
         />
 
         <ButtonTarget
@@ -207,7 +199,7 @@ const ExpressionListItem = React.memo(
   (prev, cur) => {
     if (
       prev.idx === cur.idx &&
-      prev.autoFocus === cur.autoFocus &&
+      prev.focused === cur.focused &&
       prev.item === cur.item
     )
       return true;

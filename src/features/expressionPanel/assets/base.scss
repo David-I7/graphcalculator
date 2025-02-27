@@ -96,6 +96,15 @@
         color: base.$on-primary-container;
       }
     }
+
+    &--focused {
+      outline: 1px solid base.$primary-container !important;
+
+      .dynamic-island {
+        background-color: base.$primary-container !important;
+        color: base.$on-primary-container !important;
+      }
+    }
   }
 
   .expression-list__li--faded {

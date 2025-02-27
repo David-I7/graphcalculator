@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 type ResizableTextareaProps = {
   textarea?: React.TextareaHTMLAttributes<HTMLTextAreaElement>;
   container?: { className?: string; style?: React.CSSProperties };
+  ref?: React.RefObject<HTMLTextAreaElement | null>;
 };
 
 function adjustHeight(textarea: HTMLTextAreaElement) {
@@ -11,7 +12,11 @@ function adjustHeight(textarea: HTMLTextAreaElement) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
-const ResizableTextarea = ({ textarea, container }: ResizableTextareaProps) => {
+const ResizableTextarea = ({
+  textarea,
+  container,
+  ref,
+}: ResizableTextareaProps) => {
   const measureRef = useRef<HTMLSpanElement>(null);
 
   const mergedClassnameTextAreaContainer = React.useMemo(() => {
@@ -36,6 +41,7 @@ const ResizableTextarea = ({ textarea, container }: ResizableTextareaProps) => {
     >
       <textarea
         {...textarea}
+        ref={ref}
         onInput={(e) => {
           measureRef.current!.innerText = e.currentTarget.value;
           if (

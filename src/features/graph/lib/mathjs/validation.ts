@@ -227,8 +227,6 @@ export class ExpressionValidator {
         "insuficient_function_arg"
       );
     }
-
-    console.log(node);
   }
 
   protected makeExpressionError<T extends keyof typeof ErrorCause>(
