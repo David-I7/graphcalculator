@@ -10,8 +10,8 @@ export type GraphData = {
 type ExpressionData = {
   expression: {
     content: string;
-    color?: string;
-    hidden?: boolean;
+    color: string;
+    hidden: boolean;
   };
   note: {
     content: string;

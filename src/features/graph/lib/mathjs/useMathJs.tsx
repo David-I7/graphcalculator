@@ -2,42 +2,56 @@ import { useEffect, useRef } from "react";
 import { Expression } from "../../../../lib/api/graph";
 import {
   AssignmentNode,
-  compile,
   derivative,
-  evaluate,
   FunctionAssignmentNode,
   MathNode,
-  simplify,
-  SymbolNode,
 } from "mathjs";
 import { Graph } from "../graph/graph";
 import { useGraphContext } from "../../Graph";
-import { ExpressionValidationResult, ExpressionValidator } from "./validation";
+import { ExpressionValidator } from "./validation";
 import { useAppDispatch } from "../../../../state/hooks";
 import {
   ApplicationError,
   clearError,
   setError,
 } from "../../../../state/error/error";
-import { DrawFunctionCommand, FnData } from "../graph/commands";
+import { DrawFunctionCommand, ExprData, FnData } from "../graph/commands";
 import { ExpressionTransformer } from "./transformer";
+import {
+  setFocusedExpression,
+  resetFocusedExpression,
+} from "../../../../state/graph/graph";
 
 type FunctionDeclaration = Record<string, (input: number) => number>;
 
-const useMathJs = (expr: Expression<"expression">) => {
+const useMathJs = (expr: Expression<"expression">, focused: boolean) => {
   const graph = useGraphContext();
   const exprParser = useRef(new MathJsParser());
   const dispatch = useAppDispatch();
+  const command = useRef<DrawFunctionCommand | null>(null);
 
   useEffect(() => {
     if (!graph || !expr.data.content) return;
-    let command: DrawFunctionCommand | undefined;
 
     const { err, node } = exprParser.current.transform(expr.data.content);
 
     let parsedCommand!: DrawFunctionCommand | ApplicationError;
+    const exprState: ExprData = {
+      color: expr.data.color,
+      hidden: expr.data.hidden,
+      state: focused ? "focused" : "idle",
+      onStateChange(prev, cur) {
+        if (prev === cur) return;
+
+        if (cur === "idle") {
+          dispatch(resetFocusedExpression(expr.id));
+        } else {
+          dispatch(setFocusedExpression(expr.id));
+        }
+      },
+    };
     if (node) {
-      parsedCommand = exprParser.current.parse(node!, expr, graph);
+      parsedCommand = exprParser.current.parse(node!, graph, exprState);
     }
 
     if (err) {
@@ -46,17 +60,33 @@ const useMathJs = (expr: Expression<"expression">) => {
       dispatch(setError({ id: expr.id, error: parsedCommand }));
     } else {
       dispatch(clearError(expr.id));
-      command = parsedCommand;
-      graph.addCommand(command);
+      command.current = parsedCommand;
+      graph.addCommand(command.current);
     }
 
     return () => {
-      if (command) {
-        graph.removeCommand(command);
-        command.destroy();
+      if (parsedCommand instanceof DrawFunctionCommand) {
+        graph.removeCommand(parsedCommand);
+        parsedCommand.destroy();
       }
     };
-  }, [expr, graph]);
+  }, [expr.data.content, graph]);
+
+  useEffect(() => {
+    if (!command.current) return;
+
+    command.current.settings.color = expr.data.color;
+    command.current.settings.hidden = expr.data.hidden;
+  }, [expr.data.color, expr.data.hidden]);
+
+  useEffect(() => {
+    if (!command.current) return;
+    if (command.current.state === "idle" && focused) {
+      command.current.setState("focused");
+    } else if (command.current.state === "focused" && !focused) {
+      command.current.setState("idle");
+    }
+  }, [focused]);
 };
 
 export default useMathJs;
@@ -75,8 +105,8 @@ class MathJsParser {
 
   parse(
     node: MathNode,
-    expr: Expression<"expression">,
-    graph: Graph
+    graph: Graph,
+    exprState: ExprData
   ): ApplicationError | DrawFunctionCommand {
     if (node instanceof FunctionAssignmentNode) {
       const df = this.createDerivativeData(node);
@@ -87,7 +117,7 @@ class MathJsParser {
         ddf: this.createDerivativeData(df.node),
       };
 
-      return new DrawFunctionCommand(graph, expr, fnData);
+      return new DrawFunctionCommand(graph, fnData, exprState);
     } else if (node instanceof AssignmentNode) {
       const symbol = node.object.name;
 
@@ -107,7 +137,7 @@ class MathJsParser {
           ddf: this.createDerivativeData(df.node),
         };
 
-        return new DrawFunctionCommand(graph, expr, fnData);
+        return new DrawFunctionCommand(graph, fnData, exprState);
       }
     }
 

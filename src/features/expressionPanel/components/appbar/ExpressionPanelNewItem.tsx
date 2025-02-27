@@ -12,7 +12,6 @@ import Dropdown, {
 } from "../../../../components/dropdown/Dropdown";
 import { ExpressionType } from "../../../../lib/api/graph";
 import { createExpression } from "../../../../state/graph/graph";
-import { incrementNextId } from "../../../../state/graph/nextId";
 
 type NewItemPair = [ExpressionType, (props: SVGProps) => ReactNode];
 
@@ -25,7 +24,7 @@ const NewItemDropdownMap = new Map<NewItemPair[0], NewItemPair[1]>([
 const ExpressionPanelNewItem = () => {
   const dispatch = useAppDispatch();
   const data = useMemo(() => [...NewItemDropdownMap.entries()], []);
-  const nextId = useAppSelector((state) => state.nextIdSlice.nextId);
+
   return (
     <>
       <DropdownButton>
@@ -35,10 +34,7 @@ const ExpressionPanelNewItem = () => {
 
         <Dropdown.Menu
           onClick={(arg) => {
-            dispatch(
-              createExpression({ id: nextId, type: arg[0], loc: "start" })
-            );
-            dispatch(incrementNextId());
+            dispatch(createExpression({ type: arg[0], loc: "start" }));
           }}
           data={data}
           ListItem={DropdowmMenuItem}
