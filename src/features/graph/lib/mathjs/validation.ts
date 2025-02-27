@@ -1,56 +1,40 @@
 import {
+  ConstantNode,
   FunctionAssignmentNode,
   FunctionNode,
   MathNode,
+  OperatorNode,
   parse,
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
+import { GlobalMathFunctions } from "../../data/math";
 
-function expressionErrorCreator(message: string): {
-  err: ApplicationError;
-  node: undefined;
-} {
-  return {
-    err: {
-      type: "ExpressionError",
-      message,
-    },
-    node: undefined,
-  };
-}
+const ErrorCause = {
+  insuficient_function_arg: 0,
+  lack_of_equation_notation: 1,
+  too_many_function_arg: 2,
+  unknown: 3,
+  too_many_variables: 4,
+  diff_param_from_expr: 5,
+  syntax: 6,
+};
 
-function expressionDebugErrorCreator(message: string): {
-  err: ApplicationError;
-  node: undefined;
-} {
-  return {
-    err: {
-      type: "ExpressionErrorDebug",
-      message,
-    },
-    node: undefined,
-  };
-}
+export type SyntaxValidationResult = {
+  err: ApplicationError | undefined;
+  node: MathNode | undefined;
+};
+
+export type ExpressionValidationResult = ApplicationError | undefined;
 
 export class ExpressionValidator {
   constructor() {}
 
-  validate(expr: string): {
-    err: ApplicationError | undefined;
-    node: MathNode | undefined;
-  } {
-    const trimmedContent = expr.replace(/\s/g, "");
+  validateSyntax(expr: string): SyntaxValidationResult {
     let node: MathNode;
     try {
-      node = parse(trimmedContent);
-      if (node instanceof FunctionNode) {
-        const err = this.validateFunctionNode(node);
-        return err ? err : { err: undefined, node };
-      } else if (node instanceof FunctionAssignmentNode) {
-        const err = this.validateFunctionAssignmentNode(node);
-        return err ? err : { err: undefined, node };
-      }
+      node = parse(expr);
+
       return { err: undefined, node };
     } catch (err) {
       if (err instanceof SyntaxError) {
@@ -62,7 +46,7 @@ export class ExpressionValidator {
         }
 
         const index = Number(idx);
-        const cause = trimmedContent[index - 1] || trimmedContent[index - 2];
+        const cause = expr[index - 1] || expr[index - 2];
 
         if (cause) {
           if (
@@ -72,107 +56,232 @@ export class ExpressionValidator {
             cause === "*" ||
             cause === "/"
           ) {
-            return expressionErrorCreator(
-              `You need something on both sides of the '${cause}' symbol.`
+            return this.makeSyntaxError(
+              `You need something on both sides of the '${cause}' symbol.`,
+              "syntax"
             );
           } else if (cause === "(") {
-            return expressionErrorCreator(
-              `Function '${trimmedContent[index - 3]}' is not defined.`
+            return this.makeSyntaxError(
+              expr[index - 3]
+                ? `Function '${expr[index - 3]}' is not defined.`
+                : `Parenthesis cannot be empty.`,
+              "syntax"
+            );
+          } else if (cause === ")") {
+            return this.makeSyntaxError(
+              `Parenthesis cannot be empty.`,
+              "syntax"
             );
           } else if (err.message.startsWith("Parenthesis")) {
-            return expressionErrorCreator(`Try closing the parenthesis.`);
+            return this.makeSyntaxError(
+              `Try closing the parenthesis.`,
+              "syntax"
+            );
           } else {
-            // console.log(err.message, trimmedContent, cause);
+            console.log(cause);
+            return this.makeSyntaxError(``, "syntax");
           }
         }
       }
 
-      return expressionDebugErrorCreator(
+      return this.makeDebugError(
         `Edge case not defined for syntaxError, \nDebug:\n${
           err as Error
-        },\n${trimmedContent}
+        },\n${expr}\n
         `
       );
     }
   }
 
-  protected validateFunctionNode(node: FunctionNode) {
-    const requiredArgs = 1;
-
-    if (node.fn instanceof SymbolNode) {
-      if (node.args.length === requiredArgs) return;
-
-      if (node.args.length > requiredArgs)
-        return expressionErrorCreator(
-          `We only support functions with 1 argument.`
-        );
-      else if (node.args.length < requiredArgs)
-        return expressionErrorCreator(
-          `Function '${node.fn.name}' is not defined.`
-        );
+  validateConstantNode(
+    node: ConstantNode,
+    parent: MathNode | undefined
+  ): ExpressionValidationResult {
+    if (!parent) {
+      return this.makeExpressionError(
+        "Try adding 'y=' to the beginning of the equation.",
+        "lack_of_equation_notation"
+      );
     }
+
+    return;
   }
 
-  protected validateFunctionAssignmentNode(node: FunctionAssignmentNode) {
-    const requiredArgs = 1;
+  validateSymbolNode(
+    node: SymbolNode,
+    parent: MathNode | undefined
+  ): ExpressionValidationResult {
+    // assumption is that parent is already valid.
 
-    if (node.params.length > requiredArgs)
-      return expressionErrorCreator(
-        `We only support functions with 1 argument.`
+    if (!parent) {
+      return this.makeExpressionError(
+        `Try adding '${
+          node.name[0] === "y" ? "x" : "y"
+        }=' to the beginning of the equation.`,
+        "lack_of_equation_notation"
       );
-    else if (node.params.length < requiredArgs) {
-      const variables = getSymbolNodes(node);
+    }
 
-      return expressionErrorCreator(
-        `Try including '${variables[0]}' as an argument by defining the function as 'f(${variables[0]})'.`
-      );
-    } else {
-      const variables = getSymbolNodes(node);
-      // console.log(variables, node);
-      if (variables.length === 1) {
-        if (variables[0] !== node.params[0]) {
-          return expressionErrorCreator(
-            `Try including '${variables[0]}' as an argument by defining the function as 'f(${variables[0]})'.`
+    if (parent instanceof FunctionAssignmentNode) {
+      if (node.name.length === 1) {
+        if (parent.params[0] !== node.name) {
+          return this.makeExpressionError(
+            `Try including '${node.name}' as an argument by defining the function as '${parent.name}(${node.name})'.`,
+            "diff_param_from_expr"
           );
         }
       }
-      //  else if (variables.length > 1) {
-      //   return expressionErrorCreator(
-      //     `Too many variables, try defining '${variables.find(
-      //       (variable) => variable !== node.params[0]
-      //     )}'.`
-      //   );
-      // }
+
+      if (node.name.length > 1) {
+        const undefinedVariable = node.name.search(`[^${parent.params[0]}]`);
+
+        return this.makeExpressionError(
+          `Too many variables, try defining '${node.name[undefinedVariable]}'.`,
+          "too_many_variables"
+        );
+      }
+    }
+
+    return;
+  }
+
+  validateOperatorNode(
+    node: OperatorNode,
+    parent: MathNode | undefined
+  ): ExpressionValidationResult {
+    if (!parent) {
+      if (node.args[0] instanceof SymbolNode) {
+        return this.makeExpressionError(
+          `Try adding '${
+            node.args[0].name === "y" ? "x" : "y"
+          }=' to the beginning of the equation.`,
+          "lack_of_equation_notation"
+        );
+      } else if (node.args[1] instanceof SymbolNode) {
+        return this.makeExpressionError(
+          `Try adding '${
+            node.args[1].name === "y" ? "x" : "y"
+          }=' to the beginning of the equation.`,
+          "lack_of_equation_notation"
+        );
+      }
+    }
+
+    return;
+  }
+
+  validateFunctionNode(
+    node: FunctionNode,
+    parent: MathNode | undefined
+  ): ExpressionValidationResult {
+    const requiredArgs = 1;
+
+    if (node.fn instanceof SymbolNode) {
+      if (node.args.length > requiredArgs)
+        return this.makeExpressionError(
+          `We only support functions with 1 argument.`,
+          "too_many_function_arg"
+        );
+      else if (node.args.length < requiredArgs)
+        return this.makeExpressionError(
+          GlobalMathFunctions.has(node.fn.name)
+            ? `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`
+            : `Function '${node.fn.name}' is not defined.`,
+          "insuficient_function_arg"
+        );
+    }
+
+    if (!parent) {
+      // valid Function node, just not assigned any value
+      return this.makeExpressionError(
+        GlobalMathFunctions.has(node.fn.name)
+          ? `Try adding '${
+              (node.args[0] as SymbolNode).name === "y" ? "x" : "y"
+            }=' to the beginning of the equation.`
+          : `Try assigning a value to ${node.fn.name}(${
+              (node.args[0] as SymbolNode).name
+            }). For example try ${node.fn.name}(${
+              (node.args[0] as SymbolNode).name
+            }) = ${(node.args[0] as SymbolNode).name}.`,
+        "lack_of_equation_notation"
+      );
     }
   }
 
-  makeExpressionError(message: string) {
-    return expressionErrorCreator(message);
+  validateFunctionAssignmentNode(
+    node: FunctionAssignmentNode,
+    parent: MathNode | undefined
+  ): ExpressionValidationResult {
+    const requiredArgs = 1;
+
+    if (node.params.length > requiredArgs)
+      return this.makeExpressionError(
+        `We only support functions with 1 argument.`,
+        "too_many_function_arg"
+      );
+    else if (node.params.length < requiredArgs) {
+      return this.makeExpressionError(
+        GlobalMathFunctions.has(node.name)
+          ? `Function '${node.name}' requires an argument. For example, try typing: '${node.name}(x)'.`
+          : `Function '${node.name}' is not defined.`,
+        "insuficient_function_arg"
+      );
+    }
+
+    console.log(node);
   }
 
-  makeDebugError(message: string) {
-    return expressionDebugErrorCreator(message);
+  protected makeExpressionError<T extends keyof typeof ErrorCause>(
+    message: string,
+    type: T
+  ) {
+    return {
+      type,
+      message,
+      code: ErrorCause[type],
+    };
+  }
+
+  protected makeSyntaxError<T extends keyof typeof ErrorCause>(
+    message: string,
+    type: T
+  ): SyntaxValidationResult {
+    return {
+      err: this.makeExpressionError(message, type),
+      node: undefined,
+    };
+  }
+
+  makeDebugError(
+    message: string
+  ): SyntaxValidationResult & Required<Pick<SyntaxValidationResult, "err">> {
+    return {
+      err: this.makeExpressionError(message, "unknown"),
+      node: undefined,
+    };
   }
 }
 
 function getSymbolNodes(node: MathNode): string[] {
   const symbolSet: Set<string> = new Set();
-  // console.log("root ", node);
+  const symbols: string[] = [];
   node.filter((node, path, parent) => {
     if (node instanceof SymbolNode) {
-      if (parent instanceof FunctionNode) {
-        // this is a function
-        console.log(node.name, parent);
+      if (symbolSet.has(node.name)) return;
+
+      if (GlobalMathFunctions.has(node.name)) {
+        symbolSet.add(node.name);
+        symbols.push(node.name);
         return;
       }
 
-      for (let i = 0; i < node.name.length; ++i) {
-        if (!symbolSet.has(node.name[i])) {
-          symbolSet.add(node.name[i]);
-        }
+      for (let i = 0; i < node.name.length; i++) {
+        if (symbolSet.has(node.name[i])) continue;
+        symbolSet.add(node.name[i]);
+        symbols.push(node.name[i]);
       }
     }
   });
 
-  return [...symbolSet.values()];
+  return symbols;
 }
