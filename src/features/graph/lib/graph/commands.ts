@@ -617,7 +617,7 @@ export type FnData = {
   f: {
     node: FunctionAssignmentNode;
     param: string;
-    inputIntercept: number;
+    inputIntercept: number | undefined;
     outputIntercepts: number[];
     f: (input: number) => number;
   };
@@ -800,17 +800,20 @@ export class DrawFunctionCommand implements GraphCommand {
 
       if (
         typeof prevY === "number" &&
+        Number.isFinite(prevY) &&
         ((prevY < 0 && y > 0) || (prevY > 0 && y < 0))
       ) {
+        // console.log(prevY, y, i);
         const root = newtonsMethod(i, f, df);
-        this.data.f.outputIntercepts.push(root);
+        if (root) this.data.f.outputIntercepts.push(root);
       }
 
       if (
         typeof prevDY === "number" &&
+        Number.isFinite(prevDY) &&
         ((prevDY < 0 && dy > 0) || (prevDY > 0 && dy < 0))
       ) {
-        let root!: number;
+        let root: number | null;
 
         // if df is constant ddf is 0 so we can't use
         // newtons method
@@ -822,7 +825,7 @@ export class DrawFunctionCommand implements GraphCommand {
         } else {
           root = newtonsMethod(i, df, ddf);
         }
-        this.data.df.criticalPoints.push([root, f(root)]);
+        if (root) this.data.df.criticalPoints.push([root, f(root)]);
       }
       prevY = y;
       prevDY = dy;
@@ -860,17 +863,19 @@ export class DrawFunctionCommand implements GraphCommand {
 
       if (
         typeof prevX === "number" &&
+        Number.isFinite(prevX) &&
         ((prevX < 0 && x > 0) || (prevX > 0 && x < 0))
       ) {
         const root = newtonsMethod(i, f, df);
-        this.data.f.outputIntercepts.push(root);
+        if (root) this.data.f.outputIntercepts.push(root);
       }
 
       if (
         typeof prevDX === "number" &&
+        Number.isFinite(prevDX) &&
         ((prevDX < 0 && dx > 0) || (prevDX > 0 && dx < 0))
       ) {
-        let root!: number;
+        let root: number | null;
         // if df is constant ddf is 0 so we can't use
         // newtons method
         if (
@@ -881,7 +886,7 @@ export class DrawFunctionCommand implements GraphCommand {
         } else {
           root = newtonsMethod(i, df, ddf);
         }
-        this.data.df.criticalPoints.push([f(root), root]);
+        if (root) this.data.df.criticalPoints.push([f(root), root]);
       }
       prevX = x;
       prevDX = dx;
@@ -1057,11 +1062,15 @@ class DrawTooltipCommand implements GraphCommand {
       if (precision <= 0) {
         y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
-        x = this.roundValue(x, precision);
+        if (Number.isFinite(x)) {
+          x = this.roundValue(x, precision);
+        }
       } else if (precision > 0 && precision <= 7) {
         y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
-        x = clampNumber(x, maxFractionDigits);
+        if (Number.isFinite(x)) {
+          x = clampNumber(x, maxFractionDigits);
+        }
       } else {
         y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
@@ -1072,11 +1081,15 @@ class DrawTooltipCommand implements GraphCommand {
       if (precision <= 0) {
         x = this.roundValue(x, precision);
         y = fn(x);
-        y = this.roundValue(y, precision);
+        if (Number.isFinite(y)) {
+          y = this.roundValue(y, precision);
+        }
       } else if (precision > 0 && precision <= 7) {
         x = this.roundValue(x, precision);
         y = fn(x);
-        y = clampNumber(y, maxFractionDigits);
+        if (Number.isFinite(y)) {
+          y = clampNumber(y, maxFractionDigits);
+        }
       } else {
         x = this.roundValue(x, precision);
         y = fn(x);
@@ -1133,6 +1146,9 @@ class DrawTooltipCommand implements GraphCommand {
 
         if (this.functionCommand.data.f.param === "y") {
           const { x, y } = this.calculateValues({ graphY }, "y");
+
+          if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
           if (this.functionCommand.state === "dragged") {
             this.setData(x, y);
           } else {
@@ -1140,6 +1156,9 @@ class DrawTooltipCommand implements GraphCommand {
           }
         } else {
           const { x, y } = this.calculateValues({ graphX }, "x");
+
+          if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
           if (this.functionCommand.state === "dragged") {
             this.setData(x, y);
           } else {
@@ -1188,7 +1207,15 @@ class DrawTooltipCommand implements GraphCommand {
       : { graphY: number; graphX?: number },
     param: T
   ): { x: number; y: number; xCoord: number; yCoord: number } | null {
-    const inputPoint: number = this.functionCommand.data.f.inputIntercept;
+    if (
+      typeof this.functionCommand.data.f.inputIntercept !== "number" &&
+      !this.functionCommand.data.df.criticalPoints.length &&
+      !this.functionCommand.data.f.outputIntercepts.length
+    )
+      return null;
+
+    const inputPoint: number | undefined =
+      this.functionCommand.data.f.inputIntercept;
     let closestOutputPoint: number | null;
     let closestCriticalPoint: [number, number] | null;
 
@@ -1225,15 +1252,18 @@ class DrawTooltipCommand implements GraphCommand {
     if (param === "y") {
       if (!closestOutputPoint && !closestCriticalPoint) {
         // y intercept
-
-        x = inputPoint;
-        y = 0;
-        xCoord = x * normFactor;
-        yCoord = -y * normFactor;
+        if (inputPoint !== undefined) {
+          x = inputPoint;
+          y = 0;
+          xCoord = x * normFactor;
+          yCoord = -y * normFactor;
+        }
       } else if (!closestOutputPoint) {
         const closest =
-          Math.abs(-e.graphY! - 0) <
-          Math.abs(-e.graphY! - closestCriticalPoint![1])
+          inputPoint === undefined
+            ? closestCriticalPoint!
+            : Math.abs(-e.graphY! - 0) <
+              Math.abs(-e.graphY! - closestCriticalPoint![1])
             ? inputPoint
             : closestCriticalPoint!;
 
@@ -1250,6 +1280,7 @@ class DrawTooltipCommand implements GraphCommand {
         }
       } else if (!closestCriticalPoint) {
         if (
+          inputPoint !== undefined &&
           Math.abs(-e.graphY! - 0) < Math.abs(-e.graphY! - closestOutputPoint!)
         ) {
           x = inputPoint;
@@ -1265,8 +1296,10 @@ class DrawTooltipCommand implements GraphCommand {
       } else {
         let closest: [number, number];
 
-        Math.abs(-e.graphY! - 0) <
-        Math.abs(-e.graphY! - closestCriticalPoint[1])
+        inputPoint === undefined
+          ? (closest = closestCriticalPoint)
+          : Math.abs(-e.graphY! - 0) <
+            Math.abs(-e.graphY! - closestCriticalPoint[1])
           ? (closest = [inputPoint, 0])
           : (closest = closestCriticalPoint);
 
@@ -1286,14 +1319,18 @@ class DrawTooltipCommand implements GraphCommand {
     } else {
       if (!closestOutputPoint && !closestCriticalPoint) {
         // x intercept
-        x = 0;
-        y = inputPoint;
-        xCoord = x * normFactor;
-        yCoord = -y * normFactor;
+        if (inputPoint !== undefined) {
+          x = 0;
+          y = inputPoint;
+          xCoord = x * normFactor;
+          yCoord = -y * normFactor;
+        }
       } else if (!closestOutputPoint) {
         const closest =
-          Math.abs(e.graphX! - 0) <
-          Math.abs(e.graphX! - closestCriticalPoint![0])
+          inputPoint === undefined
+            ? closestCriticalPoint!
+            : Math.abs(e.graphX! - 0) <
+              Math.abs(e.graphX! - closestCriticalPoint![0])
             ? inputPoint
             : closestCriticalPoint!;
 
@@ -1310,6 +1347,7 @@ class DrawTooltipCommand implements GraphCommand {
         }
       } else if (!closestCriticalPoint) {
         if (
+          inputPoint !== undefined &&
           Math.abs(e.graphX! - 0) < Math.abs(e.graphX! - closestOutputPoint!)
         ) {
           x = 0;
@@ -1325,7 +1363,10 @@ class DrawTooltipCommand implements GraphCommand {
       } else {
         let closest: [number, number];
 
-        Math.abs(e.graphX! - 0) < Math.abs(e.graphX! - closestCriticalPoint[0])
+        inputPoint === undefined
+          ? (closest = closestCriticalPoint)
+          : Math.abs(e.graphX! - 0) <
+            Math.abs(e.graphX! - closestCriticalPoint[0])
           ? (closest = [0, inputPoint])
           : (closest = closestCriticalPoint);
 
@@ -1343,6 +1384,8 @@ class DrawTooltipCommand implements GraphCommand {
         yCoord = -y * normFactor;
       }
     }
+
+    if (!x) return null;
 
     return { x, y, xCoord, yCoord };
   }
@@ -1421,16 +1464,22 @@ class DrawTooltipCommand implements GraphCommand {
     const normFactor = this.graph.scales.scaledStep / this.graph.scales.scaler;
 
     let x: number =
-      param === "x"
+      this.functionCommand.data.f.inputIntercept === undefined
+        ? 0
+        : param === "x"
         ? 0
         : this.functionCommand.data.f.inputIntercept * normFactor;
     let y: number =
-      param === "x"
+      this.functionCommand.data.f.inputIntercept === undefined
+        ? 0
+        : param === "x"
         ? -this.functionCommand.data.f.inputIntercept * normFactor
         : 0;
 
-    this.graph.ctx.arc(x, y, this.settings.pointRadius, 0, Math.PI * 2);
-    this.graph.ctx.fill();
+    if (typeof this.functionCommand.data.f.inputIntercept === "number") {
+      this.graph.ctx.arc(x, y, this.settings.pointRadius, 0, Math.PI * 2);
+      this.graph.ctx.fill();
+    }
 
     const outputIntercepts = this.functionCommand.data.f.outputIntercepts;
     for (let i = 0; i < outputIntercepts.length; i++) {

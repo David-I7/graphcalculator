@@ -158,7 +158,9 @@ class MathJsParser {
     return {
       param: node.params[0],
       f: scope[node.name],
-      inputIntercept,
+      inputIntercept: Number.isFinite(inputIntercept)
+        ? inputIntercept
+        : undefined,
       outputIntercepts: [],
       node,
     };
