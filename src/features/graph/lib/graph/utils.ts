@@ -82,7 +82,7 @@ export function bisection(
     maxIterations--;
   }
 
-  return mean;
+  return null;
 }
 
 export function newtonsMethod(
@@ -107,7 +107,7 @@ export function newtonsMethod(
     maxIterations--;
   }
 
-  return curX;
+  return null;
 }
 
 export function binarySearchClosest<T>(
