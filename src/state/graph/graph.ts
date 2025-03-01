@@ -1,18 +1,31 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GraphData, ExpressionType, Expression } from "../../lib/api/graph";
 import { CSS_VARIABLES } from "../../data/css/variables";
+import { swap } from "../../helpers/dts";
+import {
+  ClientExpressionState,
+  ClientGraphData,
+  ClientItem,
+  Expression,
+  ExpressionType,
+  GraphData,
+  Item,
+  ItemType,
+} from "./types";
 
 interface GraphState {
-  currentGraph: ClientGraphState;
+  currentGraph: ClientGraphData;
   savedGraphs: GraphData[];
   exampleGraphs: GraphData[];
 }
 
-type ClientGraphState = Omit<GraphData, "expressions"> & {
-  expressions: { nextId: number; focusedId: number; data: Expression[] };
+type UpdateExpressionState<T extends ExpressionType = ExpressionType> = {
+  id: number;
+  idx: number;
+  state: ClientExpressionState<T>["state"];
+  type: T;
 };
 
-function createNewGraph(): ClientGraphState {
+function createNewGraph(): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
     id: crypto.randomUUID(),
@@ -20,31 +33,35 @@ function createNewGraph(): ClientGraphState {
     modifiedAt: createdAt,
     thumb: "",
     name: "Untitled",
-    expressions: {
+    items: {
+      scope: {},
       nextId: 2,
       focusedId: 1,
-      data: [createNewExpression("expression", 1)],
+      data: [createNewItem("expression", 1)],
     },
   };
 }
 
-function createNewExpression(
-  type: ExpressionType,
+function createNewItem<T extends ItemType>(
+  type: T,
   id: number,
   content?: string
-): Expression {
+): ClientItem<T> {
   if (type === "expression") {
     return {
       id,
       type,
       data: {
+        type: "function",
+        settings: {
+          color: `hsl(${Math.floor(Math.random() * 360)},${
+            CSS_VARIABLES.baseSaturation
+          },${CSS_VARIABLES.baseLightness})`,
+          hidden: false,
+        },
         content: content ? content : "",
-        color: `hsl(${Math.floor(Math.random() * 360)},${
-          CSS_VARIABLES.baseSaturation
-        },${CSS_VARIABLES.baseLightness})`,
-        hidden: false,
       },
-    };
+    } as ClientItem<T>;
   }
 
   return {
@@ -53,14 +70,10 @@ function createNewExpression(
     data: {
       content: "",
     },
-  };
+  } as ClientItem<T>;
 }
 
-function swap<T>(a: number, b: number, arr: T[]) {
-  const tmp = arr[a];
-  arr[a] = arr[b];
-  arr[b] = tmp;
-}
+type t = ClientItem<"expression">["data"];
 
 const initialState: GraphState = {
   currentGraph: createNewGraph(),
@@ -92,46 +105,38 @@ const graphSlice = createSlice({
       }
     }),
 
-    // EXPRESSION CASES
-    createExpression: create.reducer(
+    // ITEM CASES
+    createItem: create.reducer(
       (
         state,
         action: PayloadAction<{
-          type: ExpressionType;
+          type: ItemType;
           loc: "start" | "end";
         }>
       ) => {
         if (action.payload.loc === "end") {
-          state.currentGraph.expressions.data.push(
-            createNewExpression(
-              action.payload.type,
-              state.currentGraph.expressions.nextId
-            )
+          state.currentGraph.items.data.push(
+            createNewItem(action.payload.type, state.currentGraph.items.nextId)
           );
         } else {
-          state.currentGraph.expressions.data.unshift(
-            createNewExpression(
-              action.payload.type,
-              state.currentGraph.expressions.nextId
-            )
+          state.currentGraph.items.data.unshift(
+            createNewItem(action.payload.type, state.currentGraph.items.nextId)
           );
         }
-        state.currentGraph.expressions.focusedId =
-          state.currentGraph.expressions.nextId;
-        state.currentGraph.expressions.nextId += 1;
+        state.currentGraph.items.focusedId = state.currentGraph.items.nextId;
+        state.currentGraph.items.nextId += 1;
       }
     ),
-    deleteExpression: create.reducer(
+    deleteItem: create.reducer(
       (state, action: PayloadAction<{ id: number; idx: number }>) => {
-        const expressions = state.currentGraph.expressions;
+        const items = state.currentGraph.items;
 
-        if (expressions.data[action.payload.idx].id !== action.payload.id)
-          return;
+        if (items.data[action.payload.idx].id !== action.payload.id) return;
 
-        expressions.data.splice(action.payload.idx, 1);
+        items.data.splice(action.payload.idx, 1);
       }
     ),
-    updateExpressionPos: create.reducer(
+    updateItemPos: create.reducer(
       (
         state,
         action: PayloadAction<{ id: number; startPos: number; endPos: number }>
@@ -139,53 +144,77 @@ const graphSlice = createSlice({
         if (action.payload.startPos < action.payload.endPos) {
           let i = action.payload.startPos;
           while (i < action.payload.endPos) {
-            swap(i, i + 1, state.currentGraph.expressions.data);
+            swap(i, i + 1, state.currentGraph.items.data);
             ++i;
           }
         } else if (action.payload.startPos > action.payload.endPos) {
           let i = action.payload.startPos;
           while (i > action.payload.endPos) {
-            swap(i, i - 1, state.currentGraph.expressions.data);
+            swap(i, i - 1, state.currentGraph.items.data);
             --i;
           }
         }
       }
     ),
-    updateExpressionContent: create.reducer(
+    updateItemContent: create.reducer(
       (
         state,
         action: PayloadAction<{ content: string; id: number; idx: number }>
       ) => {
-        const expr = state.currentGraph.expressions.data[action.payload.idx];
-        if (expr.id !== action.payload.id) return;
-        if (expr.data.content === action.payload.content) return;
-        expr.data.content = action.payload.content;
+        const item = state.currentGraph.items.data[action.payload.idx];
+        if (item.id !== action.payload.id) return;
+        if (item.data.content === action.payload.content) return;
+        item.data.content = action.payload.content;
       }
     ),
+    setFocusedItem: create.reducer((state, action: PayloadAction<number>) => {
+      if (state.currentGraph.items.focusedId === action.payload) return;
+      state.currentGraph.items.focusedId = action.payload;
+    }),
+    resetFocusedItem: create.reducer((state, action: PayloadAction<number>) => {
+      if (state.currentGraph.items.focusedId === action.payload) {
+        state.currentGraph.items.focusedId = -1;
+      }
+    }),
+
+    // EXPRESSION CASES
     toggleExpressionVisibility: create.reducer(
       (
         state,
         action: PayloadAction<{ hidden: boolean; id: number; idx: number }>
       ) => {
-        const expr = state.currentGraph.expressions.data[
-          action.payload.idx
-        ] as Expression<"expression">;
+        const item = state.currentGraph.items.data[action.payload.idx];
 
-        if (expr.id !== action.payload.id) return;
-
-        expr.data.hidden = !expr.data.hidden;
+        if (item.id !== action.payload.id) return;
+        if (item.type === "expression") {
+          const settings = (item.data as ClientExpressionState<"function">)[
+            "settings"
+          ];
+          if (settings) settings.hidden = !settings.hidden;
+        }
       }
     ),
-    setFocusedExpression: create.reducer(
-      (state, action: PayloadAction<number>) => {
-        if (state.currentGraph.expressions.focusedId === action.payload) return;
-        state.currentGraph.expressions.focusedId = action.payload;
-      }
-    ),
-    resetFocusedExpression: create.reducer(
-      (state, action: PayloadAction<number>) => {
-        if (state.currentGraph.expressions.focusedId === action.payload) {
-          state.currentGraph.expressions.focusedId = -1;
+    updateExpressionState: create.reducer(
+      (state, action: PayloadAction<UpdateExpressionState>) => {
+        const item = state.currentGraph.items.data[action.payload.idx];
+
+        if (item.id !== action.payload.id || item.type !== "expression") return;
+
+        const expr = item.data as ClientExpressionState;
+
+        switch (action.payload.type) {
+          case "function":
+            expr.type = "function";
+            expr.state = action.payload.state;
+            break;
+          case "point":
+            expr.type = "point";
+            expr.state = action.payload.state;
+            break;
+          case "variable":
+            expr.type = "variable";
+            expr.state = action.payload.state;
+            break;
         }
       }
     ),
@@ -194,15 +223,21 @@ const graphSlice = createSlice({
 
 export default graphSlice.reducer;
 export const {
+  // graph
   restoreGraph,
   saveGraph,
-  updateExpressionContent,
-  updateExpressionPos,
+
+  // item
+  createItem,
+  deleteItem,
+  updateItemContent,
+  updateItemPos,
+  resetFocusedItem,
+  setFocusedItem,
+
+  //expression
   toggleExpressionVisibility,
-  createExpression,
-  deleteExpression,
-  setFocusedExpression,
-  resetFocusedExpression,
+  updateExpressionState,
 } = graphSlice.actions;
 
 // SELECTORS

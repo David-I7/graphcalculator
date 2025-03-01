@@ -1,19 +1,30 @@
-import React, { useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
-import { Expression, ExpressionType } from "../../../../lib/api/graph";
 import { useAppDispatch } from "../../../../state/hooks";
 import {
-  setFocusedExpression,
-  updateExpressionContent,
+  resetFocusedItem,
+  setFocusedItem,
+  updateItemContent,
 } from "../../../../state/graph/graph";
 import ResizableTextarea from "../../../../components/input/ResizableTextarea";
-import { useFocus } from "../../../../hooks/dom";
+import { useClickOutside, useFocus } from "../../../../hooks/dom";
+import { ClientItem, ItemType } from "../../../../state/graph/types";
 
-type ExpressionTextAreaProps<T extends ExpressionType = ExpressionType> = {
+type ExpressionTextAreaProps<T extends ItemType = ItemType> = {
   focused: boolean;
-  item: Expression<T>;
+  item: ClientItem<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
   idx: number;
+};
+
+const handleFocus = (id: number) => {
+  const listItem = document.querySelector(`[expr-id="${id}"]`) as HTMLLIElement;
+  listItem.classList.add("expression-list__li--focused");
+};
+
+const handleBlur = (id: number) => {
+  const listItem = document.querySelector(`[expr-id="${id}"]`) as HTMLLIElement;
+  listItem.classList.remove("expression-list__li--focused");
 };
 
 const ExpressionTextArea = (props: ExpressionTextAreaProps) => {
@@ -39,21 +50,10 @@ const FunctionTextArea = ({
 }: ExpressionTextAreaProps<"expression">) => {
   const ref = useRef<HTMLTextAreaElement>(null);
 
-  const handleFocus = () => {
-    const listItem = document.querySelector(
-      `[expr-id="${item.id}"]`
-    ) as HTMLLIElement;
-    listItem.classList.add("expression-list__li--focused");
-  };
+  const onFocus = useCallback(() => handleFocus(item.id), [item.id]);
+  const onBlur = useCallback(() => handleBlur(item.id), [item.id]);
 
-  const handleBlur = () => {
-    const listItem = document.querySelector(
-      `[expr-id="${item.id}"]`
-    ) as HTMLLIElement;
-    listItem.classList.remove("expression-list__li--focused");
-  };
-
-  useFocus(focused, ref, handleFocus, handleBlur);
+  useFocus(focused, ref, onFocus, onBlur);
 
   return (
     <ResizableTextarea
@@ -71,12 +71,12 @@ const FunctionTextArea = ({
         value: item.data.content,
         onFocus: () => {
           if (!focused) {
-            dispatch(setFocusedExpression(item.id));
+            dispatch(setFocusedItem(item.id));
           }
         },
         onChange: (e) => {
           dispatch(
-            updateExpressionContent({
+            updateItemContent({
               id: item.id,
               content: e.target.value,
               idx: idx,
@@ -93,22 +93,44 @@ const NoteTextArea = ({
   dispatch,
   idx,
 }: ExpressionTextAreaProps<"note">) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const onFocus = useCallback(() => {
+    handleFocus(item.id);
+  }, [item.id]);
+  const onBlur = useCallback(() => {
+    dispatch(resetFocusedItem(item.id));
+    handleBlur(item.id);
+  }, [item.id]);
+  const elementSelector = useCallback(
+    () => document.querySelector(".expression-panel") as HTMLDivElement,
+    []
+  );
+
+  useClickOutside(focused, elementSelector, onBlur);
+  useFocus(focused, ref, onFocus, onBlur);
+
   return (
     <ResizableTextarea
+      ref={ref}
       container={{
         className: "font-medium",
         style: {
+          fontSize: "1rem",
           color: CSS_VARIABLES.onSurfaceBodyHigh,
           paddingRight: "3.5rem",
           paddingLeft: "1rem",
         },
       }}
       textarea={{
+        onFocus: () => {
+          dispatch(setFocusedItem(item.id));
+        },
         autoFocus: focused,
         value: item.data.content,
         onChange: (e) => {
           dispatch(
-            updateExpressionContent({
+            updateItemContent({
               id: item.id,
               content: e.target.value,
               idx: idx,

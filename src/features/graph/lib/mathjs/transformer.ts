@@ -23,36 +23,36 @@ export class ExpressionTransformer {
     if (err) {
       return { err, node: undefined };
     }
-
-    console.log(node);
-
-    // node!.transform((node, path, parent) => {
-    //   if (node instanceof SymbolNode) {
-    //     this.validator;
-    //   }
-
-    //   return node;
-    // });
+    if (err) console.log(err, "SyntaxError");
 
     let vErr: ExpressionValidationResult = undefined;
 
-    if (node instanceof ConstantNode) {
-      vErr = this.validator.validateConstantNode(node, undefined);
-    } else if (node instanceof SymbolNode) {
-      vErr = this.validator.validateSymbolNode(node, undefined);
-    } else if (node instanceof OperatorNode) {
-      vErr = this.validator.validateOperatorNode(
-        node as unknown as OperatorNode,
-        undefined
-      );
-    } else if (node instanceof FunctionNode) {
-      vErr = this.validator.validateFunctionNode(node, undefined);
-    } else if (node instanceof FunctionAssignmentNode) {
-      vErr = this.validator.validateFunctionAssignmentNode(node, undefined);
-    }
+    vErr = this.validateNode(node!, undefined);
+    node!.forEach((node, path, parent) => {
+      console.log("inner ", node);
+      vErr = this.validateNode(node, parent);
+    });
 
+    console.log("outter ", node);
     console.log(vErr);
 
     return { err: vErr, node: vErr ? undefined : node };
+  }
+
+  validateNode(node: MathNode, parent: MathNode | undefined) {
+    if (node instanceof ConstantNode) {
+      return this.validator.validateConstantNode(node, parent);
+    } else if (node instanceof SymbolNode) {
+      return this.validator.validateSymbolNode(node, parent);
+    } else if (node instanceof OperatorNode) {
+      return this.validator.validateOperatorNode(
+        node as unknown as OperatorNode,
+        parent
+      );
+    } else if (node instanceof FunctionNode) {
+      return this.validator.validateFunctionNode(node, parent);
+    } else if (node instanceof FunctionAssignmentNode) {
+      return this.validator.validateFunctionAssignmentNode(node, parent);
+    }
   }
 }

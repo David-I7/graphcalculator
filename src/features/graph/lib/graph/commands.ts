@@ -1,6 +1,5 @@
-import { ConstantNode, FunctionAssignmentNode } from "mathjs";
+import { ConstantNode, FunctionAssignmentNode, isComplex } from "mathjs";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
-import { Expression } from "../../../../lib/api/graph";
 import {
   GraphCommand,
   GraphCommandController,
@@ -16,6 +15,7 @@ import {
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
+import { RequiredFnState } from "../../../../state/graph/types";
 
 type DrawData = {
   scaledStep: number;
@@ -613,28 +613,6 @@ export class DrawAxisCommand implements GraphCommand {
   }
 }
 
-export type FnData = {
-  f: {
-    node: FunctionAssignmentNode;
-    param: string;
-    inputIntercept: number | undefined;
-    outputIntercepts: number[];
-    f: (input: number) => number;
-  };
-  df: {
-    node: FunctionAssignmentNode;
-    criticalPoints: [number, number][];
-    param: string;
-    f: (input: number) => number;
-  };
-  ddf: {
-    node: FunctionAssignmentNode;
-    criticalPoints: [number, number][];
-    param: string;
-    f: (input: number) => number;
-  };
-};
-
 export type ExprData = {
   color: string;
   hidden: boolean;
@@ -653,7 +631,11 @@ export class DrawFunctionCommand implements GraphCommand {
   state: ExprData["state"];
   onStateChange: ExprData["onStateChange"];
 
-  constructor(public graph: Graph, public data: FnData, exprData: ExprData) {
+  constructor(
+    public graph: Graph,
+    public data: RequiredFnState,
+    exprData: ExprData
+  ) {
     this.settings = {
       color: exprData.color,
       hidden: exprData.hidden,
@@ -723,11 +705,14 @@ export class DrawFunctionCommand implements GraphCommand {
       this.graph.ctx.beginPath();
       const curY = nextY ?? y * normFactor;
       const curX = nextX ?? f(-y) * normFactor;
-      if (isNaN(curX)) continue;
+      if (!Number.isFinite(curX)) continue;
 
       nextY = (y + nextStep) * normFactor;
       nextX = f(-y + nextStep) * normFactor;
-      if (isNaN(nextX)) continue;
+      if (!Number.isFinite(nextX)) continue;
+
+      // discontinuity
+      if (Math.abs(nextX - curX) > this.graph.canvas.width) continue;
 
       this.graph.ctx.moveTo(curX, curY);
       this.graph.ctx.lineTo(nextX, nextY);
@@ -757,11 +742,14 @@ export class DrawFunctionCommand implements GraphCommand {
       this.graph.ctx.beginPath();
       const curX = nextX ?? i * normFactor;
       const curY = nextY ?? -(f(i + nextStep) * normFactor);
-      if (isNaN(curY)) continue;
+      if (!Number.isFinite(curY)) continue;
 
       nextX = (i + nextStep) * normFactor;
       nextY = -(f(i + nextStep) * normFactor);
-      if (isNaN(nextY)) continue;
+      if (!Number.isFinite(nextY)) continue;
+
+      // discontinuity
+      if (Math.abs(nextY - curY) > this.graph.canvas.height) continue;
 
       this.graph.ctx.moveTo(curX, curY);
       this.graph.ctx.lineTo(nextX, nextY);
@@ -773,12 +761,17 @@ export class DrawFunctionCommand implements GraphCommand {
     // there are no xIntercepts if the function is contant
     if (this.data.f.node.expr instanceof ConstantNode) return;
 
+    if (!this.data.df.node)
+      throw new Error(
+        `Function has no derivative.\n\n${this.data.f.node.toString()}`
+      );
+
     this.data.f.outputIntercepts = [];
     this.data.df.criticalPoints = [];
 
     const f = this.data.f.f;
     const df = this.data.df.f;
-    const ddf = this.data.ddf.f;
+    const ddf = this.data.ddf.node ? this.data.ddf.f : undefined;
 
     // approaching from the left side
     const leftTiles =
@@ -799,9 +792,8 @@ export class DrawFunctionCommand implements GraphCommand {
       const dy = df(i);
 
       if (
-        typeof prevY === "number" &&
         Number.isFinite(prevY) &&
-        ((prevY < 0 && y > 0) || (prevY > 0 && y < 0))
+        ((prevY! < 0 && y > 0) || (prevY! > 0 && y < 0))
       ) {
         // console.log(prevY, y, i);
         const root = newtonsMethod(i, f, df);
@@ -809,21 +801,21 @@ export class DrawFunctionCommand implements GraphCommand {
       }
 
       if (
-        typeof prevDY === "number" &&
         Number.isFinite(prevDY) &&
-        ((prevDY < 0 && dy > 0) || (prevDY > 0 && dy < 0))
+        ((prevDY! < 0 && dy > 0) || (prevDY! > 0 && dy < 0))
       ) {
         let root: number | null;
 
         // if df is constant ddf is 0 so we can't use
         // newtons method
         if (
+          this.data.ddf.node &&
           this.data.ddf.node.expr instanceof ConstantNode &&
           this.data.ddf.node.expr.value === 0
         ) {
           root = bisection(i - nextStep, i, df);
         } else {
-          root = newtonsMethod(i, df, ddf);
+          root = newtonsMethod(i, df, ddf!);
         }
         if (root) this.data.df.criticalPoints.push([root, f(root)]);
       }
@@ -834,13 +826,17 @@ export class DrawFunctionCommand implements GraphCommand {
   private calculateCriticalPointsY() {
     // there are no yIntercepts if the function is contant
     if (this.data.f.node.expr instanceof ConstantNode) return;
+    if (!this.data.df.node)
+      throw new Error(
+        `Function has no derivative.\n\n${this.data.f.node.toString()}`
+      );
 
     this.data.f.outputIntercepts = [];
     this.data.df.criticalPoints = [];
 
     const f = this.data.f.f;
     const df = this.data.df.f;
-    const ddf = this.data.ddf.f;
+    const ddf = this.data.ddf.node ? this.data.ddf.f : undefined;
 
     // approaching from the left side
     const topTiles =
@@ -879,12 +875,13 @@ export class DrawFunctionCommand implements GraphCommand {
         // if df is constant ddf is 0 so we can't use
         // newtons method
         if (
+          this.data.ddf.node &&
           this.data.ddf.node.expr instanceof ConstantNode &&
           this.data.ddf.node.expr.value === 0
         ) {
           root = bisection(i - nextStep, i, df);
         } else {
-          root = newtonsMethod(i, df, ddf);
+          root = newtonsMethod(i, df, ddf!);
         }
         if (root) this.data.df.criticalPoints.push([f(root), root]);
       }
@@ -977,12 +974,14 @@ class DrawTooltipCommand implements GraphCommand {
 
     if (param === "y") {
       const { x, y } = this.calculateValues(e, "y");
+      if (isComplex(x)) return;
       outerX = x;
       outerY = y;
 
       offset = Math.abs(x) - Math.abs(e.graphX);
     } else {
       const { x, y } = this.calculateValues(e, "x");
+      if (isComplex(y)) return;
       outerX = x;
       outerY = y;
 
@@ -996,6 +995,7 @@ class DrawTooltipCommand implements GraphCommand {
         let point: ReturnType<typeof this.getClosestPoint>;
         if (param === "y") {
           point = this.getClosestPoint({ graphY: e.graphY }, "y");
+          console.log(point);
         } else {
           point = this.getClosestPoint({ graphX: e.graphX }, "x");
         }
@@ -1062,13 +1062,15 @@ class DrawTooltipCommand implements GraphCommand {
       if (precision <= 0) {
         y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
-        if (Number.isFinite(x)) {
+        if (isComplex(x)) {
+        } else {
           x = this.roundValue(x, precision);
         }
       } else if (precision > 0 && precision <= 7) {
         y = this.roundValue(y, precision);
         x = this.functionCommand.data.f.f(y);
-        if (Number.isFinite(x)) {
+        if (isComplex(x)) {
+        } else {
           x = clampNumber(x, maxFractionDigits);
         }
       } else {
@@ -1081,13 +1083,15 @@ class DrawTooltipCommand implements GraphCommand {
       if (precision <= 0) {
         x = this.roundValue(x, precision);
         y = fn(x);
-        if (Number.isFinite(y)) {
+        if (typeof y === "object") {
+        } else {
           y = this.roundValue(y, precision);
         }
       } else if (precision > 0 && precision <= 7) {
         x = this.roundValue(x, precision);
         y = fn(x);
-        if (Number.isFinite(y)) {
+        if (typeof y === "object") {
+        } else {
           y = clampNumber(y, maxFractionDigits);
         }
       } else {
@@ -1146,8 +1150,7 @@ class DrawTooltipCommand implements GraphCommand {
 
         if (this.functionCommand.data.f.param === "y") {
           const { x, y } = this.calculateValues({ graphY }, "y");
-
-          if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+          if (isComplex(x)) return;
 
           if (this.functionCommand.state === "dragged") {
             this.setData(x, y);
@@ -1156,8 +1159,7 @@ class DrawTooltipCommand implements GraphCommand {
           }
         } else {
           const { x, y } = this.calculateValues({ graphX }, "x");
-
-          if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+          if (isComplex(y)) return;
 
           if (this.functionCommand.state === "dragged") {
             this.setData(x, y);
@@ -1209,15 +1211,15 @@ class DrawTooltipCommand implements GraphCommand {
   ): { x: number; y: number; xCoord: number; yCoord: number } | null {
     if (
       typeof this.functionCommand.data.f.inputIntercept !== "number" &&
-      !this.functionCommand.data.df.criticalPoints.length &&
+      !this.functionCommand.data.df.node &&
       !this.functionCommand.data.f.outputIntercepts.length
     )
       return null;
 
     const inputPoint: number | undefined =
       this.functionCommand.data.f.inputIntercept;
-    let closestOutputPoint: number | null;
-    let closestCriticalPoint: [number, number] | null;
+    let closestOutputPoint: number | null = null;
+    let closestCriticalPoint: [number, number] | null = null;
 
     if (param === "y") {
       closestOutputPoint = binarySearchClosest(
@@ -1225,22 +1227,24 @@ class DrawTooltipCommand implements GraphCommand {
         this.functionCommand.data.f.outputIntercepts
       );
 
-      closestCriticalPoint = binarySearchClosest(
-        -e.graphY!,
-        this.functionCommand.data.df.criticalPoints,
-        (val) => val[1]
-      );
+      if (this.functionCommand.data.df.node)
+        closestCriticalPoint = binarySearchClosest(
+          -e.graphY!,
+          this.functionCommand.data.df.criticalPoints,
+          (val) => val[1]
+        );
     } else {
       closestOutputPoint = binarySearchClosest(
         e.graphX!,
         this.functionCommand.data.f.outputIntercepts
       );
 
-      closestCriticalPoint = binarySearchClosest(
-        e.graphX!,
-        this.functionCommand.data.df.criticalPoints,
-        (val) => val[0]
-      );
+      if (this.functionCommand.data.df.node)
+        closestCriticalPoint = binarySearchClosest(
+          e.graphX!,
+          this.functionCommand.data.df.criticalPoints,
+          (val) => val[0]
+        );
     }
 
     const normFactor = this.graph.scales.scaledStep / this.graph.scales.scaler;
@@ -1385,7 +1389,7 @@ class DrawTooltipCommand implements GraphCommand {
       }
     }
 
-    if (!x) return null;
+    if (typeof x === "undefined") return null;
 
     return { x, y, xCoord, yCoord };
   }
@@ -1492,6 +1496,7 @@ class DrawTooltipCommand implements GraphCommand {
       this.graph.ctx.fill();
     }
 
+    if (!this.functionCommand.data.df.node) return;
     const criticalPoints = this.functionCommand.data.df.criticalPoints;
     for (let i = 0; i < criticalPoints.length; i++) {
       this.graph.ctx.beginPath();
@@ -1523,13 +1528,13 @@ class DrawTooltipCommand implements GraphCommand {
       // scientific notation, don't have a solution yet
 
       return `(${
-        Math.abs(xVal) <= 9.99e-7
+        xVal !== 0 && Math.abs(xVal) <= 9.99e-7
           ? showFullPrecision
             ? xVal.toFixed(this.settings.maxFractionDigits)
             : 0
           : xVal
       }, ${
-        Math.abs(yVal) <= 9.99e-7
+        yVal !== 0 && Math.abs(yVal) <= 9.99e-7
           ? showFullPrecision
             ? yVal.toFixed(this.settings.maxFractionDigits)
             : 0
@@ -1685,4 +1690,12 @@ class DrawTooltipCommand implements GraphCommand {
     this.destroyController?.abort();
     this.graph.removeListener("mouseDown", this.boundHandleMouseDown);
   }
+}
+
+export class DrawPointCommand implements GraphCommand {
+  constructor(public graph: Graph) {}
+
+  draw(): void {}
+
+  destroy(): void {}
 }

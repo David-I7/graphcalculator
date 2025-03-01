@@ -1,5 +1,4 @@
 import "./assets/base.scss";
-import GraphFunctions from "./components/GraphFunctions";
 import {
   createContext,
   ReactNode,
@@ -9,6 +8,7 @@ import {
 } from "react";
 import { Graph as LibGraph } from "./lib/graph/graph";
 import { setup } from "./lib";
+import GraphExpressions from "./components/GraphExpressions";
 
 type GraphContextState = LibGraph;
 
@@ -49,7 +49,7 @@ const Graph = () => {
     <GraphContextProvider>
       <div className="graph-container">
         <canvas id="graph-calculator"></canvas>
-        <GraphFunctions />
+        <GraphExpressions />
       </div>
     </GraphContextProvider>
   );

@@ -97,12 +97,12 @@
       }
     }
 
-    &--focused {
-      outline: 1px solid base.$primary-container !important;
+    &.expression-list__li--focused {
+      outline: 1px solid base.$primary-container;
 
       .dynamic-island {
-        background-color: base.$primary-container !important;
-        color: base.$on-primary-container !important;
+        background-color: base.$primary-container;
+        color: base.$on-primary-container;
       }
     }
   }
