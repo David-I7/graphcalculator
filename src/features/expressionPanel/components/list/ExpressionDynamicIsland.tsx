@@ -1,47 +1,40 @@
-import { Expression, ExpressionType } from "../../../../lib/api/graph";
 import {
   Quotes,
   Function,
-  Table,
   Hidden,
   Warning,
+  VariableAssignment,
+  Point,
 } from "../../../../components/svgs";
-import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
+import { useAppDispatch } from "../../../../state/hooks";
 import { toggleExpressionVisibility } from "../../../../state/graph/graph";
+import {
+  ClientExpressionState,
+  ClientItem,
+  ItemType,
+} from "../../../../state/graph/types";
+import { ApplicationError } from "../../../../state/error/error";
 
-type ExpressionDynamicIslandProps<T extends ExpressionType = ExpressionType> = {
+type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
-  item: Expression<T>;
+  item: ClientItem<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
+  error: ApplicationError | null;
 };
 
 const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
-  const error = useAppSelector(
-    (state) => state.errorSlice.errors.expressions[props.item.id]
-  );
-
-  if (!props.item.data.content.length)
-    return (
-      <div draggable className="dynamic-island">
-        <div className="dynamic-island__index">
-          {props.index + 1}
-          <div className="dynamic-island__type"></div>
-        </div>
-      </div>
-    );
-
-  if (error) {
+  if (props.error) {
     return (
       <div draggable className="dynamic-island">
         <div className="dynamic-island__index">
           {props.index + 1}
           <div className="dynamic-island__type">
             <Warning
-              color={error.type !== "unknown" ? "currentColor" : "orange"}
+              color={props.error.type !== "unknown" ? "currentColor" : "orange"}
               width={28}
               height={28}
             >
-              <title>{error.message}</title>
+              <title>{props.error.message}</title>
             </Warning>
           </div>
         </div>
@@ -55,13 +48,11 @@ const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
       <div className="dynamic-island__type">
         <>
           {props.item.type === "expression" ? (
-            <ExpressionDynamicIsland.Function
+            <ExpressionDynamicIsland.Expression
               {...(props as ExpressionDynamicIslandProps<"expression">)}
             />
-          ) : props.item.type === "note" ? (
-            <Quotes width={28} height={28} />
           ) : (
-            <Table width={28} height={28} />
+            <Quotes width={28} height={28} />
           )}
         </>
       </div>
@@ -71,33 +62,80 @@ const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
 
 export default ExpressionDynamicIsland;
 
-ExpressionDynamicIsland.Function = function ({
+ExpressionDynamicIsland.Expression = function ({
   dispatch,
   index,
   item,
 }: ExpressionDynamicIslandProps<"expression">) {
-  return (
-    <button
-      onClick={(e) => {
-        dispatch(
-          toggleExpressionVisibility({
-            hidden: !item.data.hidden,
-            id: item.id,
-            idx: index,
-          })
-        );
-      }}
-      aria-label={`${item.data.hidden ? "Show" : "Hide"} ${item.type} ${index}`}
-      style={{
-        backgroundColor: item.data.hidden ? "transparent" : item.data.color,
-      }}
-      className="dynamic-island__type__function"
-    >
-      {item.data.hidden ? (
-        <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
-      ) : (
-        <Function width={28} height={28} style={{ cursor: "pointer" }} />
-      )}
-    </button>
-  );
+  if (!item.data.content.length) return null;
+
+  switch (item.data.type) {
+    case "function":
+      return (
+        <button
+          onClick={(e) => {
+            dispatch(
+              toggleExpressionVisibility({
+                hidden: !(item.data as ClientExpressionState<"function">)
+                  .settings.hidden,
+                id: item.id,
+                idx: index,
+              })
+            );
+          }}
+          aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
+            item.type
+          } ${index}`}
+          style={{
+            backgroundColor: item.data.settings.hidden
+              ? "transparent"
+              : item.data.settings.color,
+          }}
+          className="dynamic-island__type__function"
+        >
+          {item.data.settings.hidden ? (
+            <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
+          ) : (
+            <Function width={28} height={28} style={{ cursor: "pointer" }} />
+          )}
+        </button>
+      );
+    case "variable":
+      return (
+        <button className="dynamic-island__type__function">
+          <VariableAssignment width={28} height={28} />
+        </button>
+      );
+
+    case "point":
+      return (
+        <button
+          onClick={(e) => {
+            dispatch(
+              toggleExpressionVisibility({
+                hidden: !(item.data as ClientExpressionState<"point">).settings
+                  .hidden,
+                id: item.id,
+                idx: index,
+              })
+            );
+          }}
+          aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
+            item.type
+          } ${index}`}
+          style={{
+            backgroundColor: item.data.settings.hidden
+              ? "transparent"
+              : item.data.settings.color,
+          }}
+          className="dynamic-island__type__function"
+        >
+          {item.data.settings.hidden ? (
+            <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
+          ) : (
+            <Point width={28} height={28} style={{ cursor: "pointer" }} />
+          )}
+        </button>
+      );
+  }
 };

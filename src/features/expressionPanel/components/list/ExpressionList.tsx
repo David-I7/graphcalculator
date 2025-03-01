@@ -1,18 +1,12 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
 import { Close } from "../../../../components/svgs";
 import useDraggable from "../../../../hooks/useDraggable";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import {
-  createExpression,
-  deleteExpression,
-  updateExpressionPos,
+  createItem,
+  deleteItem,
+  updateItemPos,
 } from "../../../../state/graph/graph";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import {
@@ -20,9 +14,9 @@ import {
   KeyframeAnimationOptionsBuilder,
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
-import { Expression } from "../../../../lib/api/graph";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { destroyError } from "../../../../state/error/error";
+import { ApplicationError, destroyError } from "../../../../state/error/error";
+import { ClientItem } from "../../../../state/graph/types";
 
 const ExpressionList = () => {
   return (
@@ -36,7 +30,7 @@ export default ExpressionList;
 
 function ExpressionListRenderer() {
   const { data: expressions, focusedId } = useAppSelector(
-    (state) => state.graphSlice.currentGraph.expressions
+    (state) => state.graphSlice.currentGraph.items
   );
   const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -89,7 +83,7 @@ function ExpressionListRenderer() {
       }
       if (!found) return;
 
-      dispatch(updateExpressionPos({ id, startPos, endPos }));
+      dispatch(updateItemPos({ id, startPos, endPos }));
       setIsDragging(false);
     },
     [expressions]
@@ -106,7 +100,7 @@ function ExpressionListRenderer() {
 
   useEffect(() => {
     if (expressions.length === 0) {
-      dispatch(createExpression({ type: "expression", loc: "end" }));
+      dispatch(createItem({ type: "expression", loc: "end" }));
     }
   }, [expressions.length]);
 
@@ -129,7 +123,7 @@ function ExpressionListRenderer() {
         <li
           role="button"
           onClick={() => {
-            dispatch(createExpression({ type: "expression", loc: "end" }));
+            dispatch(createItem({ type: "expression", loc: "end" }));
           }}
           className="expression-list__li--faded"
         >
@@ -145,7 +139,7 @@ function ExpressionListRenderer() {
 }
 
 type ExpressionListItemProps = {
-  item: Expression;
+  item: ClientItem;
   focused: boolean;
   idx: number;
   dispatch: ReturnType<typeof useAppDispatch>;
@@ -160,13 +154,25 @@ const ExpressionListItem = React.memo(
     animationOptions,
     focused,
   }: ExpressionListItemProps) => {
+    const [err, setErr] = useState<ApplicationError | null>(null);
+
+    useEffect(() => {
+      if (item.type !== "expression") return;
+      //validate
+    }, [item.data.content]);
+
     return (
       <li
         className="expression-list__li draggable"
         expr-id={item.id}
         item-idx={idx}
       >
-        <ExpressionDynamicIsland dispatch={dispatch} item={item} index={idx} />
+        <ExpressionDynamicIsland
+          error={err}
+          dispatch={dispatch}
+          item={item}
+          index={idx}
+        />
 
         <ExpressionTextArea
           item={item}
@@ -183,7 +189,7 @@ const ExpressionListItem = React.memo(
               animationOptions
             );
             setTimeout(() => {
-              dispatch(deleteExpression({ id: item.id, idx: idx }));
+              dispatch(deleteItem({ id: item.id, idx: idx }));
               dispatch(destroyError(item.id));
             }, CSS_VARIABLES.animationSpeedFast);
           }}

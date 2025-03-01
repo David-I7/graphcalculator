@@ -54,7 +54,8 @@ export class ExpressionValidator {
             cause === "+" ||
             cause === "-" ||
             cause === "*" ||
-            cause === "/"
+            cause === "/" ||
+            cause === ","
           ) {
             return this.makeSyntaxError(
               `You need something on both sides of the '${cause}' symbol.`,
@@ -178,17 +179,18 @@ export class ExpressionValidator {
 
     if (node.fn instanceof SymbolNode) {
       if (node.args.length > requiredArgs)
-        return this.makeExpressionError(
-          `We only support functions with 1 argument.`,
-          "too_many_function_arg"
-        );
-      else if (node.args.length < requiredArgs)
-        return this.makeExpressionError(
-          GlobalMathFunctions.has(node.fn.name)
-            ? `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`
-            : `Function '${node.fn.name}' is not defined.`,
-          "insuficient_function_arg"
-        );
+        if (!GlobalMathFunctions.has(node.fn.name)) {
+          return this.makeExpressionError(
+            `We only support functions with 1 argument.`,
+            "too_many_function_arg"
+          );
+        } else if (node.args.length < requiredArgs)
+          return this.makeExpressionError(
+            GlobalMathFunctions.has(node.fn.name)
+              ? `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`
+              : `Function '${node.fn.name}' is not defined.`,
+            "insuficient_function_arg"
+          );
     }
 
     if (!parent) {
@@ -283,3 +285,5 @@ function getSymbolNodes(node: MathNode): string[] {
 
   return symbols;
 }
+
+export default new ExpressionValidator();

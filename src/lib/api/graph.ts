@@ -1,32 +1,4 @@
-export type GraphData = {
-  name: string;
-  id: string;
-  thumb: string;
-  createdAt: string;
-  modifiedAt: string;
-  expressions: Expression[];
-};
-
-type ExpressionData = {
-  expression: {
-    content: string;
-    color: string;
-    hidden: boolean;
-  };
-  note: {
-    content: string;
-  };
-  table: {
-    content: string;
-  };
-};
-
-export type Expression<T extends ExpressionType = ExpressionType> = {
-  type: T;
-  id: number;
-  data: ExpressionData[T];
-};
-export type ExpressionType = keyof ExpressionData;
+import { GraphData } from "../../state/graph/types";
 
 const baseUrl = "http://localhost:5000/";
 

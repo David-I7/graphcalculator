@@ -1,24 +1,22 @@
-import React, { ReactNode, useMemo, useRef } from "react";
+import { ReactNode, useMemo } from "react";
 import {
   FunctionLiteral,
   Plus,
   Quotes,
   SVGProps,
-  Table,
 } from "../../../../components/svgs";
-import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
+import { useAppDispatch } from "../../../../state/hooks";
 import Dropdown, {
   DropdownButton,
 } from "../../../../components/dropdown/Dropdown";
-import { ExpressionType } from "../../../../lib/api/graph";
-import { createExpression } from "../../../../state/graph/graph";
+import { createItem } from "../../../../state/graph/graph";
+import { ItemType } from "../../../../state/graph/types";
 
-type NewItemPair = [ExpressionType, (props: SVGProps) => ReactNode];
+type NewItemPair = [ItemType, (props: SVGProps) => ReactNode];
 
 const NewItemDropdownMap = new Map<NewItemPair[0], NewItemPair[1]>([
   ["expression", FunctionLiteral],
   ["note", Quotes],
-  ["table", Table],
 ]);
 
 const ExpressionPanelNewItem = () => {
@@ -34,7 +32,7 @@ const ExpressionPanelNewItem = () => {
 
         <Dropdown.Menu
           onClick={(arg) => {
-            dispatch(createExpression({ type: arg[0], loc: "start" }));
+            dispatch(createItem({ type: arg[0], loc: "start" }));
           }}
           data={data}
           ListItem={DropdowmMenuItem}
