@@ -1,4 +1,9 @@
-import { AssignmentNode, FunctionAssignmentNode, OperatorNode } from "mathjs";
+import {
+  AssignmentNode,
+  FunctionAssignmentNode,
+  OperatorNode,
+  ParenthesisNode,
+} from "mathjs";
 
 // API data
 
@@ -77,61 +82,18 @@ export type GraphableExpressions =
 
 export type ClientExpressionData = {
   function: {
-    state: FnState;
+    clientState: string | undefined;
   };
   point: {
-    state: PointState;
+    clientState: string | undefined;
   };
   variable: {
-    state: VarState;
+    clientState: string | undefined;
   };
 };
 
-export type PointState = {
-  node: OperatorNode | undefined;
-};
-export type FnState = {
-  f: FNode;
-  df: DFNode;
-  ddf: DFNode;
-};
-export type VarState<
-  T extends AssignmentNode | undefined = AssignmentNode | undefined
-> = T extends undefined
-  ? { node: undefined }
-  : {
-      node: AssignmentNode;
-      symbol: string;
-      value: number;
-    };
-
-export type FNode<
-  T extends FunctionAssignmentNode | undefined =
-    | FunctionAssignmentNode
-    | undefined
-> = T extends undefined
-  ? { node: undefined }
-  : {
-      node: FunctionAssignmentNode;
-      param: string;
-      inputIntercept: number | undefined;
-      outputIntercepts: number[];
-      f: (input: number) => number;
-    };
-
-export type DFNode<
-  T extends FunctionAssignmentNode | undefined =
-    | FunctionAssignmentNode
-    | undefined
-> = T extends undefined
-  ? { node: undefined }
-  : {
-      node: FunctionAssignmentNode;
-      criticalPoints: [number, number][];
-      param: string;
-      f: (input: number) => number;
-    };
-
-export type RequiredFnState = Omit<FnState, "f"> & {
-  f: FNode<FunctionAssignmentNode>;
-};
+export function isExpression(
+  item: ClientItem
+): item is ClientItem<"expression"> {
+  return item.type == "expression";
+}

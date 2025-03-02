@@ -1,8 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import {
-  ClientExpressionState,
-  RequiredFnState,
-} from "../../../../state/graph/types";
+import React, { useEffect, useMemo, useRef } from "react";
+import { ClientExpressionState } from "../../../../state/graph/types";
 import { Graph } from "../graph/graph";
 import { DrawFunctionCommand, FnCommandState } from "../graph/commands";
 import { useAppDispatch } from "../../../../state/hooks";
@@ -10,24 +7,38 @@ import {
   resetFocusedItem,
   setFocusedItem,
 } from "../../../../state/graph/graph";
+import { functionParser } from "./parse";
+import { reviver } from "mathjs";
 
 type useGraphFunctionProps = {
   id: number;
   data: ClientExpressionState<"function">;
   focused: boolean;
   graph: Graph;
+  scope: Record<string, number>;
 };
 export default function useGraphFunction({
   id,
   data,
   focused,
   graph,
+  scope,
 }: useGraphFunctionProps) {
+  const node = useMemo(() => {
+    return data.clientState ? JSON.parse(data.clientState, reviver) : undefined;
+  }, [data.clientState]);
   const dispatch = useAppDispatch();
   const command = useRef<DrawFunctionCommand | null>(null);
 
   useEffect(() => {
-    if (!data.state.f.node) return;
+    if (!node) return;
+
+    const fnData = functionParser.parse(node, scope);
+
+    if (!fnData) {
+      throw new Error(`Validation failed! Node is not valid.\n\n
+        ${node}`);
+    }
 
     const stateSync: FnCommandState = {
       state: focused ? "focused" : "idle",
@@ -44,16 +55,18 @@ export default function useGraphFunction({
 
     const currentCommand = new DrawFunctionCommand(
       graph,
-      data.state as RequiredFnState,
+      fnData,
       data.settings,
       stateSync
     );
     command.current = currentCommand;
+    graph.addCommand(currentCommand);
 
     return () => {
       currentCommand.destroy();
+      graph.removeCommand(currentCommand);
     };
-  }, [data]);
+  }, [node]);
 
   useEffect(() => {
     if (!command.current) return;

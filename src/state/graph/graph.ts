@@ -18,13 +18,6 @@ interface GraphState {
   exampleGraphs: GraphData[];
 }
 
-type UpdateExpressionState<T extends ExpressionType = ExpressionType> = {
-  id: number;
-  idx: number;
-  state: ClientExpressionState<T>["state"];
-  type: T;
-};
-
 function createNewGraph(): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
@@ -53,24 +46,14 @@ function createNewItem<T extends ItemType>(
       type,
       data: {
         type: "function",
+        content: content ? content : "",
         settings: {
           color: `hsl(${Math.floor(Math.random() * 360)},${
             CSS_VARIABLES.baseSaturation
           },${CSS_VARIABLES.baseLightness})`,
           hidden: false,
         },
-        content: content ? content : "",
-        state: {
-          f: {
-            node: undefined,
-          },
-          df: {
-            node: undefined,
-          },
-          ddf: {
-            node: undefined,
-          },
-        },
+        clientState: undefined,
       },
     } as ClientItem<"expression">;
   }
@@ -206,7 +189,15 @@ const graphSlice = createSlice({
       }
     ),
     updateExpressionState: create.reducer(
-      (state, action: PayloadAction<UpdateExpressionState>) => {
+      (
+        state,
+        action: PayloadAction<{
+          id: number;
+          idx: number;
+          clientState: ClientExpressionState<ExpressionType>["clientState"];
+          type: ExpressionType;
+        }>
+      ) => {
         const item = state.currentGraph.items.data[action.payload.idx];
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
@@ -216,15 +207,15 @@ const graphSlice = createSlice({
         switch (action.payload.type) {
           case "function":
             expr.type = "function";
-            expr.state = action.payload.state;
+            expr.clientState = action.payload.clientState;
             break;
           case "point":
             expr.type = "point";
-            expr.state = action.payload.state;
+            expr.clientState = action.payload.clientState;
             break;
           case "variable":
             expr.type = "variable";
-            expr.state = action.payload.state;
+            expr.clientState = action.payload.clientState;
             break;
         }
       }

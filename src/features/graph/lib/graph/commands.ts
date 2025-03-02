@@ -15,10 +15,7 @@ import {
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
-import {
-  ClientExpressionState,
-  RequiredFnState,
-} from "../../../../state/graph/types";
+import { ClientExpressionState } from "../../../../state/graph/types";
 
 type DrawData = {
   scaledStep: number;
@@ -624,6 +621,37 @@ export type FnCommandState = {
   ): void;
 };
 
+export type FnState = {
+  f: FNode;
+  df: DFNode;
+  ddf: DFNode;
+};
+
+export type FNode = {
+  node: FunctionAssignmentNode;
+  param: string;
+  inputIntercept: number | undefined;
+  outputIntercepts: number[];
+  f: (input: number) => number;
+};
+
+export type DFNode<
+  T extends FunctionAssignmentNode | undefined =
+    | FunctionAssignmentNode
+    | undefined
+> = T extends undefined
+  ? { node: undefined }
+  : {
+      node: FunctionAssignmentNode;
+      criticalPoints: [number, number][];
+      param: string;
+      f: (input: number) => number;
+    };
+
+function hasDerivative(node: DFNode): node is DFNode<FunctionAssignmentNode> {
+  return node.node ? true : false;
+}
+
 export class DrawFunctionCommand implements GraphCommand {
   protected tooltipCommand: DrawTooltipCommand;
 
@@ -632,7 +660,7 @@ export class DrawFunctionCommand implements GraphCommand {
 
   constructor(
     public graph: Graph,
-    public data: RequiredFnState,
+    public data: FnState,
     public settings: ClientExpressionState<"function">["settings"],
     stateSync: FnCommandState
   ) {
@@ -757,16 +785,13 @@ export class DrawFunctionCommand implements GraphCommand {
     // there are no xIntercepts if the function is contant
     if (this.data.f.node.expr instanceof ConstantNode) return;
 
-    if (!this.data.df.node)
-      throw new Error(
-        `Function has no derivative.\n\n${this.data.f.node.toString()}`
-      );
-
     this.data.f.outputIntercepts = [];
-    this.data.df.criticalPoints = [];
+    if (this.data.df.node) {
+      this.data.df.criticalPoints = [];
+    }
 
     const f = this.data.f.f;
-    const df = this.data.df.f;
+    const df = this.data.df.node ? this.data.df.f : undefined;
     const ddf = this.data.ddf.node ? this.data.ddf.f : undefined;
 
     // approaching from the left side
@@ -785,17 +810,26 @@ export class DrawFunctionCommand implements GraphCommand {
 
     for (let i = minX; i < maxX; i += nextStep) {
       const y = f(i);
-      const dy = df(i);
 
       if (
         Number.isFinite(prevY) &&
         ((prevY! < 0 && y > 0) || (prevY! > 0 && y < 0))
       ) {
-        // console.log(prevY, y, i);
-        const root = newtonsMethod(i, f, df);
+        let root: number | null = null;
+        if (df) {
+          root = newtonsMethod(i, f, df);
+        } else {
+          root = bisection(i - nextStep, i, f);
+        }
         if (root) this.data.f.outputIntercepts.push(root);
       }
 
+      if (!hasDerivative(this.data.df) || !df) {
+        prevY = y;
+        continue;
+      }
+
+      const dy = df(i);
       if (
         Number.isFinite(prevDY) &&
         ((prevDY! < 0 && dy > 0) || (prevDY! > 0 && dy < 0))
@@ -805,9 +839,8 @@ export class DrawFunctionCommand implements GraphCommand {
         // if df is constant ddf is 0 so we can't use
         // newtons method
         if (
-          this.data.ddf.node &&
-          this.data.ddf.node.expr instanceof ConstantNode &&
-          this.data.ddf.node.expr.value === 0
+          this.data.df.node.expr instanceof ConstantNode ||
+          !this.data.ddf.node
         ) {
           root = bisection(i - nextStep, i, df);
         } else {
@@ -822,16 +855,14 @@ export class DrawFunctionCommand implements GraphCommand {
   private calculateCriticalPointsY() {
     // there are no yIntercepts if the function is contant
     if (this.data.f.node.expr instanceof ConstantNode) return;
-    if (!this.data.df.node)
-      throw new Error(
-        `Function has no derivative.\n\n${this.data.f.node.toString()}`
-      );
+    if (this.data.df.node) {
+      this.data.df.criticalPoints = [];
+    }
 
     this.data.f.outputIntercepts = [];
-    this.data.df.criticalPoints = [];
 
     const f = this.data.f.f;
-    const df = this.data.df.f;
+    const df = this.data.df.node ? this.data.df.f : undefined;
     const ddf = this.data.ddf.node ? this.data.ddf.f : undefined;
 
     // approaching from the left side
@@ -851,16 +882,27 @@ export class DrawFunctionCommand implements GraphCommand {
 
     for (let i = minY; i < maxY; i += nextStep) {
       const x = f(i);
-      const dx = df(i);
 
       if (
         typeof prevX === "number" &&
         Number.isFinite(prevX) &&
         ((prevX < 0 && x > 0) || (prevX > 0 && x < 0))
       ) {
-        const root = newtonsMethod(i, f, df);
+        let root: number | null = null;
+        if (df) {
+          root = newtonsMethod(i, f, df);
+        } else {
+          root = bisection(i - nextStep, i, f);
+        }
         if (root) this.data.f.outputIntercepts.push(root);
       }
+
+      if (!hasDerivative(this.data.df) || !df) {
+        prevX = x;
+        continue;
+      }
+
+      const dx = df(i);
 
       if (
         typeof prevDX === "number" &&
@@ -871,9 +913,8 @@ export class DrawFunctionCommand implements GraphCommand {
         // if df is constant ddf is 0 so we can't use
         // newtons method
         if (
-          this.data.ddf.node &&
-          this.data.ddf.node.expr instanceof ConstantNode &&
-          this.data.ddf.node.expr.value === 0
+          !this.data.ddf.node ||
+          this.data.df.node.expr instanceof ConstantNode
         ) {
           root = bisection(i - nextStep, i, df);
         } else {

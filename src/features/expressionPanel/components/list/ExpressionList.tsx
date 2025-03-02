@@ -17,8 +17,9 @@ import {
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
 import { ApplicationError, destroyError } from "../../../../state/error/error";
-import { ClientItem } from "../../../../state/graph/types";
+import { ClientItem, isExpression } from "../../../../state/graph/types";
 import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
+import { AssignmentNode, FunctionAssignmentNode } from "mathjs";
 
 const ExpressionList = () => {
   return (
@@ -162,7 +163,8 @@ const ExpressionListItem = React.memo(
     const [error, setError] = useState<ApplicationError | null>(null);
 
     useEffect(() => {
-      if (item.type !== "expression") return;
+      if (!isExpression(item)) return;
+
       if (!item.data.content.length) {
         if (error) {
           setError(null);
@@ -173,19 +175,30 @@ const ExpressionListItem = React.memo(
       // error will be up to date with content update
 
       const res = ExpressionTransformer.transform(item.data.content, scope);
-      if (res.err) setError(res.err);
-      else {
-        // const scopeClone = {};
-        // Object.setPrototypeOf(scopeClone, scope);
-        // try {
-        //   // NON SERIALIZABLE STUFF CANNOT BE SENT TOWARDS THE STORE
-        //   // I NEED TO PARSE INSIDE THE USE HOOK
-        //   // JUST SEND THE VALID JSON.STRINGIFIED NODE
-
-        // } catch (err) {
-        //   console.log(err);
-        //   return;
-        // }
+      if (res.err) {
+        dispatch(
+          updateExpressionState({
+            id: item.id,
+            idx,
+            type: item.data.type,
+            clientState: undefined,
+          })
+        );
+        setError(res.err);
+      } else {
+        dispatch(
+          updateExpressionState({
+            id: item.id,
+            idx,
+            type:
+              res.node instanceof FunctionAssignmentNode
+                ? "function"
+                : res.node instanceof AssignmentNode
+                ? "variable"
+                : "point",
+            clientState: JSON.stringify(res.node),
+          })
+        );
 
         if (error) {
           setError(null);
