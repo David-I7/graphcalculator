@@ -10,6 +10,11 @@ import {
 import { ApplicationError } from "../../../../state/error/error";
 import { ExpressionValidationResult, ExpressionValidator } from "./validation";
 import { isGlobalFunctionRegex } from "../../data/math";
+import {
+  ClientExpressionData,
+  ClientItem,
+  ClientItemData,
+} from "../../../../state/graph/types";
 
 type TransformedResult =
   | {
@@ -26,10 +31,10 @@ export class ExpressionTransformer {
   constructor() {}
 
   transform(
-    expr: string,
+    data: ClientItemData["expression"],
     globalScope: Record<string, number>
   ): TransformedResult {
-    const trimmedContent = expr.replace(/\s/g, "");
+    const trimmedContent = data.content.replace(/\s/g, "");
     const { node, err } = this.validator.validateSyntax(trimmedContent);
 
     if (err) {
@@ -42,6 +47,47 @@ export class ExpressionTransformer {
     if (node instanceof FunctionAssignmentNode) {
       if (node.params.length) {
         scope.add(node.params[0]);
+      }
+    } else if (node instanceof AssignmentNode) {
+      if (!(node.object instanceof SymbolNode))
+        return {
+          err: this.validator.makeExpressionError(
+            `node.object is not instanceOf SymbolNode`,
+            "unknown"
+          ),
+          node: undefined,
+        };
+
+      const variable = node.object.name;
+
+      if (variable === "y" || variable === "x") {
+        const fn = new FunctionAssignmentNode(
+          "f",
+          [variable === "x" ? "y" : "x"],
+          node.value
+        );
+
+        scope.add(fn.params[0]);
+
+        return this.transformNode(fn, undefined, scope);
+      } else {
+        if (
+          scope.has(variable) &&
+          (data as ClientExpressionData["variable"]).clientState?.name !==
+            variable
+        ) {
+          return {
+            err: this.validator.makeExpressionError(
+              `
+            You've defined '${variable}' in more than one place. Try deleting some of the definitions of '${variable}'.
+            `,
+              "duplicate_variable_declaration"
+            ),
+            node: undefined,
+          };
+        }
+
+        scope.add(variable);
       }
     }
 
@@ -162,7 +208,7 @@ export class ExpressionTransformer {
         "function_composition_detected"
       );
     } else {
-      // input can be for example xpc
+      // example input: xpc
       if (parent instanceof FunctionNode && node === parent.fn) return node;
 
       if (node.name.length === 1) {

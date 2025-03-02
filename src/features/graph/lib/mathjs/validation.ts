@@ -19,6 +19,7 @@ const ErrorCause = {
   diff_param_from_expr: 5,
   syntax: 6,
   function_composition_detected: 7,
+  duplicate_variable_declaration: 8,
 };
 
 export type SyntaxValidationResult =
@@ -72,6 +73,8 @@ export class ExpressionValidator {
 
         const index = Number(idx);
         const cause = expr[index - 1] || expr[index - 2];
+
+        console.log(err, cause);
 
         if (cause) {
           if (
