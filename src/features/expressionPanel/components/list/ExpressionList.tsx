@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import {
   createItem,
   deleteItem,
+  updateExpressionState,
   updateItemPos,
 } from "../../../../state/graph/graph";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
@@ -17,6 +18,7 @@ import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
 import { ApplicationError, destroyError } from "../../../../state/error/error";
 import { ClientItem } from "../../../../state/graph/types";
+import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
 
 const ExpressionList = () => {
   return (
@@ -29,9 +31,11 @@ const ExpressionList = () => {
 export default ExpressionList;
 
 function ExpressionListRenderer() {
-  const { data: expressions, focusedId } = useAppSelector(
-    (state) => state.graphSlice.currentGraph.items
-  );
+  const {
+    data: items,
+    focusedId,
+    scope,
+  } = useAppSelector((state) => state.graphSlice.currentGraph.items);
   const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const draggedMetadata = useRef<{ id: number; startPos: number }>({
@@ -52,12 +56,12 @@ function ExpressionListRenderer() {
 
       if (!Number.isInteger(id) || !Number.isInteger(idx)) return;
 
-      if (expressions[idx]?.id !== id) return;
+      if (items[idx]?.id !== id) return;
 
       draggedMetadata.current = { id, startPos: idx };
       setIsDragging(true);
     },
-    [expressions]
+    [items]
   );
 
   const cleanup = useCallback(
@@ -86,7 +90,7 @@ function ExpressionListRenderer() {
       dispatch(updateItemPos({ id, startPos, endPos }));
       setIsDragging(false);
     },
-    [expressions]
+    [items]
   );
 
   useDraggable({
@@ -99,17 +103,18 @@ function ExpressionListRenderer() {
   });
 
   useEffect(() => {
-    if (expressions.length === 0) {
+    if (items.length === 0) {
       dispatch(createItem({ type: "expression", loc: "end" }));
     }
-  }, [expressions.length]);
+  }, [items.length]);
 
   return (
     <ol className="expression-list" ref={draggableContainerRef}>
-      {expressions.length > 0 &&
-        expressions.map((item, index) => {
+      {items.length > 0 &&
+        items.map((item, index) => {
           return (
             <ExpressionListItem
+              scope={scope}
               focused={focusedId === item.id}
               key={item.id}
               item={item}
@@ -128,9 +133,7 @@ function ExpressionListRenderer() {
           className="expression-list__li--faded"
         >
           <div className="dynamic-island">
-            <div className="dynamic-island__index">
-              {expressions.length + 1}
-            </div>
+            <div className="dynamic-island__index">{items.length + 1}</div>
           </div>
         </li>
       )}
@@ -144,6 +147,7 @@ type ExpressionListItemProps = {
   idx: number;
   dispatch: ReturnType<typeof useAppDispatch>;
   animationOptions: KeyframeAnimationOptions;
+  scope: Record<string, number>;
 };
 
 const ExpressionListItem = React.memo(
@@ -153,12 +157,40 @@ const ExpressionListItem = React.memo(
     dispatch,
     animationOptions,
     focused,
+    scope,
   }: ExpressionListItemProps) => {
-    const [err, setErr] = useState<ApplicationError | null>(null);
+    const [error, setError] = useState<ApplicationError | null>(null);
 
     useEffect(() => {
       if (item.type !== "expression") return;
+      if (!item.data.content.length) {
+        if (error) {
+          setError(null);
+        }
+        return;
+      }
       //validate
+      // error will be up to date with content update
+
+      const res = ExpressionTransformer.transform(item.data.content, scope);
+      if (res.err) setError(res.err);
+      else {
+        // const scopeClone = {};
+        // Object.setPrototypeOf(scopeClone, scope);
+        // try {
+        //   // NON SERIALIZABLE STUFF CANNOT BE SENT TOWARDS THE STORE
+        //   // I NEED TO PARSE INSIDE THE USE HOOK
+        //   // JUST SEND THE VALID JSON.STRINGIFIED NODE
+
+        // } catch (err) {
+        //   console.log(err);
+        //   return;
+        // }
+
+        if (error) {
+          setError(null);
+        }
+      }
     }, [item.data.content]);
 
     return (
@@ -168,7 +200,7 @@ const ExpressionListItem = React.memo(
         item-idx={idx}
       >
         <ExpressionDynamicIsland
-          error={err}
+          error={error}
           dispatch={dispatch}
           item={item}
           index={idx}
@@ -206,7 +238,8 @@ const ExpressionListItem = React.memo(
     if (
       prev.idx === cur.idx &&
       prev.focused === cur.focused &&
-      prev.item === cur.item
+      prev.item === cur.item &&
+      prev.scope === cur.scope
     )
       return true;
     return false;

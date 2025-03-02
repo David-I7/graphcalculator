@@ -19,3 +19,6 @@ export const GlobalMathFunctions: Set<string> = new Set([
   "csc",
   "sec",
 ]);
+
+export const isGlobalFunctionRegex =
+  /(sin|abs|ceil|cos|log10|log2|log|sqrt|pow|atan|acot|acos|asin|atan2|cot|csc|sec)/g;
