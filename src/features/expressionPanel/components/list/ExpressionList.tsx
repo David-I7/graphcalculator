@@ -6,8 +6,11 @@ import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import {
   createItem,
   deleteItem,
-  updateExpressionState,
+  updateFunctionExpr,
+  updateVariableExpr,
+  updatePointExpr,
   updateItemPos,
+  resetExprState,
 } from "../../../../state/graph/graph";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import {
@@ -20,6 +23,7 @@ import { ApplicationError, destroyError } from "../../../../state/error/error";
 import { ClientItem, isExpression } from "../../../../state/graph/types";
 import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
 import { AssignmentNode, FunctionAssignmentNode } from "mathjs";
+import { variableParser } from "../../../graph/lib/mathjs/parse";
 
 const ExpressionList = () => {
   return (
@@ -169,42 +173,51 @@ const ExpressionListItem = React.memo(
         if (error) {
           setError(null);
         }
-        return;
-      }
-      //validate
-      // error will be up to date with content update
-
-      const res = ExpressionTransformer.transform(item.data.content, scope);
-      if (res.err) {
         dispatch(
-          updateExpressionState({
+          resetExprState({
             id: item.id,
             idx,
             type: item.data.type,
-            clientState: undefined,
+          })
+        );
+        return;
+      }
+
+      const res = ExpressionTransformer.transform(item.data, scope);
+      if (res.err) {
+        dispatch(
+          resetExprState({
+            id: item.id,
+            idx,
+            type: item.data.type,
           })
         );
         setError(res.err);
       } else {
-        dispatch(
-          updateExpressionState({
-            id: item.id,
-            idx,
-            type:
-              res.node instanceof FunctionAssignmentNode
-                ? "function"
-                : res.node instanceof AssignmentNode
-                ? "variable"
-                : "point",
-            clientState: JSON.stringify(res.node),
-          })
-        );
+        if (res.node instanceof FunctionAssignmentNode) {
+          dispatch(
+            updateFunctionExpr({
+              id: item.id,
+              idx,
+              clientState: JSON.stringify(res.node),
+            })
+          );
+        } else if (res.node instanceof AssignmentNode) {
+          const clientState = variableParser.parse(res.node, scope);
+          dispatch(
+            updateVariableExpr({
+              id: item.id,
+              idx,
+              clientState,
+            })
+          );
+        }
 
         if (error) {
           setError(null);
         }
       }
-    }, [item.data.content]);
+    }, [item.data.content, scope]);
 
     return (
       <li

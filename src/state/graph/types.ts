@@ -88,7 +88,12 @@ export type ClientExpressionData = {
     clientState: string | undefined;
   };
   variable: {
-    clientState: string | undefined;
+    clientState:
+      | {
+          name: string;
+          value: number;
+        }
+      | undefined;
   };
 };
 

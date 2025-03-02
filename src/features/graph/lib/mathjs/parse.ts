@@ -6,6 +6,7 @@ import {
   ParenthesisNode,
 } from "mathjs";
 import { FnState } from "../graph/commands";
+import { ClientExpressionData } from "../../../../state/graph/types";
 
 type FunctionDeclaration = {
   [index: string]: ((input: number) => number) | number;
@@ -38,11 +39,14 @@ export class FunctionExpressionParser {
     globalScope: FunctionDeclaration
   ): FnState["f"] {
     const code = node.compile();
-    const scope = Object.create(globalScope);
+    const scope = { ...globalScope };
     code.evaluate(scope);
 
     //y or x intercept
-    const inputIntercept = node.expr.evaluate({ [node.params[0]]: 0 });
+    const inputIntercept = node.expr.evaluate({
+      ...scope,
+      [node.params[0]]: 0,
+    });
 
     return {
       param: node.params[0],
@@ -70,7 +74,7 @@ export class FunctionExpressionParser {
       );
 
       const code = derivativeFunctionAssignmentNode.compile();
-      const scope = Object.create(globalScope);
+      const scope = { ...globalScope };
       code.evaluate(scope);
 
       return {
@@ -85,6 +89,22 @@ export class FunctionExpressionParser {
       // derivative can be undefined if function is not continuous
       return { node: undefined };
     }
+  }
+}
+
+export class VariableExpressionParser {
+  constructor() {}
+
+  parse(
+    node: AssignmentNode,
+    globalScope: FunctionDeclaration
+  ): NonNullable<ClientExpressionData["variable"]["clientState"]> {
+    const code = node.compile();
+    const scope = { ...globalScope };
+    return {
+      value: code.evaluate(scope) as number,
+      name: node.object.name,
+    };
   }
 }
 
@@ -116,6 +136,7 @@ export class FunctionExpressionParser {
 
 const parsers = {
   functionParser: new FunctionExpressionParser(),
+  variableParser: new VariableExpressionParser(),
 };
 
-export const { functionParser } = parsers;
+export const { functionParser, variableParser } = parsers;
