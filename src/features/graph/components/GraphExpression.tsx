@@ -1,27 +1,53 @@
 import React from "react";
-import { useAppSelector } from "../../../state/hooks";
-import useMathJs from "../lib/mathjs/useMathJs";
-import { ClientItem } from "../../../state/graph/types";
+import { ClientExpressionState, ClientItem } from "../../../state/graph/types";
+import { useGraphContext } from "../Graph";
+import { Graph } from "../lib/graph/graph";
+import useGraphFunction from "../lib/mathjs/useGraphFunction";
 
-type GraphFunctionExpressionProps = {
-  expr: ClientItem<"expression">;
-  idx: number;
+type GraphExpressionProps = {
+  item: ClientItem<"expression">;
   focused: boolean;
-  scope: Record<string, number>;
 };
 
 export const GraphExpression = React.memo(
-  (props: GraphFunctionExpressionProps) => {
-    const expr = useAppSelector(
-      (state) => state.graphSlice.currentGraph.items.data[props.idx]
-    )! as ClientItem<"expression">;
+  (props: GraphExpressionProps) => {
+    const graph = useGraphContext();
 
-    useMathJs(expr, props.focused, props.idx, props.scope);
+    if (!graph) return;
 
-    return null;
+    switch (props.item.data.type) {
+      case "function":
+        return (
+          <GraphFunction
+            graph={graph}
+            focused={props.focused}
+            data={props.item.data as ClientExpressionState<"function">}
+            id={props.item.id}
+          />
+        );
+
+      case "point":
+        return "";
+    }
+
+    throw new Error(
+      `Type ${props.item.data.type} is not of type function or point`
+    );
   },
-  (prev, cur) =>
-    prev.expr.id === cur.expr.id &&
-    prev.focused === cur.focused &&
-    prev.idx === cur.idx
+  (prev, cur) => prev.item === cur.item && prev.focused === cur.focused
 );
+
+const GraphFunction = ({
+  data,
+  id,
+  focused,
+  graph,
+}: Omit<GraphExpressionProps, "item"> & {
+  id: number;
+  data: ClientExpressionState<"function">;
+  graph: Graph;
+}) => {
+  useGraphFunction({ id, focused, data, graph });
+
+  return null;
+};

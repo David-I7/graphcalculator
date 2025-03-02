@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useAppSelector } from "../../../state/hooks";
 import { GraphExpression } from "./GraphExpression";
 import { ClientItem } from "../../../state/graph/types";
@@ -12,32 +11,24 @@ function isGraphableExpression(item: ClientItem) {
 }
 
 const GraphExpressions = () => {
-  const {
-    data: items,
-    focusedId,
-    scope,
-  } = useAppSelector((state) => state.graphSlice.currentGraph.items);
-
-  const expressionIndexes: number[] = [];
-  items.forEach((item, index) =>
-    isGraphableExpression(item) ? expressionIndexes.push(index) : null
+  const { data: items, focusedId } = useAppSelector(
+    (state) => state.graphSlice.currentGraph.items
   );
 
-  const functionExpressions = useMemo(() => {
-    return items.filter((item) =>
-      isGraphableExpression(item)
-    ) as ClientItem<"expression">[];
-  }, [items.length]);
+  const expressionIndexes: number[] = [];
+  const graphableExpr: ClientItem<"expression">[] = [];
+  for (let i = 0; i < items.length; ++i) {
+    if (isGraphableExpression(items[i])) expressionIndexes.push(i);
+    graphableExpr.push(items[i] as ClientItem<"expression">);
+  }
 
   return (
     <>
-      {functionExpressions.map((expr, index) => (
+      {graphableExpr.map((item) => (
         <GraphExpression
-          idx={expressionIndexes[index]}
-          focused={focusedId === expr.id}
-          key={expr.id}
-          expr={expr}
-          scope={scope}
+          focused={focusedId === item.id}
+          key={item.id}
+          item={item}
         />
       ))}
     </>

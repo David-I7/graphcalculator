@@ -15,7 +15,10 @@ import {
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
-import { RequiredFnState } from "../../../../state/graph/types";
+import {
+  ClientExpressionState,
+  RequiredFnState,
+} from "../../../../state/graph/types";
 
 type DrawData = {
   scaledStep: number;
@@ -613,35 +616,28 @@ export class DrawAxisCommand implements GraphCommand {
   }
 }
 
-export type ExprData = {
-  color: string;
-  hidden: boolean;
+export type FnCommandState = {
   state: "focused" | "dragged" | "idle";
   onStateChange(
-    prevState: ExprData["state"],
-    curState: ExprData["state"]
+    prevState: FnCommandState["state"],
+    curState: FnCommandState["state"]
   ): void;
 };
+
 export class DrawFunctionCommand implements GraphCommand {
   protected tooltipCommand: DrawTooltipCommand;
-  settings: {
-    color: string;
-    hidden: boolean;
-  };
-  state: ExprData["state"];
-  onStateChange: ExprData["onStateChange"];
+
+  state: FnCommandState["state"];
+  onStateChange: FnCommandState["onStateChange"];
 
   constructor(
     public graph: Graph,
     public data: RequiredFnState,
-    exprData: ExprData
+    public settings: ClientExpressionState<"function">["settings"],
+    stateSync: FnCommandState
   ) {
-    this.settings = {
-      color: exprData.color,
-      hidden: exprData.hidden,
-    };
-    this.onStateChange = exprData.onStateChange;
-    this.state = exprData.state;
+    this.onStateChange = stateSync.onStateChange;
+    this.state = stateSync.state;
     this.tooltipCommand = new DrawTooltipCommand(graph, this);
     console.log(this.data);
   }

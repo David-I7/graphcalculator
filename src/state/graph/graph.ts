@@ -60,8 +60,19 @@ function createNewItem<T extends ItemType>(
           hidden: false,
         },
         content: content ? content : "",
+        state: {
+          f: {
+            node: undefined,
+          },
+          df: {
+            node: undefined,
+          },
+          ddf: {
+            node: undefined,
+          },
+        },
       },
-    } as ClientItem<T>;
+    } as ClientItem<"expression">;
   }
 
   return {
