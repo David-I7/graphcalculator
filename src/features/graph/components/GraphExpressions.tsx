@@ -11,15 +11,18 @@ function isGraphableExpression(item: ClientItem) {
 }
 
 const GraphExpressions = () => {
-  const { data: items, focusedId } = useAppSelector(
-    (state) => state.graphSlice.currentGraph.items
-  );
+  const {
+    data: items,
+    focusedId,
+    scope,
+  } = useAppSelector((state) => state.graphSlice.currentGraph.items);
 
-  const expressionIndexes: number[] = [];
   const graphableExpr: ClientItem<"expression">[] = [];
   for (let i = 0; i < items.length; ++i) {
-    if (isGraphableExpression(items[i])) expressionIndexes.push(i);
-    graphableExpr.push(items[i] as ClientItem<"expression">);
+    if (isGraphableExpression(items[i])) {
+      // expressionIndexes.push(i);
+      graphableExpr.push(items[i] as ClientItem<"expression">);
+    }
   }
 
   return (
@@ -29,6 +32,7 @@ const GraphExpressions = () => {
           focused={focusedId === item.id}
           key={item.id}
           item={item}
+          scope={scope}
         />
       ))}
     </>

@@ -5,13 +5,13 @@ import {
   MathNode,
   ParenthesisNode,
 } from "mathjs";
-import { FnState } from "../../../../state/graph/types";
+import { FnState } from "../graph/commands";
 
 type FunctionDeclaration = {
   [index: string]: ((input: number) => number) | number;
 };
 
-export class FunctionParse {
+export class FunctionExpressionParser {
   constructor() {}
 
   parse(
@@ -19,7 +19,7 @@ export class FunctionParse {
     globalScope: Record<string, number>
   ): undefined | FnState {
     if (node instanceof FunctionAssignmentNode) {
-      const df = this.createDerivativeData(node, globalScope);
+      let df = this.createDerivativeData(node, globalScope);
 
       const fnData: FnState = {
         f: this.createFunctionData(node, globalScope),
@@ -28,30 +28,6 @@ export class FunctionParse {
       };
 
       return fnData;
-    } else if (node instanceof AssignmentNode) {
-      const variable = node.object.name;
-
-      // implicit function
-      if (variable === "y" || variable === "x") {
-        const fn = new FunctionAssignmentNode(
-          "f",
-          [variable === "x" ? "y" : "x"],
-          node.value
-        );
-
-        const df = this.createDerivativeData(fn, globalScope);
-
-        const fnData: FnState = {
-          f: this.createFunctionData(fn, globalScope),
-          df,
-          ddf: df.node ? this.createDerivativeData(df.node, globalScope) : df,
-        };
-
-        return fnData;
-      } else {
-        // variable Assignment
-      }
-    } else if (node instanceof ParenthesisNode) {
     }
 
     return;
@@ -59,9 +35,10 @@ export class FunctionParse {
 
   createFunctionData(
     node: FunctionAssignmentNode,
-    scope: FunctionDeclaration
+    globalScope: FunctionDeclaration
   ): FnState["f"] {
     const code = node.compile();
+    const scope = Object.create(globalScope);
     code.evaluate(scope);
 
     //y or x intercept
@@ -80,31 +57,65 @@ export class FunctionParse {
 
   createDerivativeData(
     node: FunctionAssignmentNode,
-    scope: FunctionDeclaration
+    globalScope: FunctionDeclaration
   ): FnState["df"] {
-    // derivative can be undefined! if function is not continuous
+    try {
+      const derivativeNode = derivative(node, node.params["0"], {
+        simplify: false,
+      });
+      const derivativeFunctionAssignmentNode = new FunctionAssignmentNode(
+        "f",
+        node.params,
+        derivativeNode
+      );
 
-    const derivativeNode = derivative(node, node.params["0"], {
-      simplify: false,
-    });
-    const derivativeFunctionAssignmentNode = new FunctionAssignmentNode(
-      "f",
-      node.params,
-      derivativeNode
-    );
+      const code = derivativeFunctionAssignmentNode.compile();
+      const scope = Object.create(globalScope);
+      code.evaluate(scope);
 
-    const code = derivativeFunctionAssignmentNode.compile();
-    code.evaluate(scope);
-
-    return {
-      node: derivativeFunctionAssignmentNode,
-      param: derivativeFunctionAssignmentNode.params[0],
-      f: scope[derivativeFunctionAssignmentNode.name] as (
-        input: number
-      ) => number,
-      criticalPoints: [],
-    };
+      return {
+        node: derivativeFunctionAssignmentNode,
+        param: derivativeFunctionAssignmentNode.params[0],
+        f: scope[derivativeFunctionAssignmentNode.name] as (
+          input: number
+        ) => number,
+        criticalPoints: [],
+      };
+    } catch (err) {
+      // derivative can be undefined if function is not continuous
+      return { node: undefined };
+    }
   }
 }
 
-export default new FunctionParse();
+// else if (node instanceof AssignmentNode) {
+//   const variable = node.object.name;
+
+//   // implicit function
+//   if (variable === "y" || variable === "x") {
+//     const fn = new FunctionAssignmentNode(
+//       "f",
+//       [variable === "x" ? "y" : "x"],
+//       node.value
+//     );
+
+//     const df = this.createDerivativeData(fn, globalScope);
+
+//     const fnData: FnState = {
+//       f: this.createFunctionData(fn, globalScope),
+//       df,
+//       ddf: df.node ? this.createDerivativeData(df.node, globalScope) : df,
+//     };
+
+//     return fnData;
+//   } else {
+//     // variable Assignment
+//   }
+// } else if (node instanceof ParenthesisNode) {
+// }
+
+const parsers = {
+  functionParser: new FunctionExpressionParser(),
+};
+
+export const { functionParser } = parsers;
