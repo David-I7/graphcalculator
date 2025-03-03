@@ -88,15 +88,6 @@
     min-height: 3.5rem;
     border-bottom: 1px solid base.$border-lowest;
 
-    &:focus-within {
-      outline: 1px solid base.$primary-container;
-
-      .dynamic-island {
-        background-color: base.$primary-container;
-        color: base.$on-primary-container;
-      }
-    }
-
     &.expression-list__li--focused {
       outline: 1px solid base.$primary-container;
 

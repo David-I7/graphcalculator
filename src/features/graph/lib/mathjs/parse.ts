@@ -6,19 +6,12 @@ import {
   ParenthesisNode,
 } from "mathjs";
 import { FnState } from "../graph/commands";
-import { ClientExpressionData } from "../../../../state/graph/types";
-
-type FunctionDeclaration = {
-  [index: string]: ((input: number) => number) | number;
-};
+import { Expression, Scope } from "../../../../state/graph/types";
 
 export class FunctionExpressionParser {
   constructor() {}
 
-  parse(
-    node: MathNode,
-    globalScope: Record<string, number>
-  ): undefined | FnState {
+  parse(node: MathNode, globalScope: Scope): FnState {
     if (node instanceof FunctionAssignmentNode) {
       let df = this.createDerivativeData(node, globalScope);
 
@@ -31,12 +24,14 @@ export class FunctionExpressionParser {
       return fnData;
     }
 
-    return;
+    throw new Error(
+      `Node is not instance of FunctionAsignemntNode\n\n ${node}`
+    );
   }
 
   createFunctionData(
     node: FunctionAssignmentNode,
-    globalScope: FunctionDeclaration
+    globalScope: Scope
   ): FnState["f"] {
     const code = node.compile();
     const scope = { ...globalScope };
@@ -61,7 +56,7 @@ export class FunctionExpressionParser {
 
   createDerivativeData(
     node: FunctionAssignmentNode,
-    globalScope: FunctionDeclaration
+    globalScope: Scope
   ): FnState["df"] {
     try {
       const derivativeNode = derivative(node, node.params["0"], {
@@ -97,8 +92,8 @@ export class VariableExpressionParser {
 
   parse(
     node: AssignmentNode,
-    globalScope: FunctionDeclaration
-  ): NonNullable<ClientExpressionData["variable"]["clientState"]> {
+    globalScope: Scope
+  ): NonNullable<Expression<"variable">["parsedContent"]> {
     const code = node.compile();
     const scope = { ...globalScope };
     return {

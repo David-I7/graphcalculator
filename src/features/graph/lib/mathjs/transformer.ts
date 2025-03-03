@@ -10,11 +10,8 @@ import {
 import { ApplicationError } from "../../../../state/error/error";
 import { ExpressionValidationResult, ExpressionValidator } from "./validation";
 import { isGlobalFunctionRegex } from "../../data/math";
-import {
-  ClientExpressionData,
-  ClientItem,
-  ClientItemData,
-} from "../../../../state/graph/types";
+import { ItemData, Scope } from "../../../../state/graph/types";
+import { isInScope } from "../../../../state/graph/graph";
 
 type TransformedResult =
   | {
@@ -31,8 +28,8 @@ export class ExpressionTransformer {
   constructor() {}
 
   transform(
-    data: ClientItemData["expression"],
-    globalScope: Record<string, number>
+    data: ItemData["expression"],
+    globalScope: Scope
   ): TransformedResult {
     const trimmedContent = data.content.replace(/\s/g, "");
     const { node, err } = this.validator.validateSyntax(trimmedContent);
@@ -71,11 +68,7 @@ export class ExpressionTransformer {
 
         return this.transformNode(fn, undefined, scope);
       } else {
-        if (
-          scope.has(variable) &&
-          (data as ClientExpressionData["variable"]).clientState?.name !==
-            variable
-        ) {
+        if (isInScope(variable, data, globalScope)) {
           return {
             err: this.validator.makeExpressionError(
               `

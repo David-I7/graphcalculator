@@ -2,16 +2,15 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { CSS_VARIABLES } from "../../data/css/variables";
 import { swap } from "../../helpers/dts";
 import {
-  ClientExpressionData,
-  ClientExpressionState,
   ClientGraphData,
-  ClientItem,
-  ClientItemData,
   Expression,
   ExpressionType,
   GraphData,
+  isExpression,
   Item,
+  ItemData,
   ItemType,
+  Scope,
 } from "./types";
 
 interface GraphState {
@@ -37,11 +36,50 @@ function createNewGraph(): ClientGraphData {
   };
 }
 
+function saveCurrentGraph(currentGraph: ClientGraphData): GraphData {
+  // apiReq to server in the background
+
+  return {
+    ...currentGraph,
+    modifiedAt: new Date().toJSON(),
+    thumb: "", //base64encoded canvasGetImageData
+    items: currentGraph.items.data,
+  };
+}
+
+function restoreSavedGraph(graph: GraphData): ClientGraphData {
+  const scope: Scope = {};
+  let maxId: number = 1;
+
+  for (let i = 0; i < graph.items.length; i++) {
+    const item = graph.items[i];
+    maxId = Math.max(maxId, item.id);
+
+    if (isExpression(item) && item.data.parsedContent) {
+      if (item.data.type === "variable") {
+        scope[item.data.parsedContent.name] = item.data.parsedContent.value;
+      } else if (item.data.type == "function") {
+        // should store the fn somehow?
+      }
+    }
+  }
+
+  return {
+    ...graph,
+    items: {
+      scope,
+      nextId: maxId + 1,
+      focusedId: -1,
+      data: graph.items,
+    },
+  };
+}
+
 function createNewItem<T extends ItemType>(
   type: T,
   id: number,
   content?: string
-): ClientItem<T> {
+): Item {
   if (type === "expression") {
     return {
       id,
@@ -49,15 +87,15 @@ function createNewItem<T extends ItemType>(
       data: {
         type: "function",
         content: content ? content : "",
+        parsedContent: undefined,
         settings: {
           color: `hsl(${Math.floor(Math.random() * 360)},${
             CSS_VARIABLES.baseSaturation
           },${CSS_VARIABLES.baseLightness})`,
           hidden: false,
         },
-        clientState: undefined,
       },
-    } as ClientItem<"expression">;
+    } as Item<"expression">;
   }
 
   return {
@@ -66,10 +104,8 @@ function createNewItem<T extends ItemType>(
     data: {
       content: "",
     },
-  } as ClientItem<T>;
+  } as Item<"note">;
 }
-
-type t = ClientItem<"expression">["data"];
 
 const initialState: GraphState = {
   currentGraph: createNewGraph(),
@@ -82,22 +118,28 @@ const graphSlice = createSlice({
   initialState,
   reducers: (create) => ({
     // GRAPH CASES
-    restoreGraph: create.reducer((state, action: PayloadAction<string>) => {
-      const graph = state.savedGraphs.find(
-        (graph) => graph.id === action.payload
-      );
-      if (!graph) return;
-      // state.currentGraph = graph;
-    }),
-    saveGraph: create.reducer((state, action: PayloadAction<string | null>) => {
-      if (!action.payload) {
-        // state.savedGraphs.push(state.currentGraph);
+    restoreGraph: create.reducer(
+      (state, action: PayloadAction<{ id: string; idx: number }>) => {
+        const graph = state.savedGraphs[action.payload.idx];
+        if (graph.id !== action.payload.id) return;
+
+        state.currentGraph = restoreSavedGraph(graph);
+      }
+    ),
+    saveGraph: create.reducer((state, action: PayloadAction<string>) => {
+      let graphIdx: number | null = null;
+
+      for (let i = 0; i < state.savedGraphs.length; i++) {
+        if (state.savedGraphs[i].id === action.payload) {
+        }
+      }
+
+      const savedGraph = saveCurrentGraph(state.currentGraph);
+
+      if (graphIdx === null) {
+        state.savedGraphs.push(savedGraph);
       } else {
-        // for (let i = 0; i < state.savedGraphs.length; ++i) {
-        //   if (state.savedGraphs[i].id === action.payload) {
-        //     state.savedGraphs[i] = state.currentGraph;
-        //   }
-        // }
+        state.savedGraphs[graphIdx] = savedGraph;
       }
     }),
 
@@ -132,7 +174,7 @@ const graphSlice = createSlice({
         if (items.data[action.payload.idx].type === "expression") {
           const scope = items.scope;
           deleteFromScope(
-            items.data[action.payload.idx].data as ClientItemData["expression"],
+            items.data[action.payload.idx].data as ItemData["expression"],
             scope
           );
         }
@@ -181,6 +223,25 @@ const graphSlice = createSlice({
       }
     }),
 
+    // SCOPE CASES
+    // setToScope:create.reducer(
+    //   (
+    //     state,
+    //     action: PayloadAction<{key:string,value}>
+    //   ) => {
+    //     const item = state.currentGraph.items.data[action.payload.idx];
+
+    //     if (item.id !== action.payload.id) return;
+    //     if (item.type !== "expression") return
+
+    //     const expr = item.data as ItemData["expression"]
+
+    //     if (expr.type === "function" || expr.type === "point") {
+    //       expr.settings.hidden = !expr.settings.hidden;
+    //     }
+    //   }
+    // ),
+
     // EXPRESSION CASES
     toggleExpressionVisibility: create.reducer(
       (
@@ -190,15 +251,16 @@ const graphSlice = createSlice({
         const item = state.currentGraph.items.data[action.payload.idx];
 
         if (item.id !== action.payload.id) return;
-        if (item.type === "expression") {
-          const settings = (item.data as ClientExpressionState<"function">)[
-            "settings"
-          ];
-          if (settings) settings.hidden = !settings.hidden;
+        if (item.type !== "expression") return;
+
+        const expr = item.data as ItemData["expression"];
+
+        if (expr.type === "function" || expr.type === "point") {
+          expr.settings.hidden = !expr.settings.hidden;
         }
       }
     ),
-    resetExprState: create.reducer(
+    removeParsedContent: create.reducer(
       (
         state,
         action: PayloadAction<{
@@ -211,33 +273,14 @@ const graphSlice = createSlice({
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ClientExpressionState;
+        const expr = item.data as ItemData["expression"];
         const scope = state.currentGraph.items.scope;
 
         // previous value
         deleteFromScope(expr, scope);
-        // if (expr.type === "variable" && expr.clientState) {
-        //   delete scope[
-        //     (expr.clientState as ClientExpressionData["variable"]["clientState"])!
-        //       .name
-        //   ];
-        // }
 
-        // new type
-        switch (action.payload.type) {
-          case "function":
-            expr.type = "function";
-            expr.clientState = undefined;
-            break;
-          case "point":
-            expr.type = "point";
-            expr.clientState = undefined;
-            break;
-          case "variable":
-            expr.type = "variable";
-            expr.clientState = undefined;
-            break;
-        }
+        expr.type = action.payload.type;
+        expr.parsedContent = undefined;
       }
     ),
     updateFunctionExpr: create.reducer(
@@ -246,19 +289,17 @@ const graphSlice = createSlice({
         action: PayloadAction<{
           id: number;
           idx: number;
-          clientState: NonNullable<
-            ClientExpressionData["function"]["clientState"]
-          >;
+          parsedContent: string;
         }>
       ) => {
         const item = state.currentGraph.items.data[action.payload.idx];
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ClientExpressionState;
+        const expr = item.data as ItemData["expression"];
 
         expr.type = "function";
-        expr.clientState = action.payload.clientState;
+        expr.parsedContent = action.payload.parsedContent;
       }
     ),
     updatePointExpr: create.reducer(
@@ -267,19 +308,17 @@ const graphSlice = createSlice({
         action: PayloadAction<{
           id: number;
           idx: number;
-          clientState: NonNullable<
-            ClientExpressionData["point"]["clientState"]
-          >;
+          parsedContent: NonNullable<Expression<"point">["parsedContent"]>;
         }>
       ) => {
         const item = state.currentGraph.items.data[action.payload.idx];
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ClientExpressionState;
+        const expr = item.data as ItemData["expression"];
 
         expr.type = "point";
-        expr.clientState = action.payload.clientState;
+        expr.parsedContent = action.payload.parsedContent;
       }
     ),
     updateVariableExpr: create.reducer(
@@ -288,21 +327,26 @@ const graphSlice = createSlice({
         action: PayloadAction<{
           id: number;
           idx: number;
-          clientState: NonNullable<
-            ClientExpressionData["variable"]["clientState"]
-          >;
+          parsedContent: NonNullable<Expression<"variable">["parsedContent"]>;
         }>
       ) => {
         const item = state.currentGraph.items.data[action.payload.idx];
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ClientExpressionState;
+        const expr = item.data as ItemData["expression"];
         const scope = state.currentGraph.items.scope;
 
-        scope[action.payload.clientState.name] =
-          action.payload.clientState.value;
-        expr.clientState = action.payload.clientState;
+        if (
+          action.payload.parsedContent.name !== "x" &&
+          action.payload.parsedContent.name !== "y"
+        ) {
+          // allow multiple declarations of y, x,
+          // we won't use them as variables
+          scope[action.payload.parsedContent.name] =
+            action.payload.parsedContent.value;
+        }
+        expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
       }
     ),
@@ -325,7 +369,7 @@ export const {
 
   //expression
   toggleExpressionVisibility,
-  resetExprState,
+  removeParsedContent,
   updateFunctionExpr,
   updatePointExpr,
   updateVariableExpr,
@@ -336,17 +380,26 @@ export const {
 const selectExpression = () => {};
 
 // utils
-function deleteFromScope(
-  data: ClientItemData["expression"],
-  scope: Record<string, number>
-) {
-  if (data.type == "variable" && data.clientState) {
-    delete scope[
-      (
-        data.clientState as NonNullable<
-          ClientExpressionData["variable"]["clientState"]
-        >
-      ).name
-    ];
+function deleteFromScope(data: ItemData["expression"], scope: Scope) {
+  if (data.type == "variable" && data.parsedContent) {
+    delete scope[data.parsedContent.name];
   }
+}
+
+export function isInScope(
+  target: string,
+  data: ItemData["expression"],
+  scope: Scope
+): boolean {
+  if (target in scope) {
+    if (data.type === "variable" && data.parsedContent) {
+      return data.parsedContent.name === target // if name === target the var is trying to be created
+        ? false
+        : true;
+    } else {
+      return true;
+    }
+  }
+
+  return false;
 }

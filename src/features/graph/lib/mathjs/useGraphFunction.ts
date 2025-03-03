@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { ClientExpressionState } from "../../../../state/graph/types";
+import { Expression, Scope } from "../../../../state/graph/types";
 import { Graph } from "../graph/graph";
-import { DrawFunctionCommand, FnCommandState } from "../graph/commands";
+import {
+  DrawFunctionCommand,
+  FnCommandState,
+  FnState,
+} from "../graph/commands";
 import { useAppDispatch } from "../../../../state/hooks";
 import {
   resetFocusedItem,
@@ -12,10 +16,10 @@ import { reviver } from "mathjs";
 
 type useGraphFunctionProps = {
   id: number;
-  data: ClientExpressionState<"function">;
+  data: Expression<"function">;
   focused: boolean;
   graph: Graph;
-  scope: Record<string, number>;
+  scope: Scope;
 };
 export default function useGraphFunction({
   id,
@@ -25,19 +29,23 @@ export default function useGraphFunction({
   scope,
 }: useGraphFunctionProps) {
   const node = useMemo(() => {
-    return data.clientState ? JSON.parse(data.clientState, reviver) : undefined;
-  }, [data.clientState]);
+    return data.parsedContent
+      ? JSON.parse(data.parsedContent, reviver)
+      : undefined;
+  }, [data.parsedContent]);
   const dispatch = useAppDispatch();
   const command = useRef<DrawFunctionCommand | null>(null);
 
   useEffect(() => {
     if (!node) return;
 
-    const fnData = functionParser.parse(node, scope);
+    let fnData!: FnState;
 
-    if (!fnData) {
-      throw new Error(`Validation failed! Node is not valid.\n\n
-        ${node}`);
+    try {
+      fnData = functionParser.parse(node, scope);
+    } catch (err) {
+      // synchronization err
+      return;
     }
 
     const stateSync: FnCommandState = {
@@ -66,7 +74,7 @@ export default function useGraphFunction({
       currentCommand.destroy();
       graph.removeCommand(currentCommand);
     };
-  }, [node]);
+  }, [node, scope]);
 
   useEffect(() => {
     if (!command.current) return;

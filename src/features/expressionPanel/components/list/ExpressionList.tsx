@@ -10,7 +10,8 @@ import {
   updateVariableExpr,
   updatePointExpr,
   updateItemPos,
-  resetExprState,
+  removeParsedContent,
+  setFocusedItem,
 } from "../../../../state/graph/graph";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import {
@@ -19,10 +20,14 @@ import {
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { ApplicationError, destroyError } from "../../../../state/error/error";
-import { ClientItem, isExpression } from "../../../../state/graph/types";
+import { ApplicationError } from "../../../../state/error/error";
+import { isExpression, Item, Scope } from "../../../../state/graph/types";
 import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
-import { AssignmentNode, FunctionAssignmentNode } from "mathjs";
+import {
+  AssignmentNode,
+  FunctionAssignmentNode,
+  ParenthesisNode,
+} from "mathjs";
 import { variableParser } from "../../../graph/lib/mathjs/parse";
 
 const ExpressionList = () => {
@@ -65,6 +70,7 @@ function ExpressionListRenderer() {
 
       draggedMetadata.current = { id, startPos: idx };
       setIsDragging(true);
+      dispatch(setFocusedItem(-1));
     },
     [items]
   );
@@ -147,12 +153,12 @@ function ExpressionListRenderer() {
 }
 
 type ExpressionListItemProps = {
-  item: ClientItem;
+  item: Item;
   focused: boolean;
   idx: number;
   dispatch: ReturnType<typeof useAppDispatch>;
   animationOptions: KeyframeAnimationOptions;
-  scope: Record<string, number>;
+  scope: Scope;
 };
 
 const ExpressionListItem = React.memo(
@@ -174,7 +180,7 @@ const ExpressionListItem = React.memo(
           setError(null);
         }
         dispatch(
-          resetExprState({
+          removeParsedContent({
             id: item.id,
             idx,
             type: item.data.type,
@@ -186,7 +192,7 @@ const ExpressionListItem = React.memo(
       const res = ExpressionTransformer.transform(item.data, scope);
       if (res.err) {
         dispatch(
-          resetExprState({
+          removeParsedContent({
             id: item.id,
             idx,
             type: item.data.type,
@@ -199,18 +205,21 @@ const ExpressionListItem = React.memo(
             updateFunctionExpr({
               id: item.id,
               idx,
-              clientState: JSON.stringify(res.node),
+              parsedContent: JSON.stringify(res.node),
             })
           );
         } else if (res.node instanceof AssignmentNode) {
-          const clientState = variableParser.parse(res.node, scope);
+          const parsedContent = variableParser.parse(res.node, scope);
           dispatch(
             updateVariableExpr({
               id: item.id,
               idx,
-              clientState,
+              parsedContent,
             })
           );
+        } else if (res.node instanceof ParenthesisNode) {
+          // f(x,y), tranform into a function and plug in the values
+          // or split by comma?,
         }
 
         if (error) {
@@ -248,7 +257,6 @@ const ExpressionListItem = React.memo(
             );
             setTimeout(() => {
               dispatch(deleteItem({ id: item.id, idx: idx }));
-              dispatch(destroyError(item.id));
             }, CSS_VARIABLES.animationSpeedFast);
           }}
           title={`Delete ${item.type} ${idx + 1}`}
