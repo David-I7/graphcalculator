@@ -12,6 +12,7 @@ import {
   GraphData,
   Item,
   ItemType,
+  Scope,
 } from "./types";
 
 interface GraphState {
@@ -300,8 +301,16 @@ const graphSlice = createSlice({
         const expr = item.data as ClientExpressionState;
         const scope = state.currentGraph.items.scope;
 
-        scope[action.payload.clientState.name] =
-          action.payload.clientState.value;
+        if (
+          action.payload.clientState.name !== "x" &&
+          action.payload.clientState.name !== "y" &&
+          action.payload.clientState.name !== "f"
+        ) {
+          // allow multiple declarations of y, x and f,
+          // we won't use them as variables
+          scope[action.payload.clientState.name] =
+            action.payload.clientState.value;
+        }
         expr.clientState = action.payload.clientState;
         expr.type = "variable";
       }
@@ -336,10 +345,7 @@ export const {
 const selectExpression = () => {};
 
 // utils
-function deleteFromScope(
-  data: ClientItemData["expression"],
-  scope: Record<string, number>
-) {
+function deleteFromScope(data: ClientItemData["expression"], scope: Scope) {
   if (data.type == "variable" && data.clientState) {
     delete scope[
       (
@@ -349,4 +355,28 @@ function deleteFromScope(
       ).name
     ];
   }
+}
+
+export function isInScope(
+  target: string,
+  data: ClientItemData["expression"],
+  scope: Scope
+): boolean {
+  if (target in scope) {
+    if (data.type === "function") return true;
+
+    if (data.type === "variable" && data.clientState) {
+      return (
+        data.clientState as NonNullable<
+          ClientExpressionData["variable"]["clientState"]
+        >
+      ).name === target // if name === target the var is trying to be created
+        ? false
+        : true;
+    } else {
+      return true;
+    }
+  }
+
+  return false;
 }

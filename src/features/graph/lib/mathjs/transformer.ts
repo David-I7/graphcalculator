@@ -14,7 +14,9 @@ import {
   ClientExpressionData,
   ClientItem,
   ClientItemData,
+  Scope,
 } from "../../../../state/graph/types";
+import { isInScope } from "../../../../state/graph/graph";
 
 type TransformedResult =
   | {
@@ -32,7 +34,7 @@ export class ExpressionTransformer {
 
   transform(
     data: ClientItemData["expression"],
-    globalScope: Record<string, number>
+    globalScope: Scope
   ): TransformedResult {
     const trimmedContent = data.content.replace(/\s/g, "");
     const { node, err } = this.validator.validateSyntax(trimmedContent);
@@ -45,6 +47,18 @@ export class ExpressionTransformer {
     Object.keys(globalScope).forEach((key) => scope.add(key));
 
     if (node instanceof FunctionAssignmentNode) {
+      if (node.name !== "f" && isInScope(node.name, data, globalScope)) {
+        return {
+          err: this.validator.makeExpressionError(
+            `
+          You've defined '${node.name}' in more than one place. Try deleting some of the definitions of '${node.name}'.
+          `,
+            "duplicate_variable_declaration"
+          ),
+          node: undefined,
+        };
+      }
+
       if (node.params.length) {
         scope.add(node.params[0]);
       }
@@ -71,11 +85,7 @@ export class ExpressionTransformer {
 
         return this.transformNode(fn, undefined, scope);
       } else {
-        if (
-          scope.has(variable) &&
-          (data as ClientExpressionData["variable"]).clientState?.name !==
-            variable
-        ) {
+        if (isInScope(variable, data, globalScope)) {
           return {
             err: this.validator.makeExpressionError(
               `

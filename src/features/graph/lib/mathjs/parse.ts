@@ -6,11 +6,7 @@ import {
   ParenthesisNode,
 } from "mathjs";
 import { FnState } from "../graph/commands";
-import { ClientExpressionData } from "../../../../state/graph/types";
-
-type FunctionDeclaration = {
-  [index: string]: ((input: number) => number) | number;
-};
+import { ClientExpressionData, Scope } from "../../../../state/graph/types";
 
 export class FunctionExpressionParser {
   constructor() {}
@@ -36,7 +32,7 @@ export class FunctionExpressionParser {
 
   createFunctionData(
     node: FunctionAssignmentNode,
-    globalScope: FunctionDeclaration
+    globalScope: Scope
   ): FnState["f"] {
     const code = node.compile();
     const scope = { ...globalScope };
@@ -61,7 +57,7 @@ export class FunctionExpressionParser {
 
   createDerivativeData(
     node: FunctionAssignmentNode,
-    globalScope: FunctionDeclaration
+    globalScope: Scope
   ): FnState["df"] {
     try {
       const derivativeNode = derivative(node, node.params["0"], {
@@ -97,7 +93,7 @@ export class VariableExpressionParser {
 
   parse(
     node: AssignmentNode,
-    globalScope: FunctionDeclaration
+    globalScope: Scope
   ): NonNullable<ClientExpressionData["variable"]["clientState"]> {
     const code = node.compile();
     const scope = { ...globalScope };

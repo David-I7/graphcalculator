@@ -20,9 +20,13 @@ import {
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
 import { ApplicationError, destroyError } from "../../../../state/error/error";
-import { ClientItem, isExpression } from "../../../../state/graph/types";
+import { ClientItem, isExpression, Scope } from "../../../../state/graph/types";
 import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
-import { AssignmentNode, FunctionAssignmentNode } from "mathjs";
+import {
+  AssignmentNode,
+  FunctionAssignmentNode,
+  ParenthesisNode,
+} from "mathjs";
 import { variableParser } from "../../../graph/lib/mathjs/parse";
 
 const ExpressionList = () => {
@@ -152,7 +156,7 @@ type ExpressionListItemProps = {
   idx: number;
   dispatch: ReturnType<typeof useAppDispatch>;
   animationOptions: KeyframeAnimationOptions;
-  scope: Record<string, number>;
+  scope: Scope;
 };
 
 const ExpressionListItem = React.memo(
@@ -211,6 +215,9 @@ const ExpressionListItem = React.memo(
               clientState,
             })
           );
+        } else if (res.node instanceof ParenthesisNode) {
+          // f(x,y), tranform into a function and plug in the values
+          // or split by comma?,
         }
 
         if (error) {
