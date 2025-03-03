@@ -41,6 +41,14 @@ export type Expression<T extends ExpressionType = ExpressionType> =
     ? {
         type: T;
         content: string;
+        parsedContent: { name: string; value: number } | undefined;
+      }
+    : T extends "point"
+    ? {
+        type: T;
+        content: string;
+        parsedContent: { x: number; y: number } | undefined;
+        settings: ExpressionSettings;
       }
     : {
         type: T;
@@ -102,8 +110,6 @@ export type ClientGraphData = Omit<GraphData, "items"> & {
 //   };
 // };
 
-// export function isExpression(
-//   item: ClientItem
-// ): item is ClientItem<"expression"> {
-//   return item.type == "expression";
-// }
+export function isExpression(item: Item): item is Item<"expression"> {
+  return item.type == "expression";
+}

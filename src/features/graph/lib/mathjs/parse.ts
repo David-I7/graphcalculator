@@ -6,15 +6,12 @@ import {
   ParenthesisNode,
 } from "mathjs";
 import { FnState } from "../graph/commands";
-import { ClientExpressionData, Scope } from "../../../../state/graph/types";
+import { Expression, Scope } from "../../../../state/graph/types";
 
 export class FunctionExpressionParser {
   constructor() {}
 
-  parse(
-    node: MathNode,
-    globalScope: Record<string, number>
-  ): undefined | FnState {
+  parse(node: MathNode, globalScope: Scope): FnState {
     if (node instanceof FunctionAssignmentNode) {
       let df = this.createDerivativeData(node, globalScope);
 
@@ -27,7 +24,9 @@ export class FunctionExpressionParser {
       return fnData;
     }
 
-    return;
+    throw new Error(
+      `Node is not instance of FunctionAsignemntNode\n\n ${node}`
+    );
   }
 
   createFunctionData(
@@ -94,7 +93,7 @@ export class VariableExpressionParser {
   parse(
     node: AssignmentNode,
     globalScope: Scope
-  ): NonNullable<ClientExpressionData["variable"]["clientState"]> {
+  ): NonNullable<Expression<"variable">["parsedContent"]> {
     const code = node.compile();
     const scope = { ...globalScope };
     return {

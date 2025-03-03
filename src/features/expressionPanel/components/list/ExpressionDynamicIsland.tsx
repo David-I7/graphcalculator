@@ -8,16 +8,12 @@ import {
 } from "../../../../components/svgs";
 import { useAppDispatch } from "../../../../state/hooks";
 import { toggleExpressionVisibility } from "../../../../state/graph/graph";
-import {
-  ClientExpressionState,
-  ClientItem,
-  ItemType,
-} from "../../../../state/graph/types";
+import { Expression, Item, ItemType } from "../../../../state/graph/types";
 import { ApplicationError } from "../../../../state/error/error";
 
 type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
-  item: ClientItem<T>;
+  item: Item<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
   error: ApplicationError | null;
 };
@@ -76,8 +72,7 @@ ExpressionDynamicIsland.Expression = function ({
           onClick={(e) => {
             dispatch(
               toggleExpressionVisibility({
-                hidden: !(item.data as ClientExpressionState<"function">)
-                  .settings.hidden,
+                hidden: !(item.data as Expression<"function">).settings.hidden,
                 id: item.id,
                 idx: index,
               })
@@ -113,8 +108,7 @@ ExpressionDynamicIsland.Expression = function ({
           onClick={(e) => {
             dispatch(
               toggleExpressionVisibility({
-                hidden: !(item.data as ClientExpressionState<"point">).settings
-                  .hidden,
+                hidden: !(item.data as Expression<"point">).settings.hidden,
                 id: item.id,
                 idx: index,
               })

@@ -1,46 +1,40 @@
 import React, { useMemo, useRef } from "react";
-import { ClientExpressionState, ClientItem } from "../../../state/graph/types";
+import { Expression, Item, ItemData, Scope } from "../../../state/graph/types";
 import { useGraphContext } from "../Graph";
 import { Graph } from "../lib/graph/graph";
 import useGraphFunction from "../lib/mathjs/useGraphFunction";
 
 type GraphExpressionProps = {
-  item: ClientItem<"expression">;
+  item: Item<"expression">;
   focused: boolean;
-  scope: Record<string, number>;
+  scope: Scope;
 };
 
-export const GraphExpression = React.memo(
-  (props: GraphExpressionProps) => {
-    const graph = useGraphContext();
+export const GraphExpression = React.memo((props: GraphExpressionProps) => {
+  const graph = useGraphContext();
 
-    if (!graph) return;
+  if (!graph) return;
 
-    switch (props.item.data.type) {
-      case "function":
-        return (
-          <GraphFunction
-            graph={graph}
-            focused={props.focused}
-            data={props.item.data as ClientExpressionState<"function">}
-            id={props.item.id}
-            scope={props.scope}
-          />
-        );
+  switch (props.item.data.type) {
+    case "function":
+      return (
+        <GraphFunction
+          graph={graph}
+          focused={props.focused}
+          data={props.item.data as Expression<"function">}
+          id={props.item.id}
+          scope={props.scope}
+        />
+      );
 
-      case "point":
-        return "";
-    }
+    case "point":
+      return "";
+  }
 
-    throw new Error(
-      `Type ${props.item.data.type} is not of type function or point`
-    );
-  },
-  (prev, cur) =>
-    prev.scope === cur.scope &&
-    prev.item === cur.item &&
-    prev.focused === cur.focused
-);
+  throw new Error(
+    `Type ${props.item.data.type} is not of type function or point`
+  );
+});
 
 const GraphFunction = ({
   data,
@@ -50,9 +44,9 @@ const GraphFunction = ({
   scope,
 }: Omit<GraphExpressionProps, "item"> & {
   id: number;
-  data: ClientExpressionState<"function">;
+  data: Expression<"function">;
   graph: Graph;
-  scope: Record<string, number>;
+  scope: Scope;
 }) => {
   useGraphFunction({ id, focused, data, graph, scope });
 

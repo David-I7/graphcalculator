@@ -1,4 +1,10 @@
-import { ConstantNode, FunctionAssignmentNode, isComplex } from "mathjs";
+import {
+  ConstantNode,
+  FunctionAssignmentNode,
+  isComplex,
+  replacer,
+  reviver,
+} from "mathjs";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import {
   GraphCommand,
@@ -15,7 +21,7 @@ import {
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
-import { ClientExpressionState } from "../../../../state/graph/types";
+import { Expression } from "../../../../state/graph/types";
 
 type DrawData = {
   scaledStep: number;
@@ -661,7 +667,7 @@ export class DrawFunctionCommand implements GraphCommand {
   constructor(
     public graph: Graph,
     public data: FnState,
-    public settings: ClientExpressionState<"function">["settings"],
+    public settings: Expression<"function">["settings"],
     stateSync: FnCommandState
   ) {
     this.onStateChange = stateSync.onStateChange;

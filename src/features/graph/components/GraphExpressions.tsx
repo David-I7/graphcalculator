@@ -1,12 +1,12 @@
 import { useAppSelector } from "../../../state/hooks";
 import { GraphExpression } from "./GraphExpression";
-import { ClientItem } from "../../../state/graph/types";
+import { Item } from "../../../state/graph/types";
 
-function isGraphableExpression(item: ClientItem) {
+function isGraphableExpression(item: Item) {
   return (
     item.type === "expression" &&
-    ((item as ClientItem<"expression">).data.type === "function" ||
-      (item as ClientItem<"expression">).data.type === "point")
+    ((item as Item<"expression">).data.type === "function" ||
+      (item as Item<"expression">).data.type === "point")
   );
 }
 
@@ -17,11 +17,11 @@ const GraphExpressions = () => {
     scope,
   } = useAppSelector((state) => state.graphSlice.currentGraph.items);
 
-  const graphableExpr: ClientItem<"expression">[] = [];
+  const graphableExpr: Item<"expression">[] = [];
   for (let i = 0; i < items.length; ++i) {
     if (isGraphableExpression(items[i])) {
       // expressionIndexes.push(i);
-      graphableExpr.push(items[i] as ClientItem<"expression">);
+      graphableExpr.push(items[i] as Item<"expression">);
     }
   }
 
