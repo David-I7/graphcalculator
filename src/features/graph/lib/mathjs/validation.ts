@@ -3,7 +3,9 @@ import {
   FunctionAssignmentNode,
   FunctionNode,
   MathNode,
+  ObjectNode,
   OperatorNode,
+  ParenthesisNode,
   parse,
   SymbolNode,
 } from "mathjs";
@@ -18,9 +20,11 @@ const ErrorCause = {
   too_many_variables: 4,
   diff_param_from_expr: 5,
   syntax: 6,
-  function_composition_detected: 7,
+  unsupported_feature: 7,
   duplicate_variable_declaration: 8,
 };
+
+const isPointRegex = /^\(([^,)]+\)?),(.*)\)$/;
 
 export type SyntaxValidationResult =
   | {
@@ -64,61 +68,85 @@ export class ExpressionValidator {
       return { err: undefined, node };
     } catch (err) {
       if (err instanceof SyntaxError) {
-        let idx: string = "";
+        let pos: string = "";
         let itr = err.message.length - 2;
         while (Number.isInteger(parseFloat(err.message[itr]))) {
-          idx = err.message[itr] + idx;
+          pos = err.message[itr] + pos;
           itr--;
         }
 
-        const index = Number(idx);
-        const cause = expr[index - 1] || expr[index - 2];
+        const index = Number(pos) - 1;
+        const cause = expr[index] || expr[index - 1];
 
         console.log(err, cause);
 
-        if (cause) {
-          if (
-            cause === "=" ||
-            cause === "+" ||
-            cause === "-" ||
-            cause === "*" ||
-            cause === "/" ||
-            cause === ","
-          ) {
+        if (
+          cause === "=" ||
+          cause === "+" ||
+          cause === "-" ||
+          cause === "*" ||
+          cause === "/"
+        ) {
+          return this.makeSyntaxError(
+            `You need something on both sides of the '${cause}' symbol.`,
+            "syntax"
+          );
+        } else if (cause === "(") {
+          return this.makeSyntaxError(
+            `Parenthesis must contain something inside.`,
+            "syntax"
+          );
+        } else if (err.message.startsWith("Parenthesis") || cause === ",") {
+          const match = expr.match(isPointRegex);
+          console.log(match);
+          if (match) {
+            if (!match[2].length) {
+              return this.makeSyntaxError(
+                `You need something on both sides of the '${cause}' symbol.`,
+                "syntax"
+              );
+            } else if (match[2].includes(",")) {
+              return this.makeSyntaxError(
+                `We only support 2D points.`,
+                "unsupported_feature"
+              );
+            } else if (match.index && match.index > 0) {
+              return this.makeSyntaxError(
+                `I don't know what to do with this.`,
+                "unsupported_feature"
+              );
+            } else {
+              return {
+                node: new ObjectNode({
+                  x: new SymbolNode(match[1]),
+                  y: new SymbolNode(match[2]),
+                }),
+                err: undefined,
+              };
+            }
+          }
+
+          if (cause === ",") {
             return this.makeSyntaxError(
               `You need something on both sides of the '${cause}' symbol.`,
               "syntax"
             );
-          } else if (cause === "(") {
-            return this.makeSyntaxError(
-              expr[index - 3]
-                ? `Function '${expr[index - 3]}' is not defined.`
-                : `Parenthesis cannot be empty.`,
-              "syntax"
-            );
-          } else if (cause === ")") {
-            return this.makeSyntaxError(
-              `Parenthesis cannot be empty.`,
-              "syntax"
-            );
-          } else if (err.message.startsWith("Parenthesis")) {
-            return this.makeSyntaxError(
-              `Try closing the parenthesis.`,
-              "syntax"
-            );
-          } else {
-            console.log(cause);
-            return this.makeSyntaxError(``, "syntax");
           }
+
+          return this.makeSyntaxError(`Try closing the parenthesis.`, "syntax");
+        } else if (err.message.startsWith("Value expected")) {
+          if (cause === ")") {
+            return this.makeSyntaxError(
+              `Parenthesis must contain something inside.`,
+              "syntax"
+            );
+          }
+        } else {
+          console.log("errrr: ", cause);
         }
       }
 
-      return this.makeDebugError(
-        `Edge case not defined for syntaxError, \nDebug:\n${
-          err as Error
-        },\n${expr}\n
-        `
-      );
+      return this.makeSyntaxError(``, "syntax");
     }
   }
 
@@ -199,12 +227,10 @@ export class ExpressionValidator {
 
     if (node.fn instanceof SymbolNode) {
       if (node.args.length > requiredArgs) {
-        if (!GlobalMathFunctions.has(node.fn.name)) {
-          return this.makeExpressionError(
-            `We only support functions with 1 argument.`,
-            "too_many_function_arg"
-          );
-        }
+        return this.makeExpressionError(
+          `We only support functions with 1 argument.`,
+          "too_many_function_arg"
+        );
       } else if (node.args.length < requiredArgs)
         return this.makeExpressionError(
           GlobalMathFunctions.has(node.fn.name)
@@ -273,15 +299,6 @@ export class ExpressionValidator {
   ): SyntaxValidationResult {
     return {
       err: this.makeExpressionError(message, type),
-      node: undefined,
-    };
-  }
-
-  makeDebugError(
-    message: string
-  ): SyntaxValidationResult & Required<Pick<SyntaxValidationResult, "err">> {
-    return {
-      err: this.makeExpressionError(message, "unknown"),
       node: undefined,
     };
   }

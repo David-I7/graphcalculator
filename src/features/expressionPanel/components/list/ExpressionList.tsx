@@ -200,6 +200,7 @@ const ExpressionListItem = React.memo(
         );
         setError(res.err);
       } else {
+        console.log(res.node);
         if (res.node instanceof FunctionAssignmentNode) {
           dispatch(
             updateFunctionExpr({
