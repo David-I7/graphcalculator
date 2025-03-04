@@ -72,44 +72,6 @@ export type ClientGraphData = Omit<GraphData, "items"> & {
   };
 };
 
-// export type ClientExpressionState<T extends ExpressionType = ExpressionType> =
-//   Expression<T> & ClientExpressionData[T];
-
-// export type ClientItem<T extends keyof ItemData = ItemType> = Omit<
-//   Item,
-//   "data"
-// > & {
-//   data: ClientItemData[T];
-// };
-
-// export type ClientItemData<T extends ExpressionType = ExpressionType> = Omit<
-//   ItemData,
-//   "expression"
-// > & {
-//   expression: ClientExpressionState<T>;
-// };
-
-// export type GraphableExpressions =
-//   | ClientExpressionState<"function">
-//   | ClientExpressionState<"point">;
-
-// export type ClientExpressionData = {
-//   function: {
-//     clientState: string | undefined;
-//   };
-//   point: {
-//     clientState: string | undefined;
-//   };
-//   variable: {
-//     clientState:
-//       | {
-//           name: string;
-//           value: number;
-//         }
-//       | undefined;
-//   };
-// };
-
 export function isExpression(item: Item): item is Item<"expression"> {
   return item.type == "expression";
 }

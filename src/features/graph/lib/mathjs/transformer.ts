@@ -4,7 +4,9 @@ import {
   FunctionAssignmentNode,
   FunctionNode,
   MathNode,
+  ObjectNode,
   OperatorNode,
+  ParenthesisNode,
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
@@ -13,13 +15,13 @@ import { isGlobalFunctionRegex } from "../../data/math";
 import { ItemData, Scope } from "../../../../state/graph/types";
 import { isInScope } from "../../../../state/graph/graph";
 
-type TransformedResult =
+type TransformedResult<T extends MathNode = MathNode> =
   | {
       node: undefined;
       err: ApplicationError;
     }
   | {
-      node: MathNode;
+      node: T;
       err: undefined;
     };
 
@@ -46,15 +48,6 @@ export class ExpressionTransformer {
         scope.add(node.params[0]);
       }
     } else if (node instanceof AssignmentNode) {
-      if (!(node.object instanceof SymbolNode))
-        return {
-          err: this.validator.makeExpressionError(
-            `node.object is not instanceOf SymbolNode`,
-            "unknown"
-          ),
-          node: undefined,
-        };
-
       const variable = node.object.name;
 
       if (variable === "y" || variable === "x") {
@@ -82,23 +75,126 @@ export class ExpressionTransformer {
 
         scope.add(variable);
       }
-    }
+    } else if (node instanceof ObjectNode) {
+      console.log(node);
+      const data: ItemData["expression"] = {
+        type: "point",
+        parsedContent: undefined,
+        content: node.properties.x.name,
+        settings: {
+          color: "",
+          hidden: false,
+        },
+      };
+      const x = this.transform(data, globalScope);
 
-    console.log(scope);
+      if (x.err) return { err: x.err, node: undefined };
+
+      data.content = node.properties.y.name;
+      const y = this.transform(data, globalScope);
+
+      if (y.err) return { err: y.err, node: undefined };
+
+      console.log(x, y);
+
+      return {
+        err: this.validator.makeExpressionError(
+          "Point not implemented",
+          "unsupported_feature"
+        ),
+        node: undefined,
+      };
+    }
 
     return this.transformNode(node, undefined, scope);
   }
+
+  // transformRecursive(expr:string,parent:MathNode | undefined,scope:Set<string>){
+  //   const { node, err } = this.validator.validateSyntax(expr);
+
+  //   if (err) {
+  //     return { err, node: undefined };
+  //   }
+
+  //   if (node instanceof FunctionAssignmentNode) {
+  //     if (node.params.length) {
+  //       scope.add(node.params[0]);
+  //     }
+  //   } else if (node instanceof AssignmentNode) {
+  //     if (!(node.object instanceof SymbolNode))
+  //       return {
+  //         err: this.validator.makeExpressionError(
+  //           `node.object is not instanceOf SymbolNode`,
+  //           "unknown"
+  //         ),
+  //         node: undefined,
+  //       };
+
+  //     const variable = node.object.name;
+
+  //     if (variable === "y" || variable === "x") {
+  //       const fn = new FunctionAssignmentNode(
+  //         "f",
+  //         [variable === "x" ? "y" : "x"],
+  //         node.value
+  //       );
+
+  //       scope.add(fn.params[0]);
+
+  //       return this.transformNode(fn, undefined, scope);
+  //     } else {
+  //       if (isInScope(variable, data, globalScope)) {
+  //         return {
+  //           err: this.validator.makeExpressionError(
+  //             `
+  //           You've defined '${variable}' in more than one place. Try deleting some of the definitions of '${variable}'.
+  //           `,
+  //             "duplicate_variable_declaration"
+  //           ),
+  //           node: undefined,
+  //         };
+  //       }
+
+  //       scope.add(variable);
+  //     }
+  //   } else if (node instanceof ObjectNode) {
+  //     console.log(node);
+
+  //     const x = this.transformRecursive(node.properties.x.name,new ParenthesisNode(node.properties.x) ,scope);
+
+  //     if (x.err) return { err: x.err, node: undefined };
+
+  //     data.content = node.properties.y.name;
+  //     const y = this.transform(data, globalScope);
+
+  //     if (y.err) return { err: y.err, node: undefined };
+
+  //     console.log(x, y);
+
+  //     return {
+  //       err: this.validator.makeExpressionError(
+  //         "Point not implemented",
+  //         "unsupported_feature"
+  //       ),
+  //       node: undefined,
+  //     };
+  //   }
+
+  //   console.log(scope);
+
+  //   return this.transformNode(node, undefined, scope);
+  // }
 
   transformNode(
     outerNode: MathNode,
     outerParent: MathNode | undefined,
     scope: Set<string>
   ): TransformedResult {
+    // debugger;
     let transformedNode!: MathNode;
     let res!: ExpressionValidationResult;
     try {
       transformedNode = outerNode!.transform((innerNode, path, innerParent) => {
-        console.log(outerNode === innerNode ? "outer" : "inner", innerNode);
         const parent = outerNode === innerNode ? outerParent : innerParent;
 
         if (innerNode instanceof FunctionNode) {
@@ -111,9 +207,7 @@ export class ExpressionTransformer {
             throw res;
           }
 
-          if (innerNode === res) {
-            //skip
-          } else {
+          if (innerNode !== res) {
             const subNode = this.transformNode(res, parent, scope);
             if (subNode.err) throw subNode.err;
             return subNode.node;
@@ -128,12 +222,50 @@ export class ExpressionTransformer {
             throw res;
           }
 
-          if (innerNode === res) {
-            return innerNode;
-          } else {
-            const subNode = this.transformNode(res, parent, scope);
-            if (subNode.err) throw subNode.err;
-            return subNode.node;
+          if (innerNode !== res && res instanceof OperatorNode) {
+            const leftNode = this.transformNode(res.args[0], res, scope);
+            if (leftNode.err) throw leftNode.err;
+            const rightNode = this.transformNode(res.args[1], res, scope);
+            if (rightNode.err) throw rightNode.err;
+            return res;
+          }
+        } else if (innerNode instanceof OperatorNode && innerNode.op === "^") {
+          if (innerNode.args[0] instanceof FunctionNode) {
+            const left = this.transformNode(
+              innerNode.args[0],
+              innerNode,
+              scope
+            ) as TransformedResult<OperatorNode>;
+            if (left.err) throw left.err;
+            const right = this.transformNode(
+              innerNode.args[1],
+              innerNode,
+              scope
+            );
+            if (right.err) throw right.err;
+
+            innerNode.args[0] = left.node.args[1];
+            left.node.args[1] = innerNode;
+            return left.node;
+          } else if (innerNode.args[0] instanceof SymbolNode) {
+            if (innerNode.args[0].name.length > 1) {
+              const left = this.transformNode(
+                innerNode.args[0],
+                innerNode,
+                scope
+              ) as TransformedResult<OperatorNode>;
+              if (left.err) throw left.err;
+              const right = this.transformNode(
+                innerNode.args[1],
+                innerNode,
+                scope
+              );
+              if (right.err) throw right.err;
+
+              innerNode.args[0] = left.node.args[1];
+              left.node.args[1] = innerNode;
+              return left.node;
+            }
           }
         }
 
@@ -149,7 +281,6 @@ export class ExpressionTransformer {
       return { err: error as ApplicationError, node: undefined };
     }
 
-    console.log(transformedNode);
     return { err: undefined, node: transformedNode };
   }
 
@@ -159,6 +290,8 @@ export class ExpressionTransformer {
     scope: Set<string>
   ): ExpressionValidationResult {
     if (node instanceof FunctionNode) {
+      if (!parent || node.fn.name.length === 1) return node;
+
       const matches = node.fn.name.matchAll(isGlobalFunctionRegex);
 
       if ("next" in matches) {
@@ -195,22 +328,38 @@ export class ExpressionTransformer {
       // no global functions
       // case xn() or x()
       // not implementing function composition yet
-
       return this.validator.makeExpressionError(
         `We do not support function composition.`,
-        "function_composition_detected"
+        "unsupported_feature"
       );
-    } else {
+    }
+    // else if (node instanceof OperatorNode){
+    //   // if (parent instanceof OperatorNode && parent.op === "^") {
+    //   //   // debugger;
+    //   //   return new OperatorNode(
+    //   //     "*",
+    //   //     "multiply",
+    //   //     [
+    //   //       new SymbolNode(node.name.substring(0, node.name.length - 1)),
+    //   //       new OperatorNode(
+    //   //         "^",
+    //   //         "pow",
+    //   //         [
+    //   //           new SymbolNode(node.name.substring(node.name.length - 1)),
+    //   //           parent.args[1],
+    //   //         ],
+    //   //         false
+    //   //       ),
+    //   //     ],
+    //   //     true
+    //   //   );
+    //   // }
+    // }
+    else {
       // example input: xpc
       if (parent instanceof FunctionNode && node === parent.fn) return node;
 
-      if (node.name.length === 1) {
-        if (scope.has(node.name)) return node;
-        return this.validator.makeExpressionError(
-          `Too many variables, try defining '${node.name}'.`,
-          "too_many_variables"
-        );
-      }
+      if (node.name.length === 1) return node;
 
       let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
       for (let i = 0; i < node.name.length - 1; i++) {
