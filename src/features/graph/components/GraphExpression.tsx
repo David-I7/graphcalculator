@@ -2,7 +2,9 @@ import React, { useMemo, useRef } from "react";
 import { Expression, Item, ItemData, Scope } from "../../../state/graph/types";
 import { useGraphContext } from "../Graph";
 import { Graph } from "../lib/graph/graph";
-import useGraphFunction from "../lib/mathjs/useGraphFunction";
+import useGraphFunction, {
+  useGraphPoint,
+} from "../lib/mathjs/useGraphFunction";
 
 type GraphExpressionProps = {
   item: Item<"expression">;
@@ -28,7 +30,15 @@ export const GraphExpression = React.memo((props: GraphExpressionProps) => {
       );
 
     case "point":
-      return "";
+      return (
+        <GraphPoint
+          graph={graph}
+          focused={props.focused}
+          data={props.item.data as Expression<"point">}
+          id={props.item.id}
+          scope={props.scope}
+        />
+      );
   }
 
   throw new Error(
@@ -49,6 +59,22 @@ const GraphFunction = ({
   scope: Scope;
 }) => {
   useGraphFunction({ id, focused, data, graph, scope });
+
+  return null;
+};
+const GraphPoint = ({
+  data,
+  id,
+  focused,
+  graph,
+  scope,
+}: Omit<GraphExpressionProps, "item"> & {
+  id: number;
+  data: Expression<"point">;
+  graph: Graph;
+  scope: Scope;
+}) => {
+  useGraphPoint({ id, focused, data, graph, scope });
 
   return null;
 };

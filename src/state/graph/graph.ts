@@ -389,9 +389,9 @@ function deleteFromScope(data: ItemData["expression"], scope: Scope) {
 export function isInScope(
   target: string,
   data: ItemData["expression"],
-  scope: Scope
+  scope: Set<string>
 ): boolean {
-  if (target in scope) {
+  if (scope.has(target)) {
     if (data.type === "variable" && data.parsedContent) {
       return data.parsedContent.name === target // if name === target the var is trying to be created
         ? false

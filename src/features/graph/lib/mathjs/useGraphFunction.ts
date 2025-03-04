@@ -3,6 +3,7 @@ import { Expression, Scope } from "../../../../state/graph/types";
 import { Graph } from "../graph/graph";
 import {
   DrawFunctionCommand,
+  DrawPointCommand,
   FnCommandState,
   FnState,
 } from "../graph/commands";
@@ -14,9 +15,9 @@ import {
 import { functionParser } from "./parse";
 import { reviver } from "mathjs";
 
-type useGraphFunctionProps = {
+type useGraphExprProps<T extends "function" | "point"> = {
   id: number;
-  data: Expression<"function">;
+  data: Expression<T>;
   focused: boolean;
   graph: Graph;
   scope: Scope;
@@ -27,7 +28,8 @@ export default function useGraphFunction({
   focused,
   graph,
   scope,
-}: useGraphFunctionProps) {
+}: useGraphExprProps<"function">) {
+  console.log(graph);
   const node = useMemo(() => {
     return data.parsedContent
       ? JSON.parse(data.parsedContent, reviver)
@@ -68,11 +70,9 @@ export default function useGraphFunction({
       stateSync
     );
     command.current = currentCommand;
-    graph.addCommand(currentCommand);
 
     return () => {
       currentCommand.destroy();
-      graph.removeCommand(currentCommand);
     };
   }, [node, scope]);
 
@@ -90,4 +90,50 @@ export default function useGraphFunction({
 
     command.current.settings = data.settings;
   }, [data.settings.color, data.settings.hidden]);
+}
+
+export function useGraphPoint({
+  id,
+  data,
+  scope,
+  focused,
+  graph,
+}: useGraphExprProps<"point">) {
+  const node = useMemo(() => {
+    return data.parsedContent ? data.parsedContent : undefined;
+  }, [data.parsedContent]);
+  const dispatch = useAppDispatch();
+  const command = useRef<DrawPointCommand | null>(null);
+
+  useEffect(() => {
+    if (!node) return;
+
+    const currentCommand = new DrawPointCommand(
+      graph,
+      data.parsedContent!,
+      data.settings
+    );
+    command.current = currentCommand;
+
+    return () => {
+      currentCommand.destroy();
+    };
+  }, [node, scope]);
+
+  // useEffect(() => {
+  //   if (!command.current) return;
+  //   if (command.current.state === "idle" && focused) {
+  //     command.current.setState("focused");
+  //   } else if (command.current.state === "focused" && !focused) {
+  //     command.current.setState("idle");
+  //   }
+  // }, [focused]);
+
+  useEffect(() => {
+    if (!command.current) return;
+
+    command.current.settings = data.settings;
+  }, [data.settings.color, data.settings.hidden]);
+
+  return null;
 }

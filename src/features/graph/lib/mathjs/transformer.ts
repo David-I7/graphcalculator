@@ -31,7 +31,7 @@ export class ExpressionTransformer {
 
   transform(
     data: ItemData["expression"],
-    globalScope: Scope
+    scope: Set<string>
   ): TransformedResult {
     const trimmedContent = data.content.replace(/\s/g, "");
     const { node, err } = this.validator.validateSyntax(trimmedContent);
@@ -39,9 +39,6 @@ export class ExpressionTransformer {
     if (err) {
       return { err, node: undefined };
     }
-
-    const scope: Set<string> = new Set();
-    Object.keys(globalScope).forEach((key) => scope.add(key));
 
     if (node instanceof FunctionAssignmentNode) {
       if (node.params.length) {
@@ -61,7 +58,7 @@ export class ExpressionTransformer {
 
         return this.transformNode(fn, undefined, scope);
       } else {
-        if (isInScope(variable, data, globalScope)) {
+        if (isInScope(variable, data, scope)) {
           return {
             err: this.validator.makeExpressionError(
               `
@@ -75,122 +72,16 @@ export class ExpressionTransformer {
 
         scope.add(variable);
       }
-    } else if (node instanceof ObjectNode) {
-      console.log(node);
-      const data: ItemData["expression"] = {
-        type: "point",
-        parsedContent: undefined,
-        content: node.properties.x.name,
-        settings: {
-          color: "",
-          hidden: false,
-        },
-      };
-      const x = this.transform(data, globalScope);
-
-      if (x.err) return { err: x.err, node: undefined };
-
-      data.content = node.properties.y.name;
-      const y = this.transform(data, globalScope);
-
-      if (y.err) return { err: y.err, node: undefined };
-
-      console.log(x, y);
-
-      return {
-        err: this.validator.makeExpressionError(
-          "Point not implemented",
-          "unsupported_feature"
-        ),
-        node: undefined,
-      };
     }
 
     return this.transformNode(node, undefined, scope);
   }
-
-  // transformRecursive(expr:string,parent:MathNode | undefined,scope:Set<string>){
-  //   const { node, err } = this.validator.validateSyntax(expr);
-
-  //   if (err) {
-  //     return { err, node: undefined };
-  //   }
-
-  //   if (node instanceof FunctionAssignmentNode) {
-  //     if (node.params.length) {
-  //       scope.add(node.params[0]);
-  //     }
-  //   } else if (node instanceof AssignmentNode) {
-  //     if (!(node.object instanceof SymbolNode))
-  //       return {
-  //         err: this.validator.makeExpressionError(
-  //           `node.object is not instanceOf SymbolNode`,
-  //           "unknown"
-  //         ),
-  //         node: undefined,
-  //       };
-
-  //     const variable = node.object.name;
-
-  //     if (variable === "y" || variable === "x") {
-  //       const fn = new FunctionAssignmentNode(
-  //         "f",
-  //         [variable === "x" ? "y" : "x"],
-  //         node.value
-  //       );
-
-  //       scope.add(fn.params[0]);
-
-  //       return this.transformNode(fn, undefined, scope);
-  //     } else {
-  //       if (isInScope(variable, data, globalScope)) {
-  //         return {
-  //           err: this.validator.makeExpressionError(
-  //             `
-  //           You've defined '${variable}' in more than one place. Try deleting some of the definitions of '${variable}'.
-  //           `,
-  //             "duplicate_variable_declaration"
-  //           ),
-  //           node: undefined,
-  //         };
-  //       }
-
-  //       scope.add(variable);
-  //     }
-  //   } else if (node instanceof ObjectNode) {
-  //     console.log(node);
-
-  //     const x = this.transformRecursive(node.properties.x.name,new ParenthesisNode(node.properties.x) ,scope);
-
-  //     if (x.err) return { err: x.err, node: undefined };
-
-  //     data.content = node.properties.y.name;
-  //     const y = this.transform(data, globalScope);
-
-  //     if (y.err) return { err: y.err, node: undefined };
-
-  //     console.log(x, y);
-
-  //     return {
-  //       err: this.validator.makeExpressionError(
-  //         "Point not implemented",
-  //         "unsupported_feature"
-  //       ),
-  //       node: undefined,
-  //     };
-  //   }
-
-  //   console.log(scope);
-
-  //   return this.transformNode(node, undefined, scope);
-  // }
 
   transformNode(
     outerNode: MathNode,
     outerParent: MathNode | undefined,
     scope: Set<string>
   ): TransformedResult {
-    // debugger;
     let transformedNode!: MathNode;
     let res!: ExpressionValidationResult;
     try {

@@ -3,7 +3,7 @@ import {
   derivative,
   FunctionAssignmentNode,
   MathNode,
-  ParenthesisNode,
+  ObjectNode,
 } from "mathjs";
 import { FnState } from "../graph/commands";
 import { Expression, Scope } from "../../../../state/graph/types";
@@ -103,35 +103,31 @@ export class VariableExpressionParser {
   }
 }
 
-// else if (node instanceof AssignmentNode) {
-//   const variable = node.object.name;
+export class PointExpressionParser {
+  constructor() {}
 
-//   // implicit function
-//   if (variable === "y" || variable === "x") {
-//     const fn = new FunctionAssignmentNode(
-//       "f",
-//       [variable === "x" ? "y" : "x"],
-//       node.value
-//     );
+  parse(
+    node: ObjectNode<{
+      x: MathNode;
+      y: MathNode;
+    }>,
+    globalScope: Scope
+  ): NonNullable<Expression<"point">["parsedContent"]> {
+    const scope = { ...globalScope };
+    const x = node.properties.x.compile().evaluate(scope);
+    const y = node.properties.y.compile().evaluate(scope);
 
-//     const df = this.createDerivativeData(fn, globalScope);
-
-//     const fnData: FnState = {
-//       f: this.createFunctionData(fn, globalScope),
-//       df,
-//       ddf: df.node ? this.createDerivativeData(df.node, globalScope) : df,
-//     };
-
-//     return fnData;
-//   } else {
-//     // variable Assignment
-//   }
-// } else if (node instanceof ParenthesisNode) {
-// }
+    return {
+      x,
+      y,
+    };
+  }
+}
 
 const parsers = {
   functionParser: new FunctionExpressionParser(),
   variableParser: new VariableExpressionParser(),
+  pointParser: new PointExpressionParser(),
 };
 
-export const { functionParser, variableParser } = parsers;
+export const { functionParser, variableParser, pointParser } = parsers;

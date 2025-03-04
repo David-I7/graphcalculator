@@ -23,12 +23,8 @@ import ExpressionTextArea from "./ExpressionTextArea";
 import { ApplicationError } from "../../../../state/error/error";
 import { isExpression, Item, Scope } from "../../../../state/graph/types";
 import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
-import {
-  AssignmentNode,
-  FunctionAssignmentNode,
-  ParenthesisNode,
-} from "mathjs";
-import { variableParser } from "../../../graph/lib/mathjs/parse";
+import { AssignmentNode, FunctionAssignmentNode, ObjectNode } from "mathjs";
+import { pointParser, variableParser } from "../../../graph/lib/mathjs/parse";
 
 const ExpressionList = () => {
   return (
@@ -189,7 +185,10 @@ const ExpressionListItem = React.memo(
         return;
       }
 
-      const res = ExpressionTransformer.transform(item.data, scope);
+      const clonedScope: Set<string> = new Set();
+      Object.keys(scope).forEach((key) => clonedScope.add(key));
+
+      const res = ExpressionTransformer.transform(item.data, clonedScope);
       if (res.err) {
         dispatch(
           removeParsedContent({
@@ -218,9 +217,15 @@ const ExpressionListItem = React.memo(
               parsedContent,
             })
           );
-        } else if (res.node instanceof ParenthesisNode) {
-          // f(x,y), tranform into a function and plug in the values
-          // or split by comma?,
+        } else if (res.node instanceof ObjectNode) {
+          const parsedContent = pointParser.parse(res.node, scope);
+          dispatch(
+            updatePointExpr({
+              id: item.id,
+              idx,
+              parsedContent,
+            })
+          );
         }
 
         if (error) {
