@@ -673,6 +673,7 @@ export class DrawFunctionCommand implements GraphCommand {
     this.onStateChange = stateSync.onStateChange;
     this.state = stateSync.state;
     this.tooltipCommand = new DrawTooltipCommand(graph, this);
+    this.graph.addCommand(this);
     console.log(this.data);
   }
 
@@ -935,6 +936,7 @@ export class DrawFunctionCommand implements GraphCommand {
 
   destroy(): void {
     this.tooltipCommand.destroy();
+    this.graph.removeCommand(this);
   }
 }
 
@@ -1736,9 +1738,36 @@ class DrawTooltipCommand implements GraphCommand {
 }
 
 export class DrawPointCommand implements GraphCommand {
-  constructor(public graph: Graph) {}
+  constructor(
+    public graph: Graph,
+    public data: NonNullable<Expression<"point">["parsedContent"]>,
+    public settings: Expression<"point">["settings"]
+  ) {
+    this.graph.addCommand(this);
+  }
 
-  draw(): void {}
+  draw(): void {
+    if (this.settings.hidden) return;
 
-  destroy(): void {}
+    this.graph.ctx.save();
+    this.graph.ctx.fillStyle = this.settings.color;
+
+    const normFactor = this.graph.scales.scaledStep / this.graph.scales.scaler;
+
+    this.graph.ctx.beginPath();
+    this.graph.ctx.arc(
+      this.data.x * normFactor,
+      this.data.y * normFactor,
+      8,
+      0,
+      Math.PI * 2
+    );
+    this.graph.ctx.fill();
+
+    this.graph.ctx.restore();
+  }
+
+  destroy(): void {
+    this.graph.removeCommand(this);
+  }
 }

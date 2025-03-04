@@ -24,7 +24,7 @@ const ErrorCause = {
   duplicate_variable_declaration: 8,
 };
 
-const isPointRegex = /^\(([^,)]+\)?),(.*)\)$/;
+const isPointRegex = /\(([^,)]+\)?),(.*)\)/;
 
 export type SyntaxValidationResult =
   | {
@@ -116,10 +116,15 @@ export class ExpressionValidator {
                 "unsupported_feature"
               );
             } else {
+              const x = this.validateSyntax(match[1]);
+              if (x.err) return x;
+              const y = this.validateSyntax(match[2]);
+              if (y.err) return y;
+
               return {
                 node: new ObjectNode({
-                  x: new SymbolNode(match[1]),
-                  y: new SymbolNode(match[2]),
+                  x: x.node,
+                  y: y.node,
                 }),
                 err: undefined,
               };
