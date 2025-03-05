@@ -38,6 +38,18 @@ export class ExpressionTransformer {
     }
 
     if (node instanceof FunctionAssignmentNode) {
+      if (isInScope(node.name, data, scope)) {
+        return {
+          err: this.validator.makeExpressionError(
+            `
+          You've defined '${node.name}' in more than one place. Try deleting some of the definitions of '${node.name}'.
+          `,
+            "duplicate_variable_declaration"
+          ),
+          node: undefined,
+        };
+      }
+
       if (node.params.length) {
         scope.add(node.params[0]);
       }
@@ -66,8 +78,6 @@ export class ExpressionTransformer {
             node: undefined,
           };
         }
-
-        scope.add(variable);
       }
     }
 
@@ -180,10 +190,9 @@ export class ExpressionTransformer {
       if (!parent || node.fn.name.length === 1) return node;
 
       const match = node.fn.name.match(isGlobalFunctionRegex);
-
       if (match) {
         // case sin()
-        if (match[0].length === match.input?.length) return node;
+        if (match[0].length === match.input!.length) return node;
         else if (match.index! + match[0].length === match.input!.length) {
           // case (random)sin()
           return new OperatorNode(

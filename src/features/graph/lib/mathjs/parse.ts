@@ -4,14 +4,20 @@ import {
   FunctionAssignmentNode,
   MathNode,
   ObjectNode,
+  parse,
 } from "mathjs";
 import { FnState } from "../graph/commands";
 import { Expression, Scope } from "../../../../state/graph/types";
+import { getAllSymbols } from "./utils";
+
+type InternalScope = {
+  [index: string]: (() => number) | number;
+};
 
 export class FunctionExpressionParser {
   constructor() {}
 
-  parse(node: MathNode, globalScope: Scope): FnState {
+  parse(node: FunctionAssignmentNode, globalScope: Scope): FnState {
     if (node instanceof FunctionAssignmentNode) {
       let df = this.createDerivativeData(node, globalScope);
 
@@ -34,7 +40,7 @@ export class FunctionExpressionParser {
     globalScope: Scope
   ): FnState["f"] {
     const code = node.compile();
-    const scope = { ...globalScope };
+    const scope = { ...globalScope } as InternalScope;
     code.evaluate(scope);
 
     //y or x intercept
@@ -69,7 +75,7 @@ export class FunctionExpressionParser {
       );
 
       const code = derivativeFunctionAssignmentNode.compile();
-      const scope = { ...globalScope };
+      const scope = { ...globalScope } as InternalScope;
       code.evaluate(scope);
 
       return {
@@ -90,15 +96,48 @@ export class FunctionExpressionParser {
 export class VariableExpressionParser {
   constructor() {}
 
+  createDependencies(
+    node: AssignmentNode,
+    globalScope: Scope
+  ): {
+    scope: InternalScope;
+    scopeDeps: string[];
+  } {
+    const scopeDeps: string[] = [];
+    const fns: [string, string][] = [];
+    const symbols = getAllSymbols(node);
+
+    const scope: InternalScope = {};
+    symbols.forEach((symbol) => {
+      const val = globalScope[symbol];
+      if (typeof val === "number") {
+        scope[symbol] = val;
+      } else {
+        // can't process now as fns may depend on other vars themselves
+        // ex a= b(c)
+        fns.push([symbol, val]);
+      }
+      scopeDeps.push(symbol);
+    });
+
+    fns.forEach((fn) => {
+      parse(fn[1]).compile().evaluate(scope);
+    });
+
+    return { scope, scopeDeps };
+  }
+
   parse(
     node: AssignmentNode,
     globalScope: Scope
   ): NonNullable<Expression<"variable">["parsedContent"]> {
+    const { scope, scopeDeps } = this.createDependencies(node, globalScope);
+
     const code = node.compile();
-    const scope = { ...globalScope };
     return {
       value: code.evaluate(scope) as number,
       name: node.object.name,
+      scopeDeps,
     };
   }
 }
@@ -120,6 +159,7 @@ export class PointExpressionParser {
     return {
       x,
       y,
+      scopeDeps: [],
     };
   }
 }

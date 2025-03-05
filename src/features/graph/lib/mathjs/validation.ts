@@ -1,4 +1,5 @@
 import {
+  AssignmentNode,
   ConstantNode,
   FunctionAssignmentNode,
   FunctionNode,
@@ -53,7 +54,7 @@ export class ExpressionValidator {
     } else if (node instanceof OperatorNode) {
       return this.validateOperatorNode(node as unknown as OperatorNode, parent);
     } else if (node instanceof FunctionNode) {
-      return this.validateFunctionNode(node, parent);
+      return this.validateFunctionNode(node, parent, scope);
     } else if (node instanceof FunctionAssignmentNode) {
       return this.validateFunctionAssignmentNode(node, parent);
     } else if (node instanceof ParenthesisNode) {
@@ -186,10 +187,21 @@ export class ExpressionValidator {
       );
     }
 
-    if (parent instanceof FunctionNode) return node;
+    if (parent instanceof AssignmentNode && parent.object === node) return node;
+    if (parent instanceof FunctionNode && parent.fn === node) return node;
 
     // f(x) = symbol
     if (!scope.has(node.name)) {
+      if (
+        parent instanceof AssignmentNode &&
+        node.name === parent.object.name
+      ) {
+        return this.makeExpressionError(
+          `We only support implicit functions of x and y.`,
+          "unsupported_feature"
+        );
+      }
+
       return this.makeExpressionError(
         `Too many variables, try defining '${node.name}'.`,
         "too_many_variables"
@@ -226,11 +238,20 @@ export class ExpressionValidator {
 
   validateFunctionNode(
     node: FunctionNode,
-    parent: MathNode | undefined
+    parent: MathNode | undefined,
+    scope: Set<string>
   ): ExpressionValidationResult {
     const requiredArgs = 1;
 
     if (node.fn instanceof SymbolNode) {
+      if (node.fn.name.length === 1) {
+        if (!scope.has(node.fn.name))
+          return this.makeExpressionError(
+            `Function ${node.fn.name} is not defined.`,
+            "too_many_variables"
+          );
+      }
+
       if (node.args.length > requiredArgs) {
         return this.makeExpressionError(
           `We only support functions with 1 argument.`,
@@ -243,20 +264,34 @@ export class ExpressionValidator {
             : `Function '${node.fn.name}' is not defined.`,
           "insuficient_function_arg"
         );
+      // else if (!(node.args[0] instanceof SymbolNode))
+      //   return this.makeExpressionError(
+      //     "Calling functions is not supported yet.",
+      //     "unsupported_feature"
+      //   );
     }
 
     if (!parent) {
       // valid Function node, just not assigned any value
+
+      if (!(node.args[0] instanceof SymbolNode)) {
+        return this.makeExpressionError(
+          "Calling functions is not supported yet.",
+          "unsupported_feature"
+        );
+      }
+
+      const param = (node.args[0] as SymbolNode).name;
       return this.makeExpressionError(
         GlobalMathFunctions.has(node.fn.name)
           ? `Try adding '${
               (node.args[0] as SymbolNode).name === "y" ? "x" : "y"
             }=' to the beginning of the equation.`
           : `Try assigning a value to ${node.fn.name}(${
-              (node.args[0] as SymbolNode).name
-            }). For example try ${node.fn.name}(${
-              (node.args[0] as SymbolNode).name
-            }) = ${(node.args[0] as SymbolNode).name}.`,
+              param ? param : "x"
+            }). For example try ${node.fn.name}(${param ? param : "x"}) = ${
+              param ? param : "x"
+            }.`,
         "lack_of_equation_notation"
       );
     }
