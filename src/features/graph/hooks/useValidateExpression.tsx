@@ -62,7 +62,11 @@ const useValidateExpression = ({
           updateFunctionExpr({
             id: item.id,
             idx,
-            parsedContent: JSON.stringify(res.node),
+            parsedContent: {
+              node: JSON.stringify(res.node),
+              name: res.node.name,
+              scopeDeps: [],
+            },
           })
         );
       } else if (res.node instanceof AssignmentNode) {
@@ -89,6 +93,8 @@ const useValidateExpression = ({
         setError(null);
       }
     }
+
+    //runs 2 times when something get added or removed from scope...
   }, [item.data.content, scope]);
 
   return error;

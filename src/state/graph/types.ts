@@ -41,26 +41,32 @@ export type Expression<T extends ExpressionType = ExpressionType> =
     ? {
         type: T;
         content: string;
-        parsedContent: { name: string; value: number } | undefined;
+        parsedContent:
+          | { name: string; value: number; scopeDeps: string[] }
+          | undefined;
       }
     : T extends "point"
     ? {
         type: T;
         content: string;
-        parsedContent: { x: number; y: number } | undefined;
+        parsedContent:
+          | { x: number; y: number; scopeDeps: string[] }
+          | undefined;
         settings: ExpressionSettings;
       }
     : {
         type: T;
         content: string;
-        parsedContent: string | undefined;
+        parsedContent:
+          | { name: string; node: string; scopeDeps: string[] }
+          | undefined;
         settings: ExpressionSettings;
       };
 
 // Client State
 
 export type Scope = {
-  [index: string]: ((input: number) => number) | number;
+  [index: string]: string | number;
 };
 
 export type ClientGraphData = Omit<GraphData, "items"> & {

@@ -2,17 +2,29 @@ import { useEffect, useState } from "react";
 import MobileState from "./mobile/MobileState";
 import { useFetch } from "../../hooks/api";
 import { getGraphs } from "../../lib/api/graph";
+import { parser } from "mathjs";
 
 const Globalstate = () => {
   return (
     <>
       <MobileState />
-      {/* <TestState /> */}
+      {/* <Test /> */}
     </>
   );
 };
 
 export default Globalstate;
+
+function Test() {
+  const mathParser = parser();
+  mathParser.evaluate("x=undefined");
+  mathParser.evaluate("f(x) = x + 10");
+  const f = mathParser.get("f");
+
+  console.log(f(10));
+
+  return null;
+}
 
 function TestState() {
   const [primitive, setPrimitive] = useState<number>(0);

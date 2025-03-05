@@ -20,7 +20,7 @@ function useGraphFunction({
   const graph = useGraphContext();
   const node = useMemo(() => {
     return data.parsedContent
-      ? JSON.parse(data.parsedContent, reviver)
+      ? JSON.parse(data.parsedContent.node, reviver)
       : undefined;
   }, [data.parsedContent]);
   const dispatch = useAppDispatch();
@@ -35,6 +35,7 @@ function useGraphFunction({
       fnData = functionParser.parse(node, scope);
     } catch (err) {
       // synchronization err
+      // console.log(err);
       return;
     }
 

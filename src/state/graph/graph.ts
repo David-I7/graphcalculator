@@ -12,6 +12,8 @@ import {
   ItemType,
   Scope,
 } from "./types";
+import { functionParser } from "../../features/graph/lib/mathjs/parse";
+import { reviver } from "mathjs";
 
 interface GraphState {
   currentGraph: ClientGraphData;
@@ -59,7 +61,10 @@ function restoreSavedGraph(graph: GraphData): ClientGraphData {
       if (item.data.type === "variable") {
         scope[item.data.parsedContent.name] = item.data.parsedContent.value;
       } else if (item.data.type == "function") {
-        // should store the fn somehow?
+        const fnName = item.data.parsedContent.name;
+
+        if (fnName === "f" || fnName === "x" || fnName === "y") continue;
+        scope[fnName] = item.data.content;
       }
     }
   }
@@ -289,7 +294,7 @@ const graphSlice = createSlice({
         action: PayloadAction<{
           id: number;
           idx: number;
-          parsedContent: string;
+          parsedContent: NonNullable<Expression<"function">["parsedContent"]>;
         }>
       ) => {
         const item = state.currentGraph.items.data[action.payload.idx];
@@ -297,6 +302,15 @@ const graphSlice = createSlice({
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
         const expr = item.data as ItemData["expression"];
+        const scope = state.currentGraph.items.scope;
+
+        if (
+          action.payload.parsedContent.name !== "x" &&
+          action.payload.parsedContent.name !== "y" &&
+          action.payload.parsedContent.name !== "f"
+        ) {
+          scope[action.payload.parsedContent.name] = expr.content;
+        }
 
         expr.type = "function";
         expr.parsedContent = action.payload.parsedContent;
@@ -339,15 +353,15 @@ const graphSlice = createSlice({
 
         if (
           action.payload.parsedContent.name !== "x" &&
-          action.payload.parsedContent.name !== "y"
+          action.payload.parsedContent.name !== "y" &&
+          action.payload.parsedContent.name !== "f"
         ) {
-          // allow multiple declarations of y, x,
-          // we won't use them as variables
           scope[action.payload.parsedContent.name] =
             action.payload.parsedContent.value;
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
+        expr.parsedContent.scopeDeps = [];
       }
     ),
   }),
@@ -383,6 +397,10 @@ const selectExpression = () => {};
 function deleteFromScope(data: ItemData["expression"], scope: Scope) {
   if (data.type == "variable" && data.parsedContent) {
     delete scope[data.parsedContent.name];
+  } else if (data.type === "function" && data.parsedContent) {
+    if (scope[data.parsedContent.name]) {
+      delete scope[data.parsedContent.name];
+    }
   }
 }
 
@@ -393,12 +411,11 @@ export function isInScope(
 ): boolean {
   if (scope.has(target)) {
     if (data.type === "variable" && data.parsedContent) {
-      return data.parsedContent.name === target // if name === target the var is trying to be created
-        ? false
-        : true;
-    } else {
-      return true;
+      return data.parsedContent.name === target ? false : true;
+    } else if (data.type === "function" && data.parsedContent) {
+      return data.parsedContent.name === target ? false : true;
     }
+    return true;
   }
 
   return false;
