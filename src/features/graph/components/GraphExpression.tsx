@@ -1,80 +1,50 @@
-import React, { useMemo, useRef } from "react";
-import { Expression, Item, ItemData, Scope } from "../../../state/graph/types";
-import { useGraphContext } from "../Graph";
-import { Graph } from "../lib/graph/graph";
-import useGraphFunction, {
-  useGraphPoint,
-} from "../lib/mathjs/useGraphFunction";
+import {
+  Expression,
+  isExpression,
+  Item,
+  Scope,
+} from "../../../state/graph/types";
+import { GraphFunction } from "../hooks/useGraphFunction";
+import { GraphPoint } from "../hooks/useGraphPoint";
 
-type GraphExpressionProps = {
-  item: Item<"expression">;
+export type useGraphExprProps<
+  T extends "function" | "point" = "function" | "point"
+> = {
+  id: number;
+  data: Expression<T>;
   focused: boolean;
   scope: Scope;
 };
 
-export const GraphExpression = React.memo((props: GraphExpressionProps) => {
-  const graph = useGraphContext();
+export const GraphExpression = (props: {
+  item: Item;
+  focused: boolean;
+  scope: Scope;
+}) => {
+  if (!isExpression(props.item)) return null;
 
-  if (!graph) return;
+  if (props.item.data.type === "variable") return null;
 
   switch (props.item.data.type) {
     case "function":
       return (
         <GraphFunction
-          graph={graph}
-          focused={props.focused}
-          data={props.item.data as Expression<"function">}
           id={props.item.id}
           scope={props.scope}
+          focused={props.focused}
+          data={props.item.data}
         />
       );
-
     case "point":
       return (
         <GraphPoint
-          graph={graph}
-          focused={props.focused}
-          data={props.item.data as Expression<"point">}
           id={props.item.id}
           scope={props.scope}
+          focused={props.focused}
+          data={props.item.data}
         />
       );
+    default:
+      throw new Error("Unsupported expression type.");
   }
-
-  throw new Error(
-    `Type ${props.item.data.type} is not of type function or point`
-  );
-});
-
-const GraphFunction = ({
-  data,
-  id,
-  focused,
-  graph,
-  scope,
-}: Omit<GraphExpressionProps, "item"> & {
-  id: number;
-  data: Expression<"function">;
-  graph: Graph;
-  scope: Scope;
-}) => {
-  useGraphFunction({ id, focused, data, graph, scope });
-
-  return null;
-};
-const GraphPoint = ({
-  data,
-  id,
-  focused,
-  graph,
-  scope,
-}: Omit<GraphExpressionProps, "item"> & {
-  id: number;
-  data: Expression<"point">;
-  graph: Graph;
-  scope: Scope;
-}) => {
-  useGraphPoint({ id, focused, data, graph, scope });
-
-  return null;
 };

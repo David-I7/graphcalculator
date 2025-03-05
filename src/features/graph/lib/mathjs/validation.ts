@@ -56,6 +56,8 @@ export class ExpressionValidator {
       return this.validateFunctionNode(node, parent);
     } else if (node instanceof FunctionAssignmentNode) {
       return this.validateFunctionAssignmentNode(node, parent);
+    } else if (node instanceof ParenthesisNode) {
+      return this.validateParenthesisNode(node, parent);
     }
     return node;
   }
@@ -146,8 +148,6 @@ export class ExpressionValidator {
               "syntax"
             );
           }
-        } else {
-          console.log("errrr: ", cause);
         }
       }
 
@@ -287,6 +287,16 @@ export class ExpressionValidator {
     return node;
   }
 
+  validateParenthesisNode(node: ParenthesisNode, parent: undefined | MathNode) {
+    if (!parent) {
+      return this.makeExpressionError(
+        `Try adding 'y=' to the beginning of the equation.`,
+        "lack_of_equation_notation"
+      );
+    }
+    return node;
+  }
+
   makeExpressionError<T extends keyof typeof ErrorCause>(
     message: string,
     type: T
@@ -308,5 +318,3 @@ export class ExpressionValidator {
     };
   }
 }
-
-export default new ExpressionValidator();
