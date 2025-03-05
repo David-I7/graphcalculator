@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import {
+  CommandState,
   DrawFunctionCommand,
-  FnCommandState,
   FnState,
 } from "../lib/graph/commands";
 import { resetFocusedItem, setFocusedItem } from "../../../state/graph/graph";
@@ -38,8 +38,8 @@ function useGraphFunction({
       return;
     }
 
-    const stateSync: FnCommandState = {
-      state: focused ? "focused" : "idle",
+    const stateSync: CommandState = {
+      status: focused ? "focused" : "idle",
       onStateChange(prev, cur) {
         if (prev === cur) return;
 
@@ -66,10 +66,10 @@ function useGraphFunction({
 
   useEffect(() => {
     if (!command.current) return;
-    if (command.current.state === "idle" && focused) {
-      command.current.setState("focused");
-    } else if (command.current.state === "focused" && !focused) {
-      command.current.setState("idle");
+    if (command.current.commandState.status === "idle" && focused) {
+      command.current.setStatus("focused");
+    } else if (command.current.commandState.status === "focused" && !focused) {
+      command.current.setStatus("idle");
     }
   }, [focused]);
 

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
-import { DrawPointCommand } from "../lib/graph/commands";
+import { CommandState, DrawPointCommand } from "../lib/graph/commands";
 import { useGraphContext } from "../Graph";
 import { useGraphExprProps } from "../components/GraphExpression";
+import { resetFocusedItem, setFocusedItem } from "../../../state/graph/graph";
+import { useAppDispatch } from "../../../state/hooks";
 
 export function useGraphPoint({
   id,
@@ -13,16 +15,29 @@ export function useGraphPoint({
   const node = useMemo(() => {
     return data.parsedContent ? data.parsedContent : undefined;
   }, [data.parsedContent]);
-  // const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const command = useRef<DrawPointCommand | null>(null);
 
   useEffect(() => {
     if (!node || !graph) return;
 
+    const stateSync: CommandState = {
+      status: focused ? "focused" : "idle",
+      onStateChange(prev, cur) {
+        if (prev === cur) return;
+        if (cur === "idle") {
+          dispatch(resetFocusedItem(id));
+        } else {
+          dispatch(setFocusedItem(id));
+        }
+      },
+    };
+
     const currentCommand = new DrawPointCommand(
       graph,
       data.parsedContent!,
-      data.settings
+      data.settings,
+      stateSync
     );
     command.current = currentCommand;
 
@@ -31,14 +46,14 @@ export function useGraphPoint({
     };
   }, [node, scope]);
 
-  // useEffect(() => {
-  //   if (!command.current) return;
-  //   if (command.current.state === "idle" && focused) {
-  //     command.current.setState("focused");
-  //   } else if (command.current.state === "focused" && !focused) {
-  //     command.current.setState("idle");
-  //   }
-  // }, [focused]);
+  useEffect(() => {
+    if (!command.current) return;
+    if (command.current.commandState.status === "idle" && focused) {
+      command.current.setStatus("focused");
+    } else if (command.current.commandState.status === "focused" && !focused) {
+      command.current.setStatus("idle");
+    }
+  }, [focused]);
 
   useEffect(() => {
     if (!command.current) return;

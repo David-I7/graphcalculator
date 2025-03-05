@@ -1,10 +1,4 @@
-import {
-  ConstantNode,
-  FunctionAssignmentNode,
-  isComplex,
-  replacer,
-  reviver,
-} from "mathjs";
+import { ConstantNode, FunctionAssignmentNode, isComplex } from "mathjs";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import {
   GraphCommand,
@@ -18,6 +12,7 @@ import {
   clampNumber,
   drawRoundedRect,
   newtonsMethod,
+  pointsIntersect,
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
@@ -619,11 +614,11 @@ export class DrawAxisCommand implements GraphCommand {
   }
 }
 
-export type FnCommandState = {
-  state: "focused" | "dragged" | "idle";
+export type CommandState = {
+  status: "focused" | "dragged" | "idle";
   onStateChange(
-    prevState: FnCommandState["state"],
-    curState: FnCommandState["state"]
+    prevState: CommandState["status"],
+    curState: CommandState["status"]
   ): void;
 };
 
@@ -662,17 +657,12 @@ export class DrawFunctionCommand implements GraphCommand {
   // protected tooltipCommand: DrawTooltipCommand;
   protected pointController: FunctionPointController;
 
-  state: FnCommandState["state"];
-  onStateChange: FnCommandState["onStateChange"];
-
   constructor(
     public graph: Graph,
     public data: FnState,
     public settings: Expression<"function">["settings"],
-    stateSync: FnCommandState
+    public commandState: CommandState
   ) {
-    this.onStateChange = stateSync.onStateChange;
-    this.state = stateSync.state;
     this.pointController = new FunctionPointController(graph, this);
     // this.tooltipCommand = new DrawTooltipCommand(graph, this);
 
@@ -680,11 +670,11 @@ export class DrawFunctionCommand implements GraphCommand {
     console.log(this.data);
   }
 
-  setState<T extends typeof this.state>(state: T) {
-    if (state === this.state) return;
-    this.onStateChange(this.state, state);
-    this.state = state;
-    this.pointController.syncState(state);
+  setStatus<T extends CommandState["status"]>(status: T) {
+    if (status === this.commandState.status) return;
+    this.commandState.onStateChange(this.commandState.status, status);
+    this.commandState.status = status;
+    this.pointController.syncState(status);
   }
 
   draw(): void {
@@ -699,13 +689,13 @@ export class DrawFunctionCommand implements GraphCommand {
 
       if (this.data.f.param === "y") {
         this.drawFunctionOfY();
-        if (this.state !== "idle") {
+        if (this.commandState.status !== "idle") {
           this.calculateCriticalPointsY();
           this.pointController.draw();
         }
       } else {
         this.drawFunctionOfX();
-        if (this.state !== "idle") {
+        if (this.commandState.status !== "idle") {
           this.calculateCriticalPointsX();
           this.pointController.draw();
         }
@@ -1163,19 +1153,18 @@ class FunctionPointController implements GraphCommand {
     // focused state initially on creation
     this.pointRadius = graph.dpr * 4;
     this.tooltip = new DrawTooltip(graph);
-    this.destroyController = new AbortController();
-    this.init();
+    this.syncState(this.functionCommand.commandState.status);
     this.boundHandleMouseDown = this.handleMouseDown.bind(this);
     this.graph.on("mouseDown", this.boundHandleMouseDown);
   }
 
-  syncState<T extends typeof this.functionCommand.state>(state: T) {
-    if (state === "idle") {
+  syncState<T extends CommandState["status"]>(status: T) {
+    if (status === "idle") {
       this.hoveredPoint = null;
       this.highlightedPoints = [];
       this.destroyController?.abort();
       this.destroyController = null;
-    } else if (state === "focused") {
+    } else if (status === "focused") {
       if (!this.destroyController) {
         this.destroyController = new AbortController();
         this.init();
@@ -1216,7 +1205,7 @@ class FunctionPointController implements GraphCommand {
     if (offset < tolerance && offset > -tolerance) {
       e.preventDefault();
 
-      if (this.functionCommand.state === "focused") {
+      if (this.functionCommand.commandState.status === "focused") {
         let point: ReturnType<typeof this.functionCommand.getClosestPoint>;
         if (param === "y") {
           point = this.functionCommand.getClosestPoint(
@@ -1232,9 +1221,10 @@ class FunctionPointController implements GraphCommand {
 
         if (
           point &&
-          this.intersects(
+          pointsIntersect(
             { x: point.x, y: point.y },
-            { x: e.graphX, y: -e.graphY }
+            { x: e.graphX, y: -e.graphY },
+            this.graph.scales.scaler
           )
         ) {
           const id = `(${point.x}, ${point.y})`;
@@ -1267,10 +1257,10 @@ class FunctionPointController implements GraphCommand {
       }
 
       this.setData(outerX, outerY);
-      this.functionCommand.setState("dragged");
+      this.functionCommand.setStatus("dragged");
     } else {
-      if (this.functionCommand.state !== "idle") {
-        this.functionCommand.setState("idle");
+      if (this.functionCommand.commandState.status !== "idle") {
+        this.functionCommand.setStatus("idle");
       }
     }
   }
@@ -1367,18 +1357,11 @@ class FunctionPointController implements GraphCommand {
     return { graphX, graphY };
   }
 
-  intersects(p1: { x: number; y: number }, p2: { x: number; y: number }) {
-    const dx = p1.x - p2.x;
-    const dy = p1.y - p2.y;
-
-    return dx ** 2 + dy ** 2 < this.graph.scales.scaler ** 2 * 0.1;
-  }
-
   init() {
     this.graph.canvas.addEventListener(
       "mousemove",
       (e) => {
-        if (this.functionCommand.state === "idle") return;
+        if (this.functionCommand.commandState.status === "idle") return;
 
         let closest: ReturnType<typeof this.functionCommand.getClosestPoint> =
           null;
@@ -1392,7 +1375,7 @@ class FunctionPointController implements GraphCommand {
           const { x, y } = this.calculateValues({ graphY }, "y");
           if (isComplex(x)) return;
 
-          if (this.functionCommand.state === "dragged") {
+          if (this.functionCommand.commandState.status === "dragged") {
             this.setData(x, y);
           } else {
             closest = this.functionCommand.getClosestPoint({ graphY }, "y");
@@ -1401,7 +1384,7 @@ class FunctionPointController implements GraphCommand {
           const { x, y } = this.calculateValues({ graphX }, "x");
           if (isComplex(y)) return;
 
-          if (this.functionCommand.state === "dragged") {
+          if (this.functionCommand.commandState.status === "dragged") {
             this.setData(x, y);
           } else {
             closest = this.functionCommand.getClosestPoint({ graphX }, "x");
@@ -1410,9 +1393,10 @@ class FunctionPointController implements GraphCommand {
 
         if (closest) {
           if (
-            this.intersects(
+            pointsIntersect(
               { x: closest.x, y: closest.y },
-              { x: graphX, y: -graphY }
+              { x: graphX, y: -graphY },
+              this.graph.scales.scaler
             )
           ) {
             document.body.style.cursor = "pointer";
@@ -1443,7 +1427,7 @@ class FunctionPointController implements GraphCommand {
     window.addEventListener(
       "mouseup",
       (e) => {
-        this.functionCommand.setState("focused");
+        this.functionCommand.setStatus("focused");
       },
       { signal: this.destroyController!.signal }
     );
@@ -1496,7 +1480,7 @@ class FunctionPointController implements GraphCommand {
       );
     }
 
-    if (this.functionCommand.state === "dragged") {
+    if (this.functionCommand.commandState.status === "dragged") {
       // Point
       this.graph.ctx.fillStyle = this.functionCommand.settings.color;
       this.graph.ctx.beginPath();
@@ -1772,12 +1756,52 @@ class DrawTooltip {
 }
 
 export class DrawPointCommand implements GraphCommand {
+  // protected destroyController: AbortController | null = new AbortController()
+  protected isHighlighted: boolean = false;
+  protected boundMousedown;
+  protected tooltip: DrawTooltip;
   constructor(
     public graph: Graph,
     public data: NonNullable<Expression<"point">["parsedContent"]>,
-    public settings: Expression<"point">["settings"]
+    public settings: Expression<"point">["settings"],
+    public commandState: CommandState
   ) {
+    this.tooltip = new DrawTooltip(graph);
     this.graph.addCommand(this);
+
+    this.boundMousedown = this.handleMouseDown.bind(this);
+    this.graph.on("mouseDown", this.boundMousedown);
+  }
+
+  handleMouseDown(e: MouseEventData) {
+    if (this.settings.hidden) return;
+
+    const { graphX, graphY } = e;
+
+    if (
+      pointsIntersect(
+        { x: graphX, y: -graphY },
+        { x: this.data.x, y: this.data.y },
+        this.graph.scales.scaler
+      )
+    ) {
+      e.preventDefault();
+      this.isHighlighted = !this.isHighlighted;
+      if (this.commandState.status === "idle") this.setStatus("focused");
+    } else {
+      if (this.commandState.status === "focused") this.setStatus("idle");
+    }
+  }
+
+  setStatus<T extends CommandState["status"]>(status: T) {
+    if (this.commandState.status === status) return;
+
+    if (status === "idle") {
+      this.isHighlighted = false;
+    }
+
+    this.commandState.onStateChange(this.commandState.status, status);
+    this.commandState.status = status;
   }
 
   draw(): void {
@@ -1787,6 +1811,8 @@ export class DrawPointCommand implements GraphCommand {
     this.graph.ctx.fillStyle = this.settings.color;
 
     const normFactor = this.graph.scales.scaledStep / this.graph.scales.scaler;
+    const xCoord = this.data.x * normFactor;
+    const yCoord = -this.data.y * normFactor;
 
     this.graph.ctx.beginPath();
     this.graph.ctx.arc(
@@ -1798,10 +1824,14 @@ export class DrawPointCommand implements GraphCommand {
     );
     this.graph.ctx.fill();
 
+    if (this.isHighlighted)
+      this.tooltip.drawTooltip(this.data.x, this.data.y, xCoord, yCoord);
+
     this.graph.ctx.restore();
   }
 
   destroy(): void {
     this.graph.removeCommand(this);
+    this.graph.removeListener("mouseDown", this.boundMousedown);
   }
 }

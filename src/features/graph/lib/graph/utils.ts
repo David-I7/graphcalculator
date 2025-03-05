@@ -146,3 +146,14 @@ export function binarySearchClosest<T>(
 
   return arr[closest];
 }
+
+export function pointsIntersect(
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+  scaler: number
+) {
+  const dx = p1.x - p2.x;
+  const dy = p1.y - p2.y;
+
+  return dx ** 2 + dy ** 2 < scaler ** 2 * 0.1;
+}
