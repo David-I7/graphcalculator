@@ -8,7 +8,6 @@ import {
 } from "react";
 import { Graph as LibGraph } from "./lib/graph/graph";
 import { setup } from "./lib";
-import GraphExpressions from "./components/GraphExpressions";
 
 type GraphContextState = LibGraph;
 
@@ -36,7 +35,7 @@ const useInitGraphContext = () => {
 
 export const useGraphContext = () => useContext(GraphContext);
 
-const GraphContextProvider = ({ children }: { children: ReactNode }) => {
+export const GraphContextProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GraphContext.Provider value={useInitGraphContext()}>
       {children}
@@ -46,12 +45,9 @@ const GraphContextProvider = ({ children }: { children: ReactNode }) => {
 
 const Graph = () => {
   return (
-    <GraphContextProvider>
-      <div className="graph-container">
-        <canvas id="graph-calculator"></canvas>
-        <GraphExpressions />
-      </div>
-    </GraphContextProvider>
+    <div className="graph-container">
+      <canvas id="graph-calculator"></canvas>
+    </div>
   );
 };
 

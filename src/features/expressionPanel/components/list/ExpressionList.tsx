@@ -6,11 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import {
   createItem,
   deleteItem,
-  updateFunctionExpr,
-  updateVariableExpr,
-  updatePointExpr,
   updateItemPos,
-  removeParsedContent,
   setFocusedItem,
 } from "../../../../state/graph/graph";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
@@ -20,11 +16,9 @@ import {
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { ApplicationError } from "../../../../state/error/error";
-import { isExpression, Item, Scope } from "../../../../state/graph/types";
-import ExpressionTransformer from "../../../graph/lib/mathjs/transformer";
-import { AssignmentNode, FunctionAssignmentNode, ObjectNode } from "mathjs";
-import { pointParser, variableParser } from "../../../graph/lib/mathjs/parse";
+import { Item, Scope } from "../../../../state/graph/types";
+import useValidateExpression from "../../../graph/hooks/useValidateExpression";
+import { GraphExpression } from "../../../graph/components/GraphExpression";
 
 const ExpressionList = () => {
   return (
@@ -166,73 +160,7 @@ const ExpressionListItem = React.memo(
     focused,
     scope,
   }: ExpressionListItemProps) => {
-    const [error, setError] = useState<ApplicationError | null>(null);
-
-    useEffect(() => {
-      if (!isExpression(item)) return;
-
-      if (!item.data.content.length) {
-        if (error) {
-          setError(null);
-        }
-        dispatch(
-          removeParsedContent({
-            id: item.id,
-            idx,
-            type: item.data.type,
-          })
-        );
-        return;
-      }
-
-      const clonedScope: Set<string> = new Set();
-      Object.keys(scope).forEach((key) => clonedScope.add(key));
-
-      const res = ExpressionTransformer.transform(item.data, clonedScope);
-      if (res.err) {
-        dispatch(
-          removeParsedContent({
-            id: item.id,
-            idx,
-            type: item.data.type,
-          })
-        );
-        setError(res.err);
-      } else {
-        console.log(res.node);
-        if (res.node instanceof FunctionAssignmentNode) {
-          dispatch(
-            updateFunctionExpr({
-              id: item.id,
-              idx,
-              parsedContent: JSON.stringify(res.node),
-            })
-          );
-        } else if (res.node instanceof AssignmentNode) {
-          const parsedContent = variableParser.parse(res.node, scope);
-          dispatch(
-            updateVariableExpr({
-              id: item.id,
-              idx,
-              parsedContent,
-            })
-          );
-        } else if (res.node instanceof ObjectNode) {
-          const parsedContent = pointParser.parse(res.node, scope);
-          dispatch(
-            updatePointExpr({
-              id: item.id,
-              idx,
-              parsedContent,
-            })
-          );
-        }
-
-        if (error) {
-          setError(null);
-        }
-      }
-    }, [item.data.content, scope]);
+    const error = useValidateExpression({ idx, item, scope, dispatch });
 
     return (
       <li
@@ -271,6 +199,8 @@ const ExpressionListItem = React.memo(
         >
           <Close />
         </ButtonTarget>
+
+        <GraphExpression item={item} scope={scope} focused={focused} />
       </li>
     );
   },

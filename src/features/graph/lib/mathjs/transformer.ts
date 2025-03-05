@@ -1,18 +1,15 @@
 import {
   AssignmentNode,
-  ConstantNode,
   FunctionAssignmentNode,
   FunctionNode,
   MathNode,
-  ObjectNode,
   OperatorNode,
-  ParenthesisNode,
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
 import { ExpressionValidationResult, ExpressionValidator } from "./validation";
 import { isGlobalFunctionRegex } from "../../data/math";
-import { ItemData, Scope } from "../../../../state/graph/types";
+import { ItemData } from "../../../../state/graph/types";
 import { isInScope } from "../../../../state/graph/graph";
 
 type TransformedResult<T extends MathNode = MathNode> =
@@ -168,7 +165,6 @@ export class ExpressionTransformer {
         return innerNode;
       });
     } catch (error) {
-      console.log(error);
       return { err: error as ApplicationError, node: undefined };
     }
 
@@ -183,70 +179,41 @@ export class ExpressionTransformer {
     if (node instanceof FunctionNode) {
       if (!parent || node.fn.name.length === 1) return node;
 
-      const matches = node.fn.name.matchAll(isGlobalFunctionRegex);
+      const match = node.fn.name.match(isGlobalFunctionRegex);
 
-      if ("next" in matches) {
-        for (const match of matches) {
-          // case sin()
-          if (match[0].length === match.input.length) return node;
-          else if (match.index + match[0].length === match.input.length) {
-            // case (random)sin()
-            return new OperatorNode(
-              "*",
-              "multiply",
-              [
-                new SymbolNode(node.fn.name.substring(0, match.index)),
-                new FunctionNode(
-                  node.fn.name.substring(match.index),
-                  node.args
-                ),
-              ],
-              true
-            );
-          } else {
-            //sinx index = 0
-            //xsinx scenario(middle) or sinsinx
-            //same error, function sin must have an argument
+      if (match) {
+        // case sin()
+        if (match[0].length === match.input?.length) return node;
+        else if (match.index! + match[0].length === match.input!.length) {
+          // case (random)sin()
+          return new OperatorNode(
+            "*",
+            "multiply",
+            [
+              new SymbolNode(node.fn.name.substring(0, match.index)),
+              new FunctionNode(node.fn.name.substring(match.index!), node.args),
+            ],
+            true
+          );
+        } else {
+          //sinx index = 0
+          //xsinx scenario(middle) or sinsinx
+          //same error, function sin must have an argument
 
-            return this.validator.makeExpressionError(
-              `Function '${match[0]}' requires an argument. For example, try typing: '${match[0]}(x)'.`,
-              "insuficient_function_arg"
-            );
-          }
+          return this.validator.makeExpressionError(
+            `Function '${match[0]}' requires an argument. For example, try typing: '${match[0]}(x)'.`,
+            "insuficient_function_arg"
+          );
         }
       }
 
-      // no global functions
       // case xn() or x()
       // not implementing function composition yet
       return this.validator.makeExpressionError(
         `We do not support function composition.`,
         "unsupported_feature"
       );
-    }
-    // else if (node instanceof OperatorNode){
-    //   // if (parent instanceof OperatorNode && parent.op === "^") {
-    //   //   // debugger;
-    //   //   return new OperatorNode(
-    //   //     "*",
-    //   //     "multiply",
-    //   //     [
-    //   //       new SymbolNode(node.name.substring(0, node.name.length - 1)),
-    //   //       new OperatorNode(
-    //   //         "^",
-    //   //         "pow",
-    //   //         [
-    //   //           new SymbolNode(node.name.substring(node.name.length - 1)),
-    //   //           parent.args[1],
-    //   //         ],
-    //   //         false
-    //   //       ),
-    //   //     ],
-    //   //     true
-    //   //   );
-    //   // }
-    // }
-    else {
+    } else {
       // example input: xpc
       if (parent instanceof FunctionNode && node === parent.fn) return node;
 

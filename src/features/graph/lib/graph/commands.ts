@@ -1757,7 +1757,7 @@ export class DrawPointCommand implements GraphCommand {
     this.graph.ctx.beginPath();
     this.graph.ctx.arc(
       this.data.x * normFactor,
-      this.data.y * normFactor,
+      -this.data.y * normFactor,
       8,
       0,
       Math.PI * 2
