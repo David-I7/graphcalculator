@@ -50,8 +50,7 @@ const useValidateExpression = ({
 
     // if (item.data.parsedContent) return
 
-    const clonedScope: Set<string> = new Set();
-    Object.keys(scope).forEach((key) => clonedScope.add(key));
+    const clonedScope = { ...scope };
 
     const res = ExpressionTransformer.transform(item.data, clonedScope);
 

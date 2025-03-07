@@ -117,9 +117,9 @@ export function deleteFromScope(data: ItemData["expression"], scope: Scope) {
 export function isInScope(
   target: string,
   data: ItemData["expression"],
-  scope: Set<string>
+  scope: Scope
 ): boolean {
-  if (scope.has(target)) {
+  if (target in scope) {
     if (data.type === "variable" && data.parsedContent) {
       return data.parsedContent.name === target ? false : true;
     } else if (data.type === "function" && data.parsedContent) {

@@ -12,6 +12,7 @@ import {
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
 import { GlobalMathFunctions } from "../../data/math";
+import { Scope } from "../../../../state/graph/types";
 
 const ErrorCause = {
   insuficient_function_arg: 0,
@@ -23,6 +24,7 @@ const ErrorCause = {
   syntax: 6,
   unsupported_feature: 7,
   duplicate_variable_declaration: 8,
+  invalid_variable_declaration: 9,
 };
 
 const isPointRegex = /\(([^,)]+\)?),(.*)\)/;
@@ -42,11 +44,7 @@ export type ExpressionValidationResult = ApplicationError | MathNode;
 export class ExpressionValidator {
   constructor() {}
 
-  validateNode(
-    node: MathNode,
-    parent: MathNode | undefined,
-    scope: Set<string>
-  ) {
+  validateNode(node: MathNode, parent: MathNode | undefined, scope: Scope) {
     if (node instanceof ConstantNode) {
       return this.validateConstantNode(node, parent);
     } else if (node instanceof SymbolNode) {
@@ -171,7 +169,7 @@ export class ExpressionValidator {
   validateSymbolNode(
     node: SymbolNode,
     parent: MathNode | undefined,
-    scope: Set<string>
+    scope: Scope
   ): ExpressionValidationResult {
     // assumption is that parent is already valid.
 
@@ -189,7 +187,7 @@ export class ExpressionValidator {
     if (parent instanceof FunctionNode && parent.fn === node) return node;
 
     // f(x) = symbol
-    if (!scope.has(node.name)) {
+    if (!(node.name in scope)) {
       if (
         parent instanceof AssignmentNode &&
         node.name === parent.object.name
@@ -204,6 +202,13 @@ export class ExpressionValidator {
         `Too many variables, try defining '${node.name}'.`,
         "too_many_variables"
       );
+    } else {
+      if (typeof scope[node.name] === "string") {
+        return this.makeExpressionError(
+          `'${node.name}' is a function. Try using parenthesis.`,
+          "invalid_variable_declaration"
+        );
+      }
     }
 
     return node;
@@ -237,13 +242,13 @@ export class ExpressionValidator {
   validateFunctionNode(
     node: FunctionNode,
     parent: MathNode | undefined,
-    scope: Set<string>
+    scope: Scope
   ): ExpressionValidationResult {
     const requiredArgs = 1;
 
     if (node.fn instanceof SymbolNode) {
       if (node.fn.name.length === 1) {
-        if (!scope.has(node.fn.name))
+        if (!(node.fn.name in scope))
           return this.makeExpressionError(
             `Function ${node.fn.name} is not defined.`,
             "too_many_variables"

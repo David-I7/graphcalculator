@@ -9,7 +9,7 @@ import {
 import { ApplicationError } from "../../../../state/error/error";
 import { ExpressionValidationResult, ExpressionValidator } from "./validation";
 import { isGlobalFunctionRegex } from "../../data/math";
-import { ItemData } from "../../../../state/graph/types";
+import { ItemData, Scope } from "../../../../state/graph/types";
 import { isInScope } from "../../../../state/graph/controllers";
 
 type TransformedResult<T extends MathNode = MathNode> =
@@ -26,10 +26,7 @@ export class ExpressionTransformer {
   protected validator: ExpressionValidator = new ExpressionValidator();
   constructor() {}
 
-  transform(
-    data: ItemData["expression"],
-    scope: Set<string>
-  ): TransformedResult {
+  transform(data: ItemData["expression"], scope: Scope): TransformedResult {
     const trimmedContent = data.content.replace(/\s/g, "");
     const { node, err } = this.validator.validateSyntax(trimmedContent);
 
@@ -51,7 +48,7 @@ export class ExpressionTransformer {
       }
 
       if (node.params.length) {
-        scope.add(node.params[0]);
+        scope[node.params[0]] = 0;
       }
     } else if (node instanceof AssignmentNode) {
       const variable = node.object.name;
@@ -63,7 +60,7 @@ export class ExpressionTransformer {
           node.value
         );
 
-        scope.add(fn.params[0]);
+        scope[fn.params[0]] = 0;
 
         return this.transformNode(fn, undefined, scope);
       } else {
@@ -87,7 +84,7 @@ export class ExpressionTransformer {
   transformNode(
     outerNode: MathNode,
     outerParent: MathNode | undefined,
-    scope: Set<string>
+    scope: Scope
   ): TransformedResult {
     let transformedNode!: MathNode;
     let res!: ExpressionValidationResult;
@@ -184,7 +181,7 @@ export class ExpressionTransformer {
   transformImplicitMultiplication(
     node: FunctionNode | SymbolNode,
     parent: MathNode | undefined,
-    scope: Set<string>
+    scope: Scope
   ): ExpressionValidationResult {
     if (node instanceof FunctionNode) {
       if (!parent || node.fn.name.length === 1) return node;
@@ -230,7 +227,7 @@ export class ExpressionTransformer {
 
       let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
       for (let i = 0; i < node.name.length - 1; i++) {
-        if (scope.has(node.name[i]) && scope.has(node.name[i + 1])) {
+        if (node.name[i] in scope && node.name[i + 1] in scope) {
           if (transformed) {
             transformed = new OperatorNode(
               "*",
@@ -247,7 +244,7 @@ export class ExpressionTransformer {
             );
           }
         } else {
-          if (!scope.has(node.name[i])) {
+          if (!(node.name[i] in scope)) {
             return this.validator.makeExpressionError(
               `Too many variables, try defining '${node.name[i]}'.`,
               "too_many_variables"
