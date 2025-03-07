@@ -27,11 +27,11 @@ const useValidateExpression = ({
   scope: Scope;
   dispatch: ReturnType<typeof useAppDispatch>;
 }) => {
+  if (!isExpression(item)) return null;
+
   const [error, setError] = useState<ApplicationError | null>(null);
 
   useEffect(() => {
-    if (!isExpression(item)) return;
-
     if (!item.data.content.length) {
       if (error) {
         setError(null);
@@ -50,23 +50,25 @@ const useValidateExpression = ({
 
     // if (item.data.parsedContent) return
 
-    const clonedScope: Set<string> = new Set();
-    Object.keys(scope).forEach((key) => clonedScope.add(key));
+
+    const clonedScope = { ...scope };
 
     const res = ExpressionTransformer.transform(item.data, clonedScope);
 
     if (res.err) {
-      console.log(res.err);
-      dispatch(
-        removeParsedContent({
-          id: item.id,
-          idx,
-          type: item.data.type,
-        })
-      );
+      // console.log(res.err);
+      if (item.data.parsedContent) {
+        dispatch(
+          removeParsedContent({
+            id: item.id,
+            idx,
+            type: item.data.type,
+          })
+        );
+      }
       setError(res.err);
     } else {
-      console.log(res.node);
+      // console.log(res.node);
       if (res.node instanceof FunctionAssignmentNode) {
         const parsedContent = functionParser.parse(res.node, scope);
         dispatch(

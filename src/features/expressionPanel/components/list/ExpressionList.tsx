@@ -109,6 +109,8 @@ function ExpressionListRenderer() {
     }
   }, [items.length]);
 
+  console.log(scope);
+
   return (
     <ol className="expression-list" ref={draggableContainerRef}>
       {items.length > 0 &&
@@ -219,26 +221,31 @@ const ExpressionListItem = React.memo(
   }
 );
 
-function scopeDepsChanged(
-  prevScope: Scope,
-  curScope: Scope,
-  item: Item
-): boolean {
-  if (item.type === "note") return false;
+// function scopeDepsChanged(
+//   prevScope: Scope,
+//   curScope: Scope,
+//   prevItem: Item,
+//   curItem: Item
+// ): boolean {
 
-  const data = item.data as Expression;
-  if (!data.parsedContent) return false;
+//   if (!isExpression(curItem)) return false;
+//   if (prevItem !== curItem) return true
 
-  let hasChanged: boolean = false;
-  for (let i = 0; i < data.parsedContent.scopeDeps.length; i++) {
-    if (
-      prevScope[data.parsedContent.scopeDeps[i]] ===
-      curScope[data.parsedContent.scopeDeps[i]]
-    )
-      continue;
-    hasChanged = true;
-    break;
-  }
+//   const prevData = prevItem.data as Expression;
+//   const curData = curItem.data as Expression;
 
-  return hasChanged;
-}
+//   //   for (let i = 0; i < curData.parsedContent.scopeDeps.length; i++) {
+//   //   if (
+//   //     prevScope[data.parsedContent.scopeDeps[i]] ===
+//   //     curScope[data.parsedContent.scopeDeps[i]]
+//   //   )
+//   //     continue;
+//   //   return true;
+//   // }
+
+//   // if (!curData.parsedContent || !curData.parsedContent.scopeDeps.length ||
+//   //   prevData.parsedContent
+//   // ) return false;
+
+//   // return false;
+// }
