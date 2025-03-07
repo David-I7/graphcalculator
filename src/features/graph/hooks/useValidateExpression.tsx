@@ -50,6 +50,7 @@ const useValidateExpression = ({
 
     // if (item.data.parsedContent) return
 
+
     const clonedScope = { ...scope };
 
     const res = ExpressionTransformer.transform(item.data, clonedScope);

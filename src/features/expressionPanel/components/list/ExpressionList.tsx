@@ -16,7 +16,7 @@ import {
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { Item, Scope } from "../../../../state/graph/types";
+import { Expression, Item, Scope } from "../../../../state/graph/types";
 import useValidateExpression from "../../../graph/hooks/useValidateExpression";
 import { GraphExpression } from "../../../graph/components/GraphExpression";
 
@@ -207,6 +207,8 @@ const ExpressionListItem = React.memo(
     );
   },
   (prev, cur) => {
+    // console.log(!scopeDepsChanged(prev.scope, cur.scope, cur.item), cur.item);
+    // console.log(prev.scope === cur.scope);
     if (
       prev.idx === cur.idx &&
       prev.focused === cur.focused &&

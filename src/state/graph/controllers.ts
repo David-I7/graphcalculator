@@ -120,6 +120,7 @@ export function isInScope(
   scope: Scope
 ): boolean {
   if (target in scope) {
+
     if (data.type === "variable" && data.parsedContent) {
       return data.parsedContent.name === target ? false : true;
     } else if (data.type === "function" && data.parsedContent) {

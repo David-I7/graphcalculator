@@ -231,7 +231,6 @@ const graphSlice = createSlice({
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
         const expr = item.data as Expression<"function">;
-
         if (
           expr.parsedContent &&
           expr.parsedContent.node === action.payload.parsedContent.node
