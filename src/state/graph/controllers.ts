@@ -20,7 +20,7 @@ export function createNewGraph(): ClientGraphData {
     thumb: "",
     name: "Untitled",
     items: {
-      scope: {},
+      scope: { e: Math.E, pi: Math.PI },
       nextId: 2,
       focusedId: 1,
       data: [createNewItem("expression", 1)],

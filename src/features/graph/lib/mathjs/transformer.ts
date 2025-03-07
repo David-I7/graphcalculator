@@ -8,7 +8,7 @@ import {
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
 import { ExpressionValidationResult, ExpressionValidator } from "./validation";
-import { isGlobalFunctionRegex } from "../../data/math";
+import { GlobalMathConstants, isGlobalFunctionRegex } from "../../data/math";
 import { ItemData, Scope } from "../../../../state/graph/types";
 import { isInScope } from "../../../../state/graph/controllers";
 
@@ -41,7 +41,7 @@ export class ExpressionTransformer {
             `
           You've defined '${node.name}' in more than one place. Try deleting some of the definitions of '${node.name}'.
           `,
-            "duplicate_variable_declaration"
+            "invalid_variable_declaration"
           ),
           node: undefined,
         };
@@ -52,6 +52,15 @@ export class ExpressionTransformer {
       }
     } else if (node instanceof AssignmentNode) {
       const variable = node.object.name;
+
+      if (variable === "f" || GlobalMathConstants.has(variable))
+        return {
+          err: this.validator.makeExpressionError(
+            `'${variable}' is a restricted symbol. Try using a different one instead.`,
+            "invalid_variable_declaration"
+          ),
+          node: undefined,
+        };
 
       if (variable === "y" || variable === "x") {
         const fn = new FunctionAssignmentNode(
@@ -70,7 +79,7 @@ export class ExpressionTransformer {
               `
             You've defined '${variable}' in more than one place. Try deleting some of the definitions of '${variable}'.
             `,
-              "duplicate_variable_declaration"
+              "invalid_variable_declaration"
             ),
             node: undefined,
           };
@@ -208,7 +217,7 @@ export class ExpressionTransformer {
 
           return this.validator.makeExpressionError(
             `Function '${match[0]}' requires an argument. For example, try typing: '${match[0]}(x)'.`,
-            "insuficient_function_arg"
+            "invalid_function_declaration"
           );
         }
       }
@@ -224,39 +233,116 @@ export class ExpressionTransformer {
       if (parent instanceof FunctionNode && node === parent.fn) return node;
 
       if (node.name.length === 1) return node;
+      if (GlobalMathConstants.has(node.name)) return node;
+
+      const splitSymbol = (
+        transformed: OperatorNode<"*", "multiply", MathNode[]> | undefined,
+        start1: number,
+        end1: number,
+        end2?: number
+      ) => {
+        if (transformed) {
+          transformed = new OperatorNode(
+            "*",
+            "multiply",
+            [transformed, new SymbolNode(node.name.substring(start1, end1))],
+            true
+          );
+        } else {
+          transformed = new OperatorNode(
+            "*",
+            "multiply",
+            [
+              new SymbolNode(node.name.substring(start1, end1)),
+              new SymbolNode(node.name.substring(end1, end2)),
+            ],
+            true
+          );
+        }
+
+        return transformed;
+      };
+
+      const isPi = (str: string, i: number) => {
+        return str[i] === "p" && str[i + 1] === "i";
+      };
+
+      const createError = (i: number) => {
+        if (!(node.name[i] in scope)) {
+          return this.validator.makeExpressionError(
+            `Too many variables, try defining '${node.name[i]}'.`,
+            "invalid_variable_declaration"
+          );
+        } else {
+          return this.validator.makeExpressionError(
+            `Too many variables, try defining '${node.name[i + 1]}'.`,
+            "invalid_variable_declaration"
+          );
+        }
+      };
 
       let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
-      for (let i = 0; i < node.name.length - 1; i++) {
-        if (node.name[i] in scope && node.name[i + 1] in scope) {
-          if (transformed) {
-            transformed = new OperatorNode(
-              "*",
-              "multiply",
-              [transformed, new SymbolNode(node.name[i])],
-              true
-            );
+      let i = 0;
+      while (i < node.name.length) {
+        if (!transformed) {
+          if (isPi(node.name, i)) {
+            transformed = splitSymbol(transformed, i, i + 2, i + 3);
+            i += 3;
+          } else if (isPi(node.name, i + 1)) {
+            transformed = splitSymbol(transformed, i, i + 1, i + 3);
+            i += 3;
+          } else if (node.name[i] in scope && node.name[i + 1] in scope) {
+            transformed = splitSymbol(transformed, i, i + 1, i + 2);
+            i += 2;
           } else {
-            transformed = new OperatorNode(
-              "*",
-              "multiply",
-              [new SymbolNode(node.name[i]), new SymbolNode(node.name[i + 1])],
-              true
-            );
+            return createError(i);
           }
         } else {
-          if (!(node.name[i] in scope)) {
-            return this.validator.makeExpressionError(
-              `Too many variables, try defining '${node.name[i]}'.`,
-              "too_many_variables"
-            );
+          if (isPi(node.name, i)) {
+            transformed = splitSymbol(transformed, i, i + 2);
+            i += 2;
+          } else if (node.name[i] in scope) {
+            transformed = splitSymbol(transformed, i, i + 1);
+            i += 1;
           } else {
-            return this.validator.makeExpressionError(
-              `Too many variables, try defining '${node.name[i + 1]}'.`,
-              "too_many_variables"
-            );
+            return createError(i);
           }
         }
       }
+
+      // for (let i = 0; i < node.name.length - 1; i++) {
+
+      //   if (node.name[i] in scope && node.name[i + 1] in scope) {
+
+      //     if (transformed) {
+      //       transformed = new OperatorNode(
+      //         "*",
+      //         "multiply",
+      //         [transformed, new SymbolNode(node.name[i + 1])],
+      //         true
+      //       );
+      //     } else {
+      //       transformed = new OperatorNode(
+      //         "*",
+      //         "multiply",
+      //         [new SymbolNode(node.name[i]), new SymbolNode(node.name[i + 1])],
+      //         true
+      //       );
+      //     }
+      //   } else {
+      //     if (!(node.name[i] in scope)) {
+      //       return this.validator.makeExpressionError(
+      //         `Too many variables, try defining '${node.name[i]}'.`,
+      //         "invalid_variable_declaration"
+      //       );
+      //     } else {
+      //       return this.validator.makeExpressionError(
+      //         `Too many variables, try defining '${node.name[i + 1]}'.`,
+      //         "invalid_variable_declaration"
+      //       );
+      //     }
+      //   }
+      // }
 
       return transformed;
     }

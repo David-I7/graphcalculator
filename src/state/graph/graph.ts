@@ -231,6 +231,13 @@ const graphSlice = createSlice({
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
         const expr = item.data as Expression<"function">;
+
+        if (
+          expr.parsedContent &&
+          expr.parsedContent.node === action.payload.parsedContent.node
+        )
+          return;
+
         const scope = state.currentGraph.items.scope;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
@@ -262,6 +269,11 @@ const graphSlice = createSlice({
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
         const expr = item.data as ItemData["expression"];
+        if (
+          expr.parsedContent &&
+          expr.parsedContent.node === action.payload.parsedContent.node
+        )
+          return;
 
         expr.type = "point";
         expr.parsedContent = action.payload.parsedContent;
@@ -281,6 +293,12 @@ const graphSlice = createSlice({
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
         const expr = item.data as ItemData["expression"];
+        if (
+          expr.parsedContent &&
+          expr.parsedContent.node === action.payload.parsedContent.node
+        )
+          return;
+
         const scope = state.currentGraph.items.scope;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {

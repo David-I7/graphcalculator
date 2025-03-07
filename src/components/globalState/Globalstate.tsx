@@ -17,7 +17,7 @@ export default Globalstate;
 
 function Test() {
   const mathParser = parser();
-  mathParser.evaluate("b(x) = x");
+  mathParser.evaluate("b(x) = pi");
   mathParser.evaluate("a=b");
   const f = mathParser.get("a");
 

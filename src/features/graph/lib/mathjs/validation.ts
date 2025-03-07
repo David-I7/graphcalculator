@@ -11,20 +11,16 @@ import {
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
-import { GlobalMathFunctions } from "../../data/math";
+import { GlobalMathFunctions, restrictedVariables } from "../../data/math";
 import { Scope } from "../../../../state/graph/types";
 
 const ErrorCause = {
-  insuficient_function_arg: 0,
+  invalid_function_declaration: 0,
   lack_of_equation_notation: 1,
-  too_many_function_arg: 2,
   unknown: 3,
-  too_many_variables: 4,
-  diff_param_from_expr: 5,
-  syntax: 6,
-  unsupported_feature: 7,
-  duplicate_variable_declaration: 8,
-  invalid_variable_declaration: 9,
+  syntax: 4,
+  unsupported_feature: 5,
+  invalid_variable_declaration: 6,
 };
 
 const isPointRegex = /\(([^,)]+\)?),(.*)\)/;
@@ -97,7 +93,6 @@ export class ExpressionValidator {
           );
         } else if (err.message.startsWith("Parenthesis") || cause === ",") {
           const match = expr.match(isPointRegex);
-          console.log(match);
           if (match) {
             if (!match[2].length) {
               return this.makeSyntaxError(
@@ -198,9 +193,16 @@ export class ExpressionValidator {
         );
       }
 
+      if (restrictedVariables.has(node.name)) {
+        return this.makeExpressionError(
+          `'${node.name}' is a restricted symbol. Try using a different one instead.`,
+          "invalid_variable_declaration"
+        );
+      }
+
       return this.makeExpressionError(
         `Too many variables, try defining '${node.name}'.`,
-        "too_many_variables"
+        "invalid_variable_declaration"
       );
     } else {
       if (typeof scope[node.name] === "string") {
@@ -224,14 +226,14 @@ export class ExpressionValidator {
           `Try adding '${
             node.args[0].name === "y" ? "x" : "y"
           }=' to the beginning of the equation.`,
-          "lack_of_equation_notation"
+          "invalid_function_declaration"
         );
       } else if (node.args[1] instanceof SymbolNode) {
         return this.makeExpressionError(
           `Try adding '${
             node.args[1].name === "y" ? "x" : "y"
           }=' to the beginning of the equation.`,
-          "lack_of_equation_notation"
+          "invalid_function_declaration"
         );
       }
     }
@@ -251,21 +253,21 @@ export class ExpressionValidator {
         if (!(node.fn.name in scope))
           return this.makeExpressionError(
             `Function ${node.fn.name} is not defined.`,
-            "too_many_variables"
+            "invalid_variable_declaration"
           );
       }
 
       if (node.args.length > requiredArgs) {
         return this.makeExpressionError(
           `We only support functions with 1 argument.`,
-          "too_many_function_arg"
+          "invalid_function_declaration"
         );
       } else if (node.args.length < requiredArgs)
         return this.makeExpressionError(
           GlobalMathFunctions.has(node.fn.name)
             ? `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`
-            : `Function '${node.fn.name}' is not defined.`,
-          "insuficient_function_arg"
+            : `Function '${node.fn.name}' requires an argument.`,
+          "invalid_function_declaration"
         );
       // else if (!(node.args[0] instanceof SymbolNode))
       //   return this.makeExpressionError(
@@ -295,7 +297,7 @@ export class ExpressionValidator {
             }). For example try ${node.fn.name}(${param ? param : "x"}) = ${
               param ? param : "x"
             }.`,
-        "lack_of_equation_notation"
+        "invalid_function_declaration"
       );
     }
 
@@ -311,14 +313,14 @@ export class ExpressionValidator {
     if (node.params.length > requiredArgs)
       return this.makeExpressionError(
         `We only support functions with 1 argument.`,
-        "too_many_function_arg"
+        "invalid_function_declaration"
       );
     else if (node.params.length < requiredArgs) {
       return this.makeExpressionError(
         GlobalMathFunctions.has(node.name)
           ? `Function '${node.name}' requires an argument. For example, try typing: '${node.name}(x)'.`
           : `Function '${node.name}' is not defined.`,
-        "insuficient_function_arg"
+        "invalid_function_declaration"
       );
     }
 
@@ -329,7 +331,7 @@ export class ExpressionValidator {
     if (!parent) {
       return this.makeExpressionError(
         `Try adding 'y=' to the beginning of the equation.`,
-        "lack_of_equation_notation"
+        "invalid_function_declaration"
       );
     }
     return node;

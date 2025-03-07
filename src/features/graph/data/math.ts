@@ -20,6 +20,8 @@ export const GlobalMathFunctions: Set<string> = new Set([
   "sec",
 ]);
 
+export const GlobalMathConstants = new Set(["pi", "e"]);
+
 export const isGlobalFunctionRegex =
   /(sin|abs|ceil|cos|log10|log2|log|sqrt|pow|atan|acot|acos|asin|atan2|cot|csc|sec|floor)/;
 
