@@ -190,6 +190,90 @@ export class ExpressionTransformer {
     return { err: undefined, node: transformedNode };
   }
 
+  splitMultiplication(
+    node: SymbolNode,
+    scope: Scope
+  ): ExpressionValidationResult {
+    if (GlobalMathConstants.has(node.name)) return node;
+
+    const splitSymbol = (
+      transformed: OperatorNode<"*", "multiply", MathNode[]> | undefined,
+      start1: number,
+      end1: number,
+      end2?: number
+    ) => {
+      if (transformed) {
+        transformed = new OperatorNode(
+          "*",
+          "multiply",
+          [transformed, new SymbolNode(node.name.substring(start1, end1))],
+          true
+        );
+      } else {
+        transformed = new OperatorNode(
+          "*",
+          "multiply",
+          [
+            new SymbolNode(node.name.substring(start1, end1)),
+            new SymbolNode(node.name.substring(end1, end2)),
+          ],
+          true
+        );
+      }
+
+      return transformed;
+    };
+
+    const isPi = (str: string, i: number) => {
+      return str[i] === "p" && str[i + 1] === "i";
+    };
+
+    const createError = (i: number) => {
+      if (!(node.name[i] in scope)) {
+        return this.validator.makeExpressionError(
+          `Too many variables, try defining '${node.name[i]}'.`,
+          "invalid_variable_declaration"
+        );
+      } else {
+        return this.validator.makeExpressionError(
+          `Too many variables, try defining '${node.name[i + 1]}'.`,
+          "invalid_variable_declaration"
+        );
+      }
+    };
+
+    let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
+    let i = 0;
+    while (i < node.name.length) {
+      if (!transformed) {
+        if (isPi(node.name, i)) {
+          transformed = splitSymbol(transformed, i, i + 2, i + 3);
+          i += 3;
+        } else if (isPi(node.name, i + 1)) {
+          transformed = splitSymbol(transformed, i, i + 1, i + 3);
+          i += 3;
+        } else if (node.name[i] in scope && node.name[i + 1] in scope) {
+          transformed = splitSymbol(transformed, i, i + 1, i + 2);
+          i += 2;
+        } else {
+          return createError(i);
+        }
+      } else {
+        if (isPi(node.name, i)) {
+          transformed = splitSymbol(transformed, i, i + 2);
+          i += 2;
+        } else if (node.name[i] in scope) {
+          transformed = splitSymbol(transformed, i, i + 1);
+          i += 1;
+        } else {
+          return createError(i);
+        }
+      }
+    }
+
+    return transformed;
+  }
+
   transformImplicitMultiplication(
     node: FunctionNode | SymbolNode,
     parent: MathNode | undefined,
@@ -214,9 +298,8 @@ export class ExpressionTransformer {
             true
           );
         } else {
-          //sinx index = 0
-          //xsinx scenario(middle) or sinsinx
-          //same error, function sin must have an argument
+          //xsinx
+          //function sin must have an argument
 
           return this.validator.makeExpressionError(
             `Function '${match[0]}' requires an argument. For example, try typing: '${match[0]}(x)'.`,
@@ -225,129 +308,109 @@ export class ExpressionTransformer {
         }
       }
 
-      // case xn() or x()
+      // case xn()
       // not implementing function composition yet
-      return this.validator.makeExpressionError(
-        `We do not support function composition.`,
-        "unsupported_feature"
+
+      const symbolNode = new SymbolNode(
+        node.fn.name.substring(0, node.fn.name.length - 1)
       );
+      const resNode = this.splitMultiplication(symbolNode, scope);
+      console.log(symbolNode);
+      if ("code" in resNode) return resNode;
+      node.fn.name = node.fn.name.substring(node.fn.name.length - 1);
+      const transformedNode = new OperatorNode(
+        "*",
+        "multiply",
+        [resNode, node],
+        true
+      );
+
+      console.log(transformedNode);
+      return transformedNode;
     } else {
       // example input: xpc
       if (parent instanceof FunctionNode && node === parent.fn) return node;
 
       if (node.name.length === 1) return node;
-      if (GlobalMathConstants.has(node.name)) return node;
 
-      const splitSymbol = (
-        transformed: OperatorNode<"*", "multiply", MathNode[]> | undefined,
-        start1: number,
-        end1: number,
-        end2?: number
-      ) => {
-        if (transformed) {
-          transformed = new OperatorNode(
-            "*",
-            "multiply",
-            [transformed, new SymbolNode(node.name.substring(start1, end1))],
-            true
-          );
-        } else {
-          transformed = new OperatorNode(
-            "*",
-            "multiply",
-            [
-              new SymbolNode(node.name.substring(start1, end1)),
-              new SymbolNode(node.name.substring(end1, end2)),
-            ],
-            true
-          );
-        }
+      return this.splitMultiplication(node, scope);
 
-        return transformed;
-      };
+      // const splitSymbol = (
+      //   transformed: OperatorNode<"*", "multiply", MathNode[]> | undefined,
+      //   start1: number,
+      //   end1: number,
+      //   end2?: number
+      // ) => {
+      //   if (transformed) {
+      //     transformed = new OperatorNode(
+      //       "*",
+      //       "multiply",
+      //       [transformed, new SymbolNode(node.name.substring(start1, end1))],
+      //       true
+      //     );
+      //   } else {
+      //     transformed = new OperatorNode(
+      //       "*",
+      //       "multiply",
+      //       [
+      //         new SymbolNode(node.name.substring(start1, end1)),
+      //         new SymbolNode(node.name.substring(end1, end2)),
+      //       ],
+      //       true
+      //     );
+      //   }
 
-      const isPi = (str: string, i: number) => {
-        return str[i] === "p" && str[i + 1] === "i";
-      };
+      //   return transformed;
+      // };
 
-      const createError = (i: number) => {
-        if (!(node.name[i] in scope)) {
-          return this.validator.makeExpressionError(
-            `Too many variables, try defining '${node.name[i]}'.`,
-            "invalid_variable_declaration"
-          );
-        } else {
-          return this.validator.makeExpressionError(
-            `Too many variables, try defining '${node.name[i + 1]}'.`,
-            "invalid_variable_declaration"
-          );
-        }
-      };
+      // const isPi = (str: string, i: number) => {
+      //   return str[i] === "p" && str[i + 1] === "i";
+      // };
 
-      let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
-      let i = 0;
-      while (i < node.name.length) {
-        if (!transformed) {
-          if (isPi(node.name, i)) {
-            transformed = splitSymbol(transformed, i, i + 2, i + 3);
-            i += 3;
-          } else if (isPi(node.name, i + 1)) {
-            transformed = splitSymbol(transformed, i, i + 1, i + 3);
-            i += 3;
-          } else if (node.name[i] in scope && node.name[i + 1] in scope) {
-            transformed = splitSymbol(transformed, i, i + 1, i + 2);
-            i += 2;
-          } else {
-            return createError(i);
-          }
-        } else {
-          if (isPi(node.name, i)) {
-            transformed = splitSymbol(transformed, i, i + 2);
-            i += 2;
-          } else if (node.name[i] in scope) {
-            transformed = splitSymbol(transformed, i, i + 1);
-            i += 1;
-          } else {
-            return createError(i);
-          }
-        }
-      }
+      // const createError = (i: number) => {
+      //   if (!(node.name[i] in scope)) {
+      //     return this.validator.makeExpressionError(
+      //       `Too many variables, try defining '${node.name[i]}'.`,
+      //       "invalid_variable_declaration"
+      //     );
+      //   } else {
+      //     return this.validator.makeExpressionError(
+      //       `Too many variables, try defining '${node.name[i + 1]}'.`,
+      //       "invalid_variable_declaration"
+      //     );
+      //   }
+      // };
 
-      // for (let i = 0; i < node.name.length - 1; i++) {
-
-      //   if (node.name[i] in scope && node.name[i + 1] in scope) {
-
-      //     if (transformed) {
-      //       transformed = new OperatorNode(
-      //         "*",
-      //         "multiply",
-      //         [transformed, new SymbolNode(node.name[i + 1])],
-      //         true
-      //       );
+      // let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
+      // let i = 0;
+      // while (i < node.name.length) {
+      //   if (!transformed) {
+      //     if (isPi(node.name, i)) {
+      //       transformed = splitSymbol(transformed, i, i + 2, i + 3);
+      //       i += 3;
+      //     } else if (isPi(node.name, i + 1)) {
+      //       transformed = splitSymbol(transformed, i, i + 1, i + 3);
+      //       i += 3;
+      //     } else if (node.name[i] in scope && node.name[i + 1] in scope) {
+      //       transformed = splitSymbol(transformed, i, i + 1, i + 2);
+      //       i += 2;
       //     } else {
-      //       transformed = new OperatorNode(
-      //         "*",
-      //         "multiply",
-      //         [new SymbolNode(node.name[i]), new SymbolNode(node.name[i + 1])],
-      //         true
-      //       );
+      //       return createError(i);
       //     }
       //   } else {
-      //     if (!(node.name[i] in scope)) {
-      //       return this.validator.makeExpressionError(
-      //         `Too many variables, try defining '${node.name[i]}'.`,
-      //         "invalid_variable_declaration"
-      //       );
+      //     if (isPi(node.name, i)) {
+      //       transformed = splitSymbol(transformed, i, i + 2);
+      //       i += 2;
+      //     } else if (node.name[i] in scope) {
+      //       transformed = splitSymbol(transformed, i, i + 1);
+      //       i += 1;
       //     } else {
-      //       return this.validator.makeExpressionError(
-      //         `Too many variables, try defining '${node.name[i + 1]}'.`,
-      //         "invalid_variable_declaration"
-      //       );
+      //       return createError(i);
       //     }
       //   }
       // }
 
-      return transformed;
+      // return transformed;
     }
   }
 }

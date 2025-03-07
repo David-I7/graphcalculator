@@ -264,9 +264,7 @@ export class ExpressionValidator {
         );
       } else if (node.args.length < requiredArgs)
         return this.makeExpressionError(
-          GlobalMathFunctions.has(node.fn.name)
-            ? `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`
-            : `Function '${node.fn.name}' requires an argument.`,
+          `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`,
           "invalid_function_declaration"
         );
       // else if (!(node.args[0] instanceof SymbolNode))
