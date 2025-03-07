@@ -152,7 +152,10 @@ export class ExpressionTransformer {
             left.node.args[1] = innerNode;
             return left.node;
           } else if (innerNode.args[0] instanceof SymbolNode) {
-            if (innerNode.args[0].name.length > 1) {
+            if (
+              innerNode.args[0].name.length > 1 &&
+              !GlobalMathConstants.has(innerNode.args[0].name)
+            ) {
               const left = this.transformNode(
                 innerNode.args[0],
                 innerNode,
