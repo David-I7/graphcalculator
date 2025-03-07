@@ -16,7 +16,7 @@ import {
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { Item, Scope } from "../../../../state/graph/types";
+import { Expression, Item, Scope } from "../../../../state/graph/types";
 import useValidateExpression from "../../../graph/hooks/useValidateExpression";
 import { GraphExpression } from "../../../graph/components/GraphExpression";
 
@@ -205,6 +205,8 @@ const ExpressionListItem = React.memo(
     );
   },
   (prev, cur) => {
+    // console.log(!scopeDepsChanged(prev.scope, cur.scope, cur.item), cur.item);
+    // console.log(prev.scope === cur.scope);
     if (
       prev.idx === cur.idx &&
       prev.focused === cur.focused &&
@@ -212,6 +214,31 @@ const ExpressionListItem = React.memo(
       prev.scope === cur.scope
     )
       return true;
+
     return false;
   }
 );
+
+function scopeDepsChanged(
+  prevScope: Scope,
+  curScope: Scope,
+  item: Item
+): boolean {
+  if (item.type === "note") return false;
+
+  const data = item.data as Expression;
+  if (!data.parsedContent) return false;
+
+  let hasChanged: boolean = false;
+  for (let i = 0; i < data.parsedContent.scopeDeps.length; i++) {
+    if (
+      prevScope[data.parsedContent.scopeDeps[i]] ===
+      curScope[data.parsedContent.scopeDeps[i]]
+    )
+      continue;
+    hasChanged = true;
+    break;
+  }
+
+  return hasChanged;
+}

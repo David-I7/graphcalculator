@@ -81,8 +81,6 @@ export class ExpressionValidator {
         const index = Number(pos) - 1;
         const cause = expr[index] || expr[index - 1];
 
-        console.log(err, cause);
-
         if (
           cause === "=" ||
           cause === "+" ||

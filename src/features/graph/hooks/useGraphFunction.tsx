@@ -5,11 +5,12 @@ import {
   FnState,
 } from "../lib/graph/commands";
 import { resetFocusedItem, setFocusedItem } from "../../../state/graph/graph";
-import { functionParser } from "../lib/mathjs/parse";
 import { useAppDispatch } from "../../../state/hooks";
-import { reviver } from "mathjs";
+import { derivative, FunctionAssignmentNode, parse } from "mathjs";
 import { useGraphContext } from "../Graph";
 import { useGraphExprProps } from "../components/GraphExpression";
+import { InternalScope, Scope } from "../../../state/graph/types";
+import { createDependencies } from "../lib/mathjs/utils";
 
 function useGraphFunction({
   id,
@@ -20,7 +21,7 @@ function useGraphFunction({
   const graph = useGraphContext();
   const node = useMemo(() => {
     return data.parsedContent
-      ? JSON.parse(data.parsedContent.node, reviver)
+      ? (parse(data.parsedContent.node) as FunctionAssignmentNode)
       : undefined;
   }, [data.parsedContent]);
   const dispatch = useAppDispatch();
@@ -32,7 +33,7 @@ function useGraphFunction({
     let fnData!: FnState;
 
     try {
-      fnData = functionParser.parse(node, scope);
+      fnData = FunctionCommandStateFactory.createState(node, scope);
     } catch (err) {
       // synchronization err
       // console.log(err);
@@ -91,3 +92,81 @@ export const GraphFunction = ({
 
   return null;
 };
+
+export class FunctionCommandStateFactory {
+  constructor() {}
+
+  static createState(
+    node: FunctionAssignmentNode,
+    globalScope: Scope
+  ): FnState {
+    const { scope } = createDependencies(node, globalScope);
+
+    const df = this.createDerivativeData(node, scope);
+
+    const fnData: FnState = {
+      f: this.createFunctionData(node, scope),
+      df: this.createDerivativeData(node, scope),
+      ddf: df.node ? this.createDerivativeData(df.node, scope) : df,
+    };
+
+    return fnData;
+  }
+
+  private static createFunctionData(
+    node: FunctionAssignmentNode,
+    scope: InternalScope
+  ): FnState["f"] {
+    const code = node.compile();
+    const copy = { ...scope };
+    code.evaluate(copy);
+
+    //y or x intercept
+    const inputIntercept = node.expr.evaluate({
+      ...copy,
+      [node.params[0]]: 0,
+    });
+
+    return {
+      param: node.params[0],
+      f: copy[node.name] as (input: number) => number,
+      inputIntercept: Number.isFinite(inputIntercept)
+        ? inputIntercept
+        : undefined,
+      outputIntercepts: [],
+      node,
+    };
+  }
+
+  private static createDerivativeData(
+    node: FunctionAssignmentNode,
+    scope: InternalScope
+  ): FnState["df"] {
+    try {
+      const derivativeNode = derivative(node, node.params["0"], {
+        simplify: false,
+      });
+      const derivativeFunctionAssignmentNode = new FunctionAssignmentNode(
+        "f",
+        node.params,
+        derivativeNode
+      );
+
+      const code = derivativeFunctionAssignmentNode.compile();
+      const copy = { ...scope };
+      code.evaluate(copy);
+
+      return {
+        node: derivativeFunctionAssignmentNode,
+        param: derivativeFunctionAssignmentNode.params[0],
+        f: copy[derivativeFunctionAssignmentNode.name] as (
+          input: number
+        ) => number,
+        criticalPoints: [],
+      };
+    } catch (err) {
+      // derivative can be undefined if function is not continuous
+      return { node: undefined };
+    }
+  }
+}

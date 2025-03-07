@@ -1,115 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { CSS_VARIABLES } from "../../data/css/variables";
 import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
   ExpressionType,
   GraphData,
-  isExpression,
   Item,
   ItemData,
   ItemType,
   Scope,
 } from "./types";
-import { functionParser } from "../../features/graph/lib/mathjs/parse";
-import { reviver } from "mathjs";
+import {
+  createNewGraph,
+  createNewItem,
+  deleteFromScope,
+  restoreSavedGraph,
+  saveCurrentGraph,
+} from "./controllers";
+import { MinHeap } from "../../helpers/performance";
+import {
+  pointParser,
+  variableParser,
+} from "../../features/graph/lib/mathjs/parse";
+import { AssignmentNode, MathNode, ObjectNode, parse } from "mathjs";
+import { restrictedVariables } from "../../features/graph/data/math";
 
 interface GraphState {
   currentGraph: ClientGraphData;
   savedGraphs: GraphData[];
   exampleGraphs: GraphData[];
-}
-
-function createNewGraph(): ClientGraphData {
-  const createdAt = new Date().toJSON();
-  return {
-    id: crypto.randomUUID(),
-    createdAt,
-    modifiedAt: createdAt,
-    thumb: "",
-    name: "Untitled",
-    items: {
-      scope: {},
-      nextId: 2,
-      focusedId: 1,
-      data: [createNewItem("expression", 1)],
-    },
-  };
-}
-
-function saveCurrentGraph(currentGraph: ClientGraphData): GraphData {
-  // apiReq to server in the background
-
-  return {
-    ...currentGraph,
-    modifiedAt: new Date().toJSON(),
-    thumb: "", //base64encoded canvasGetImageData
-    items: currentGraph.items.data,
-  };
-}
-
-function restoreSavedGraph(graph: GraphData): ClientGraphData {
-  const scope: Scope = {};
-  let maxId: number = 1;
-
-  for (let i = 0; i < graph.items.length; i++) {
-    const item = graph.items[i];
-    maxId = Math.max(maxId, item.id);
-
-    if (isExpression(item) && item.data.parsedContent) {
-      if (item.data.type === "variable") {
-        scope[item.data.parsedContent.name] = item.data.parsedContent.value;
-      } else if (item.data.type == "function") {
-        const fnName = item.data.parsedContent.name;
-
-        if (fnName === "f" || fnName === "x" || fnName === "y") continue;
-        scope[fnName] = item.data.content;
-      }
-    }
-  }
-
-  return {
-    ...graph,
-    items: {
-      scope,
-      nextId: maxId + 1,
-      focusedId: -1,
-      data: graph.items,
-    },
-  };
-}
-
-function createNewItem<T extends ItemType>(
-  type: T,
-  id: number,
-  content?: string
-): Item {
-  if (type === "expression") {
-    return {
-      id,
-      type,
-      data: {
-        type: "function",
-        content: content ? content : "",
-        parsedContent: undefined,
-        settings: {
-          color: `hsl(${Math.floor(Math.random() * 360)},${
-            CSS_VARIABLES.baseSaturation
-          },${CSS_VARIABLES.baseLightness})`,
-          hidden: false,
-        },
-      },
-    } as Item<"expression">;
-  }
-
-  return {
-    id,
-    type,
-    data: {
-      content: "",
-    },
-  } as Item<"note">;
 }
 
 const initialState: GraphState = {
@@ -282,7 +201,17 @@ const graphSlice = createSlice({
         const scope = state.currentGraph.items.scope;
 
         // previous value
-        deleteFromScope(expr, scope);
+        if (expr.type !== "point" && expr.parsedContent) {
+          if (!restrictedVariables.has(expr.parsedContent.name)) {
+            deleteFromScope(expr, scope);
+            deleteScopeSync(
+              state.currentGraph.items.data,
+              scope,
+              expr.parsedContent.name,
+              expr
+            );
+          }
+        }
 
         expr.type = action.payload.type;
         expr.parsedContent = undefined;
@@ -301,15 +230,18 @@ const graphSlice = createSlice({
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ItemData["expression"];
+        const expr = item.data as Expression<"function">;
         const scope = state.currentGraph.items.scope;
 
-        if (
-          action.payload.parsedContent.name !== "x" &&
-          action.payload.parsedContent.name !== "y" &&
-          action.payload.parsedContent.name !== "f"
-        ) {
-          scope[action.payload.parsedContent.name] = expr.content;
+        if (!restrictedVariables.has(action.payload.parsedContent.name)) {
+          scope[action.payload.parsedContent.name] =
+            action.payload.parsedContent.node;
+          updateScopeSync(
+            state.currentGraph.items.data,
+            scope,
+            action.payload.parsedContent.name,
+            expr
+          );
         }
 
         expr.type = "function";
@@ -351,17 +283,18 @@ const graphSlice = createSlice({
         const expr = item.data as ItemData["expression"];
         const scope = state.currentGraph.items.scope;
 
-        if (
-          action.payload.parsedContent.name !== "x" &&
-          action.payload.parsedContent.name !== "y" &&
-          action.payload.parsedContent.name !== "f"
-        ) {
+        if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] =
             action.payload.parsedContent.value;
+          updateScopeSync(
+            state.currentGraph.items.data,
+            scope,
+            action.payload.parsedContent.name,
+            expr
+          );
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
-        expr.parsedContent.scopeDeps = [];
       }
     ),
   }),
@@ -393,30 +326,192 @@ export const {
 
 const selectExpression = () => {};
 
-// utils
-function deleteFromScope(data: ItemData["expression"], scope: Scope) {
-  if (data.type == "variable" && data.parsedContent) {
-    delete scope[data.parsedContent.name];
-  } else if (data.type === "function" && data.parsedContent) {
-    if (scope[data.parsedContent.name]) {
-      delete scope[data.parsedContent.name];
-    }
-  }
-}
+const updateScopeSync = (
+  items: Item[],
+  scope: Scope,
+  changedEntry: string,
+  changedExpr: Expression
+) => {
+  // debugger;
+  const scopeChanges = new Set(changedEntry);
 
-export function isInScope(
-  target: string,
-  data: ItemData["expression"],
-  scope: Set<string>
-): boolean {
-  if (scope.has(target)) {
-    if (data.type === "variable" && data.parsedContent) {
-      return data.parsedContent.name === target ? false : true;
-    } else if (data.type === "function" && data.parsedContent) {
-      return data.parsedContent.name === target ? false : true;
+  const canCompute = (expr: Expression, scopeChanges: Set<string>): boolean => {
+    for (let i = 0; i < expr.parsedContent!.scopeDeps.length; i++) {
+      if (scopeChanges.has(expr.parsedContent!.scopeDeps[i])) continue;
+      return false;
     }
     return true;
-  }
+  };
 
-  return false;
-}
+  const priorityCb = (p: Expression, c: Expression) => {
+    // if parent is > child => true
+    if (canCompute(p, scopeChanges)) return false;
+    else if (canCompute(c, scopeChanges)) return true;
+    else {
+      return (
+        p.parsedContent!.scopeDeps.length > c.parsedContent!.scopeDeps.length
+      );
+    }
+  };
+
+  let minHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
+
+  // build heap
+  items.forEach((item) => {
+    if (item.type === "expression") {
+      const expression = item.data as Expression;
+      if (
+        expression.parsedContent &&
+        expression !== changedExpr &&
+        expression.parsedContent.scopeDeps.length
+      ) {
+        minHeap.insert(expression);
+      }
+    }
+  });
+
+  // no items depend on the changed variable
+  if (!minHeap.length) return;
+
+  let uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
+  let scopeHasChanged = false;
+  while (minHeap.length) {
+    const expr = minHeap.pop();
+
+    if (!canCompute(expr, scopeChanges)) {
+      uncomputedHeap.insert(expr);
+      continue;
+    }
+
+    scopeHasChanged = true;
+
+    switch (expr.type) {
+      case "variable": {
+        const node = parse(expr.parsedContent!.node) as AssignmentNode;
+        const newContent = variableParser.parse(node, scope);
+        expr.parsedContent = newContent;
+        scope[newContent.name] = newContent.value;
+        scopeChanges.add(newContent.name);
+        break;
+      }
+      case "point": {
+        const node = parse(expr.parsedContent!.node) as ObjectNode<{
+          x: MathNode;
+          y: MathNode;
+        }>;
+        const newContent = pointParser.parse(node, scope);
+        expr.parsedContent = newContent;
+        // no additions to scopeChanges as
+        // it is not stored as a variable
+        break;
+      }
+      case "function": {
+        // this means that it is now safe to compute function
+        // for dependents
+        scopeChanges.add(expr.parsedContent!.name);
+        break;
+      }
+      default: {
+        throw new Error(`Type is not implemented.`);
+      }
+    }
+
+    if (!minHeap.length && scopeHasChanged && uncomputedHeap.length) {
+      minHeap = uncomputedHeap;
+      uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
+      scopeHasChanged = false;
+    }
+  }
+};
+
+const deleteScopeSync = (
+  items: Item[],
+  scope: Scope,
+  changedEntry: string,
+  changedExpr: Expression
+) => {
+  // debugger;
+  const scopeChanges = new Set(changedEntry);
+
+  const isDependent = (
+    expr: Expression,
+    scopeChanges: Set<string>
+  ): boolean => {
+    for (let i = 0; i < expr.parsedContent!.scopeDeps.length; i++) {
+      if (scopeChanges.has(expr.parsedContent!.scopeDeps[i])) continue;
+      return false;
+    }
+    return true;
+  };
+
+  const priorityCb = (p: Expression, c: Expression) => {
+    // if parent is > child => true
+    if (isDependent(p, scopeChanges)) return false;
+    else if (isDependent(c, scopeChanges)) return true;
+    else {
+      return (
+        p.parsedContent!.scopeDeps.length > c.parsedContent!.scopeDeps.length
+      );
+    }
+  };
+
+  let minHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
+
+  // build heap
+  items.forEach((item) => {
+    if (item.type === "expression") {
+      const expression = item.data as Expression;
+      if (
+        expression.parsedContent &&
+        expression !== changedExpr &&
+        expression.parsedContent.scopeDeps.length
+      ) {
+        minHeap.insert(expression);
+      }
+    }
+  });
+
+  // no items depend on the changed variable
+  if (!minHeap.length) return;
+
+  let uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
+  let scopeHasChanged = false;
+  while (minHeap.length) {
+    const expr = minHeap.pop();
+
+    if (!isDependent(expr, scopeChanges)) {
+      uncomputedHeap.insert(expr);
+      continue;
+    }
+
+    scopeHasChanged = true;
+
+    switch (expr.type) {
+      case "variable": {
+        delete scope[expr.parsedContent!.name];
+        scopeChanges.add(expr.parsedContent!.name);
+        expr.parsedContent = undefined;
+        break;
+      }
+      case "point": {
+        expr.parsedContent = undefined;
+        break;
+      }
+      case "function": {
+        delete scope[expr.parsedContent!.name];
+        scopeChanges.add(expr.parsedContent!.name);
+        expr.parsedContent = undefined;
+        break;
+      }
+      default: {
+        throw new Error(`Type is not implemented.`);
+      }
+    }
+
+    if (!minHeap.length && scopeHasChanged && uncomputedHeap.length) {
+      minHeap = uncomputedHeap;
+      uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
+      scopeHasChanged = false;
+    }
+  }
+};

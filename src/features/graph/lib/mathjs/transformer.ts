@@ -10,7 +10,7 @@ import { ApplicationError } from "../../../../state/error/error";
 import { ExpressionValidationResult, ExpressionValidator } from "./validation";
 import { isGlobalFunctionRegex } from "../../data/math";
 import { ItemData } from "../../../../state/graph/types";
-import { isInScope } from "../../../../state/graph/graph";
+import { isInScope } from "../../../../state/graph/controllers";
 
 type TransformedResult<T extends MathNode = MathNode> =
   | {
