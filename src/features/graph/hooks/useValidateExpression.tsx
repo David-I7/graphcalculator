@@ -9,7 +9,11 @@ import {
 import { isExpression, Item, Scope } from "../../../state/graph/types";
 import ExpressionTransformer from "../lib/mathjs/transformer";
 import { AssignmentNode, FunctionAssignmentNode, ObjectNode } from "mathjs";
-import { pointParser, variableParser } from "../lib/mathjs/parse";
+import {
+  functionParser,
+  pointParser,
+  variableParser,
+} from "../lib/mathjs/parse";
 import { useAppDispatch } from "../../../state/hooks";
 
 const useValidateExpression = ({
@@ -32,21 +36,27 @@ const useValidateExpression = ({
       if (error) {
         setError(null);
       }
-      dispatch(
-        removeParsedContent({
-          id: item.id,
-          idx,
-          type: item.data.type,
-        })
-      );
+      if (item.data.parsedContent) {
+        dispatch(
+          removeParsedContent({
+            id: item.id,
+            idx,
+            type: item.data.type,
+          })
+        );
+      }
       return;
     }
+
+    // if (item.data.parsedContent) return
 
     const clonedScope: Set<string> = new Set();
     Object.keys(scope).forEach((key) => clonedScope.add(key));
 
     const res = ExpressionTransformer.transform(item.data, clonedScope);
+
     if (res.err) {
+      console.log(res.err);
       dispatch(
         removeParsedContent({
           id: item.id,
@@ -58,15 +68,12 @@ const useValidateExpression = ({
     } else {
       console.log(res.node);
       if (res.node instanceof FunctionAssignmentNode) {
+        const parsedContent = functionParser.parse(res.node, scope);
         dispatch(
           updateFunctionExpr({
             id: item.id,
             idx,
-            parsedContent: {
-              node: JSON.stringify(res.node),
-              name: res.node.name,
-              scopeDeps: [],
-            },
+            parsedContent,
           })
         );
       } else if (res.node instanceof AssignmentNode) {

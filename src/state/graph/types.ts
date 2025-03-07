@@ -42,7 +42,7 @@ export type Expression<T extends ExpressionType = ExpressionType> =
         type: T;
         content: string;
         parsedContent:
-          | { name: string; value: number; scopeDeps: string[] }
+          | { name: string; value: number; node: string; scopeDeps: string[] }
           | undefined;
       }
     : T extends "point"
@@ -50,7 +50,7 @@ export type Expression<T extends ExpressionType = ExpressionType> =
         type: T;
         content: string;
         parsedContent:
-          | { x: number; y: number; scopeDeps: string[] }
+          | { x: number; y: number; node: string; scopeDeps: string[] }
           | undefined;
         settings: ExpressionSettings;
       }
@@ -67,6 +67,10 @@ export type Expression<T extends ExpressionType = ExpressionType> =
 
 export type Scope = {
   [index: string]: string | number;
+};
+
+export type InternalScope = {
+  [index: string]: (() => number) | number;
 };
 
 export type ClientGraphData = Omit<GraphData, "items"> & {

@@ -22,3 +22,5 @@ export const GlobalMathFunctions: Set<string> = new Set([
 
 export const isGlobalFunctionRegex =
   /(sin|abs|ceil|cos|log10|log2|log|sqrt|pow|atan|acot|acos|asin|atan2|cot|csc|sec|floor)/;
+
+export const restrictedVariables = new Set(["x", "y", "f"]);
