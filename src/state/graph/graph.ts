@@ -1,23 +1,26 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { swap } from "../../helpers/dts";
+import { AdjacencyList, SerializedAdjList, swap } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
   ExpressionType,
   GraphData,
+  isExpression,
   Item,
   ItemData,
   ItemType,
   Scope,
 } from "./types";
 import {
+  addDependencies,
   createNewGraph,
   createNewItem,
   deleteFromScope,
+  dependenciesInScope,
+  removeDependencies,
   restoreSavedGraph,
   saveCurrentGraph,
 } from "./controllers";
-import { MinHeap } from "../../helpers/performance";
 import {
   pointParser,
   variableParser,
@@ -95,11 +98,20 @@ const graphSlice = createSlice({
 
         if (items.data[action.payload.idx].id !== action.payload.id) return;
 
-        if (items.data[action.payload.idx].type === "expression") {
+        const item = items.data[action.payload.id];
+
+        if (
+          isExpression(item) &&
+          item.data.parsedContent &&
+          "name" in item.data.parsedContent
+        ) {
           const scope = items.scope;
-          deleteFromScope(
-            items.data[action.payload.idx].data as ItemData["expression"],
-            scope
+          const depGraph = items.dependencyGraph;
+          deleteFromScope(item.data.parsedContent.name, depGraph, scope);
+          removeDependencies(
+            item.data.parsedContent.name,
+            item.data.parsedContent.scopeDeps,
+            depGraph
           );
         }
 
@@ -138,7 +150,10 @@ const graphSlice = createSlice({
       }
     ),
     setFocusedItem: create.reducer((state, action: PayloadAction<number>) => {
-      if (state.currentGraph.items.focusedId === action.payload) return;
+      if (state.currentGraph.items.focusedId === action.payload) {
+        return;
+      }
+
       state.currentGraph.items.focusedId = action.payload;
     }),
     resetFocusedItem: create.reducer((state, action: PayloadAction<number>) => {
@@ -146,25 +161,6 @@ const graphSlice = createSlice({
         state.currentGraph.items.focusedId = -1;
       }
     }),
-
-    // SCOPE CASES
-    // setToScope:create.reducer(
-    //   (
-    //     state,
-    //     action: PayloadAction<{key:string,value}>
-    //   ) => {
-    //     const item = state.currentGraph.items.data[action.payload.idx];
-
-    //     if (item.id !== action.payload.id) return;
-    //     if (item.type !== "expression") return
-
-    //     const expr = item.data as ItemData["expression"]
-
-    //     if (expr.type === "function" || expr.type === "point") {
-    //       expr.settings.hidden = !expr.settings.hidden;
-    //     }
-    //   }
-    // ),
 
     // EXPRESSION CASES
     toggleExpressionVisibility: create.reducer(
@@ -199,16 +195,16 @@ const graphSlice = createSlice({
 
         const expr = item.data as ItemData["expression"];
         const scope = state.currentGraph.items.scope;
+        const depGraph = state.currentGraph.items.dependencyGraph;
 
         // previous value
         if (expr.type !== "point" && expr.parsedContent) {
           if (!restrictedVariables.has(expr.parsedContent.name)) {
-            deleteFromScope(expr, scope);
-            deleteScopeSync(
-              state.currentGraph.items.data,
-              scope,
+            deleteFromScope(expr.parsedContent.name, depGraph, scope);
+            removeDependencies(
               expr.parsedContent.name,
-              expr
+              expr.parsedContent.scopeDeps,
+              depGraph
             );
           }
         }
@@ -239,15 +235,23 @@ const graphSlice = createSlice({
           return;
 
         const scope = state.currentGraph.items.scope;
+        const depGraph = state.currentGraph.items.dependencyGraph;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] =
             action.payload.parsedContent.node;
-          updateScopeSync(
-            state.currentGraph.items.data,
-            scope,
+
+          addDependencies(
             action.payload.parsedContent.name,
-            expr
+            action.payload.parsedContent.scopeDeps,
+            depGraph
+          );
+
+          updateScopeSync(
+            action.payload.parsedContent.name,
+            state.currentGraph.items.data,
+            depGraph,
+            scope
           );
         }
 
@@ -300,15 +304,23 @@ const graphSlice = createSlice({
           return;
 
         const scope = state.currentGraph.items.scope;
+        const depGraph = state.currentGraph.items.dependencyGraph;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] =
             action.payload.parsedContent.value;
-          updateScopeSync(
-            state.currentGraph.items.data,
-            scope,
+
+          addDependencies(
             action.payload.parsedContent.name,
-            expr
+            action.payload.parsedContent.scopeDeps,
+            depGraph
+          );
+
+          updateScopeSync(
+            action.payload.parsedContent.name,
+            state.currentGraph.items.data,
+            depGraph,
+            scope
           );
         }
         expr.parsedContent = action.payload.parsedContent;
@@ -344,64 +356,36 @@ export const {
 
 const selectExpression = () => {};
 
-const updateScopeSync = (
+function updateScopeSync(
+  updated: string,
   items: Item[],
-  scope: Scope,
-  changedEntry: string,
-  changedExpr: Expression
-) => {
-  // debugger;
-  const scopeChanges = new Set(changedEntry);
+  depGraph: SerializedAdjList,
+  scope: Scope
+) {
+  let topologyOrder = AdjacencyList.topologicSort(depGraph);
+  if (!topologyOrder) throw new Error("Cycle has been detected");
 
-  const canCompute = (expr: Expression, scopeChanges: Set<string>): boolean => {
-    for (let i = 0; i < expr.parsedContent!.scopeDeps.length; i++) {
-      if (scopeChanges.has(expr.parsedContent!.scopeDeps[i])) continue;
-      return false;
-    }
-    return true;
-  };
+  const updatedIdx = topologyOrder.findIndex((v) => v === updated);
+  if (updatedIdx === -1 || updatedIdx === topologyOrder.length - 1) return;
 
-  const priorityCb = (p: Expression, c: Expression) => {
-    // if parent is > child => true
-    if (canCompute(p, scopeChanges)) return false;
-    else if (canCompute(c, scopeChanges)) return true;
-    else {
-      return (
-        p.parsedContent!.scopeDeps.length > c.parsedContent!.scopeDeps.length
-      );
-    }
-  };
+  topologyOrder = topologyOrder.slice(updatedIdx + 1);
 
-  let minHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
-
-  // build heap
+  const exprMap: Record<string, Expression> = {};
   items.forEach((item) => {
-    if (item.type === "expression") {
-      const expression = item.data as Expression;
-      if (
-        expression.parsedContent &&
-        expression !== changedExpr &&
-        expression.parsedContent.scopeDeps.length
-      ) {
-        minHeap.insert(expression);
-      }
+    if (
+      isExpression(item) &&
+      item.data.parsedContent &&
+      "name" in item.data.parsedContent
+    ) {
+      exprMap[item.data.parsedContent.name] = item.data;
     }
   });
 
-  // no items depend on the changed variable
-  if (!minHeap.length) return;
+  for (const v of topologyOrder) {
+    const expr = exprMap[v];
 
-  let uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
-  let scopeHasChanged = false;
-  while (minHeap.length) {
-    const expr = minHeap.pop();
-
-    if (!canCompute(expr, scopeChanges)) {
-      uncomputedHeap.insert(expr);
+    if (!expr || !dependenciesInScope(expr.parsedContent!.scopeDeps, scope))
       continue;
-    }
-
-    scopeHasChanged = true;
 
     switch (expr.type) {
       case "variable": {
@@ -409,127 +393,16 @@ const updateScopeSync = (
         const newContent = variableParser.parse(node, scope);
         expr.parsedContent = newContent;
         scope[newContent.name] = newContent.value;
-        scopeChanges.add(newContent.name);
-        break;
-      }
-      case "point": {
-        const node = parse(expr.parsedContent!.node) as ObjectNode<{
-          x: MathNode;
-          y: MathNode;
-        }>;
-        const newContent = pointParser.parse(node, scope);
-        expr.parsedContent = newContent;
-        // no additions to scopeChanges as
-        // it is not stored as a variable
         break;
       }
       case "function": {
         // this means that it is now safe to compute function
         // for dependents
-        scopeChanges.add(expr.parsedContent!.name);
         break;
       }
       default: {
         throw new Error(`Type is not implemented.`);
       }
     }
-
-    if (!minHeap.length && scopeHasChanged && uncomputedHeap.length) {
-      minHeap = uncomputedHeap;
-      uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
-      scopeHasChanged = false;
-    }
   }
-};
-
-const deleteScopeSync = (
-  items: Item[],
-  scope: Scope,
-  changedEntry: string,
-  changedExpr: Expression
-) => {
-  // debugger;
-  const scopeChanges = new Set(changedEntry);
-
-  const isDependent = (
-    expr: Expression,
-    scopeChanges: Set<string>
-  ): boolean => {
-    for (let i = 0; i < expr.parsedContent!.scopeDeps.length; i++) {
-      if (scopeChanges.has(expr.parsedContent!.scopeDeps[i])) continue;
-      return false;
-    }
-    return true;
-  };
-
-  const priorityCb = (p: Expression, c: Expression) => {
-    // if parent is > child => true
-    if (isDependent(p, scopeChanges)) return false;
-    else if (isDependent(c, scopeChanges)) return true;
-    else {
-      return (
-        p.parsedContent!.scopeDeps.length > c.parsedContent!.scopeDeps.length
-      );
-    }
-  };
-
-  let minHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
-
-  // build heap
-  items.forEach((item) => {
-    if (item.type === "expression") {
-      const expression = item.data as Expression;
-      if (
-        expression.parsedContent &&
-        expression !== changedExpr &&
-        expression.parsedContent.scopeDeps.length
-      ) {
-        minHeap.insert(expression);
-      }
-    }
-  });
-
-  // no items depend on the changed variable
-  if (!minHeap.length) return;
-
-  let uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
-  let scopeHasChanged = false;
-  while (minHeap.length) {
-    const expr = minHeap.pop();
-
-    if (!isDependent(expr, scopeChanges)) {
-      uncomputedHeap.insert(expr);
-      continue;
-    }
-
-    scopeHasChanged = true;
-
-    switch (expr.type) {
-      case "variable": {
-        delete scope[expr.parsedContent!.name];
-        scopeChanges.add(expr.parsedContent!.name);
-        expr.parsedContent = undefined;
-        break;
-      }
-      case "point": {
-        expr.parsedContent = undefined;
-        break;
-      }
-      case "function": {
-        delete scope[expr.parsedContent!.name];
-        scopeChanges.add(expr.parsedContent!.name);
-        expr.parsedContent = undefined;
-        break;
-      }
-      default: {
-        throw new Error(`Type is not implemented.`);
-      }
-    }
-
-    if (!minHeap.length && scopeHasChanged && uncomputedHeap.length) {
-      minHeap = uncomputedHeap;
-      uncomputedHeap = new MinHeap<NonNullable<Expression>>(priorityCb);
-      scopeHasChanged = false;
-    }
-  }
-};
+}

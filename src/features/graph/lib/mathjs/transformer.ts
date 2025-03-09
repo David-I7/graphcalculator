@@ -34,33 +34,8 @@ export class ExpressionTransformer {
       return { err, node: undefined };
     }
 
-    if (node instanceof FunctionAssignmentNode) {
-      if (isInScope(node.name, data, scope)) {
-        return {
-          err: this.validator.makeExpressionError(
-            `
-          You've defined '${node.name}' in more than one place. Try deleting some of the definitions of '${node.name}'.
-          `,
-            "invalid_variable_declaration"
-          ),
-          node: undefined,
-        };
-      }
-
-      if (node.params.length) {
-        scope[node.params[0]] = 0;
-      }
-    } else if (node instanceof AssignmentNode) {
+    if (node instanceof AssignmentNode) {
       const variable = node.object.name;
-
-      if (variable === "f" || GlobalMathConstants.has(variable))
-        return {
-          err: this.validator.makeExpressionError(
-            `'${variable}' is a restricted symbol. Try using a different one instead.`,
-            "invalid_variable_declaration"
-          ),
-          node: undefined,
-        };
 
       if (variable === "y" || variable === "x") {
         const fn = new FunctionAssignmentNode(
@@ -72,21 +47,10 @@ export class ExpressionTransformer {
         scope[fn.params[0]] = 0;
 
         return this.transformNode(fn, undefined, scope);
-      } else {
-        if (isInScope(variable, data, scope)) {
-          return {
-            err: this.validator.makeExpressionError(
-              `
-            You've defined '${variable}' in more than one place. Try deleting some of the definitions of '${variable}'.
-            `,
-              "invalid_variable_declaration"
-            ),
-            node: undefined,
-          };
-        }
       }
     }
 
+    this.validator.initializeScope(node, data, scope);
     return this.transformNode(node, undefined, scope);
   }
 
@@ -309,13 +273,11 @@ export class ExpressionTransformer {
       }
 
       // case xn()
-      // not implementing function composition yet
 
       const symbolNode = new SymbolNode(
         node.fn.name.substring(0, node.fn.name.length - 1)
       );
       const resNode = this.splitMultiplication(symbolNode, scope);
-      console.log(symbolNode);
       if ("code" in resNode) return resNode;
       node.fn.name = node.fn.name.substring(node.fn.name.length - 1);
       const transformedNode = new OperatorNode(
@@ -325,7 +287,6 @@ export class ExpressionTransformer {
         true
       );
 
-      console.log(transformedNode);
       return transformedNode;
     } else {
       // example input: xpc

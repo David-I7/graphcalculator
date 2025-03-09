@@ -1,9 +1,4 @@
-import {
-  AssignmentNode,
-  FunctionAssignmentNode,
-  OperatorNode,
-  ParenthesisNode,
-} from "mathjs";
+import { SerializedAdjList } from "../../helpers/dts";
 
 // API data
 
@@ -78,6 +73,7 @@ export type ClientGraphData = Omit<GraphData, "items"> & {
     nextId: number;
     focusedId: number;
     scope: Scope;
+    dependencyGraph: SerializedAdjList;
     data: Item[];
   };
 };

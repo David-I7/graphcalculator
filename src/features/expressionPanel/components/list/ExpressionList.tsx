@@ -16,7 +16,12 @@ import {
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
-import { Item, Scope } from "../../../../state/graph/types";
+import {
+  Expression,
+  isExpression,
+  Item,
+  Scope,
+} from "../../../../state/graph/types";
 import useValidateExpression from "../../../graph/hooks/useValidateExpression";
 import { GraphExpression } from "../../../graph/components/GraphExpression";
 
@@ -35,6 +40,7 @@ function ExpressionListRenderer() {
     data: items,
     focusedId,
     scope,
+    dependencyGraph,
   } = useAppSelector((state) => state.graphSlice.currentGraph.items);
   const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -109,7 +115,7 @@ function ExpressionListRenderer() {
     }
   }, [items.length]);
 
-  console.log(scope);
+  console.log("re-render");
 
   return (
     <ol className="expression-list" ref={draggableContainerRef}>
@@ -202,7 +208,9 @@ const ExpressionListItem = React.memo(
           <Close />
         </ButtonTarget>
 
-        <GraphExpression item={item} scope={scope} focused={focused} />
+        {!error && (
+          <GraphExpression item={item} scope={scope} focused={focused} />
+        )}
       </li>
     );
   },
@@ -218,32 +226,3 @@ const ExpressionListItem = React.memo(
     return false;
   }
 );
-
-// function scopeDepsChanged(
-//   prevScope: Scope,
-//   curScope: Scope,
-//   prevItem: Item,
-//   curItem: Item
-// ): boolean {
-
-//   if (!isExpression(curItem)) return false;
-//   if (prevItem !== curItem) return true
-
-//   const prevData = prevItem.data as Expression;
-//   const curData = curItem.data as Expression;
-
-//   //   for (let i = 0; i < curData.parsedContent.scopeDeps.length; i++) {
-//   //   if (
-//   //     prevScope[data.parsedContent.scopeDeps[i]] ===
-//   //     curScope[data.parsedContent.scopeDeps[i]]
-//   //   )
-//   //     continue;
-//   //   return true;
-//   // }
-
-//   // if (!curData.parsedContent || !curData.parsedContent.scopeDeps.length ||
-//   //   prevData.parsedContent
-//   // ) return false;
-
-//   // return false;
-// }

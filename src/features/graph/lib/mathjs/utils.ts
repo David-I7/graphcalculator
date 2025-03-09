@@ -31,7 +31,8 @@ export function getAllSymbols(node: MathNode): Set<string> {
 
 export function createDependencies(
   node: MathNode,
-  globalScope: Scope
+  globalScope: Scope,
+  context?: InternalScope
 ): {
   scope: InternalScope;
   scopeDeps: string[];
@@ -40,21 +41,24 @@ export function createDependencies(
   const fns: [string, string][] = [];
   const symbols = getAllSymbols(node);
 
-  const scope: InternalScope = {};
+  let scope: InternalScope = context ? context : {};
   symbols.forEach((symbol) => {
+    if (context && symbol in context) return;
+
     const val = globalScope[symbol];
     if (typeof val === "number") {
       scope[symbol] = val;
     } else {
-      // can't process now as fns may depend on other vars themselves
-      // ex a= b(c)
       fns.push([symbol, val]);
     }
     scopeDeps.push(symbol);
   });
 
   fns.forEach((fn) => {
-    parse(fn[1]).compile().evaluate(scope);
+    const node = parse(fn[1]);
+    const { scope: subScope } = createDependencies(node, globalScope, scope);
+    scope = subScope;
+    node.compile().evaluate(scope);
   });
 
   return { scope, scopeDeps };

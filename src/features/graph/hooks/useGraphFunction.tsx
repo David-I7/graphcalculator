@@ -23,7 +23,7 @@ function useGraphFunction({
     return data.parsedContent
       ? (parse(data.parsedContent.node) as FunctionAssignmentNode)
       : undefined;
-  }, [data.parsedContent]);
+  }, [data.parsedContent, scope]);
   const dispatch = useAppDispatch();
   const command = useRef<DrawFunctionCommand | null>(null);
 
@@ -64,7 +64,7 @@ function useGraphFunction({
     return () => {
       currentCommand.destroy();
     };
-  }, [node, scope, graph]);
+  }, [node, graph]);
 
   useEffect(() => {
     if (!command.current) return;
