@@ -8,11 +8,11 @@ import {
 } from "../../../../state/graph/graph";
 import ResizableTextarea from "../../../../components/input/ResizableTextarea";
 import { useClickOutside, useFocus } from "../../../../hooks/dom";
-import { ClientItem, ItemType } from "../../../../state/graph/types";
+import { Item, ItemType } from "../../../../state/graph/types";
 
 type ExpressionTextAreaProps<T extends ItemType = ItemType> = {
   focused: boolean;
-  item: ClientItem<T>;
+  item: Item<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
   idx: number;
 };
@@ -56,35 +56,53 @@ const FunctionTextArea = ({
   useFocus(focused, ref, onFocus, onBlur);
 
   return (
-    <ResizableTextarea
-      ref={ref}
-      container={{
-        className: "font-medium",
-        style: {
-          color: CSS_VARIABLES.onSurfaceBodyHigh,
-          paddingRight: "3.5rem",
-          paddingLeft: "1rem",
-        },
+    <div
+      style={{
+        display: "grid",
       }}
-      textarea={{
-        autoFocus: focused,
-        value: item.data.content,
-        onFocus: () => {
-          if (!focused) {
-            dispatch(setFocusedItem(item.id));
-          }
-        },
-        onChange: (e) => {
-          dispatch(
-            updateItemContent({
-              id: item.id,
-              content: e.target.value,
-              idx: idx,
-            })
-          );
-        },
-      }}
-    />
+    >
+      <ResizableTextarea
+        ref={ref}
+        container={{
+          className: "font-medium",
+          style: {
+            color: CSS_VARIABLES.onSurfaceBodyHigh,
+            paddingRight: "3.5rem",
+            paddingLeft: "1rem",
+          },
+        }}
+        textarea={{
+          autoFocus: focused,
+          value: item.data.content,
+          onFocus: () => {
+            if (!focused) {
+              dispatch(setFocusedItem(item.id));
+            }
+          },
+          onChange: (e) => {
+            dispatch(
+              updateItemContent({
+                id: item.id,
+                content: e.target.value,
+                idx: idx,
+              })
+            );
+          },
+        }}
+      />
+      {item.data.type === "variable" && item.data.parsedContent && (
+        <div
+          style={{
+            height: "2.5rem",
+            padding: "0.5rem",
+            placeSelf: "flex-end",
+            fontSize: "1.5rem",
+          }}
+        >
+          = {item.data.parsedContent.value}
+        </div>
+      )}
+    </div>
   );
 };
 const NoteTextArea = ({

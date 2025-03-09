@@ -1,6 +1,8 @@
 // GRAPH
 
 import { CSS_VARIABLES } from "../../data/css/variables";
+import { restrictedVariables } from "../../features/graph/data/math";
+import { AdjacencyList, SerializedAdjList } from "../../helpers/dts";
 import {
   ClientGraphData,
   GraphData,
@@ -21,6 +23,7 @@ export function createNewGraph(): ClientGraphData {
     name: "Untitled",
     items: {
       scope: { e: Math.E, pi: Math.PI },
+      dependencyGraph: {},
       nextId: 2,
       focusedId: 1,
       data: [createNewItem("expression", 1)],
@@ -41,6 +44,7 @@ export function saveCurrentGraph(currentGraph: ClientGraphData): GraphData {
 
 export function restoreSavedGraph(graph: GraphData): ClientGraphData {
   const scope: Scope = {};
+  const depGraph: SerializedAdjList = {};
   let maxId: number = 1;
 
   for (let i = 0; i < graph.items.length; i++) {
@@ -50,11 +54,16 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
     if (isExpression(item) && item.data.parsedContent) {
       if (item.data.type === "variable") {
         scope[item.data.parsedContent.name] = item.data.parsedContent.value;
+        addDependencies(
+          item.data.parsedContent.name,
+          item.data.parsedContent.scopeDeps,
+          depGraph
+        );
       } else if (item.data.type == "function") {
         const fnName = item.data.parsedContent.name;
-
-        if (fnName === "f" || fnName === "x" || fnName === "y") continue;
-        scope[fnName] = item.data.content;
+        if (restrictedVariables.has(fnName)) continue;
+        scope[fnName] = item.data.parsedContent.node;
+        addDependencies(fnName, item.data.parsedContent.scopeDeps, depGraph);
       }
     }
   }
@@ -66,6 +75,7 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
       nextId: maxId + 1,
       focusedId: -1,
       data: graph.items,
+      dependencyGraph: depGraph,
     },
   };
 }
@@ -106,11 +116,25 @@ export function createNewItem<T extends ItemType>(
 
 // SCOPE
 
-export function deleteFromScope(data: ItemData["expression"], scope: Scope) {
-  if (data.type == "variable" && data.parsedContent) {
-    if (data.parsedContent.name in scope) delete scope[data.parsedContent.name];
-  } else if (data.type === "function" && data.parsedContent) {
-    if (data.parsedContent.name in scope) delete scope[data.parsedContent.name];
+export function deleteFromScope(
+  deleted: string,
+  depGraph: SerializedAdjList,
+  scope: Scope
+) {
+  const queue: string[] = [deleted];
+
+  while (queue.length) {
+    const v = queue.pop()!;
+    if (!(v in scope)) continue;
+    delete scope[v];
+
+    const edges = depGraph[v];
+
+    edges.forEach((edge) => {
+      if (edge in scope) {
+        queue.push(edge);
+      }
+    });
   }
 }
 
@@ -120,7 +144,6 @@ export function isInScope(
   scope: Scope
 ): boolean {
   if (target in scope) {
-
     if (data.type === "variable" && data.parsedContent) {
       return data.parsedContent.name === target ? false : true;
     } else if (data.type === "function" && data.parsedContent) {
@@ -132,6 +155,40 @@ export function isInScope(
   return false;
 }
 
-// export function updateScopedDependants(parsedContent) {
+export function dependenciesInScope(depArray: string[], scope: Scope) {
+  for (let i = 0; i < depArray.length; i++) {
+    if (depArray[i] in scope) continue;
+    return false;
+  }
+  return true;
+}
 
-// }
+export function addDependencies(
+  variable: string,
+  depArray: string[],
+  graph: SerializedAdjList
+) {
+  if (depArray.length) {
+    depArray.forEach((dep) => {
+      AdjacencyList.addNode(dep, graph);
+      AdjacencyList.addEdge(dep, variable, graph);
+    });
+  }
+  AdjacencyList.addNode(variable, graph);
+}
+
+export function removeDependencies(
+  variable: string,
+  depArray: string[],
+  graph: SerializedAdjList
+) {
+  depArray.forEach((dep) => {
+    const edges = graph[dep];
+    for (let i = 0; i < edges.length; i++) {
+      if (edges[i] === variable) {
+        edges.splice(i, 1);
+        break;
+      }
+    }
+  });
+}

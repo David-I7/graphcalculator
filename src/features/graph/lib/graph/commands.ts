@@ -664,10 +664,7 @@ export class DrawFunctionCommand implements GraphCommand {
     public commandState: CommandState
   ) {
     this.pointController = new FunctionPointController(graph, this);
-    // this.tooltipCommand = new DrawTooltipCommand(graph, this);
-
     this.graph.addCommand(this);
-    console.log(this.data);
   }
 
   setStatus<T extends CommandState["status"]>(status: T) {

@@ -11,8 +11,13 @@ import {
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
-import { GlobalMathFunctions, restrictedVariables } from "../../data/math";
-import { Scope } from "../../../../state/graph/types";
+import {
+  GlobalMathConstants,
+  GlobalMathFunctions,
+  restrictedVariables,
+} from "../../data/math";
+import { Expression, Scope } from "../../../../state/graph/types";
+import { isInScope } from "../../../../state/graph/controllers";
 
 const ErrorCause = {
   invalid_function_declaration: 0,
@@ -39,6 +44,79 @@ export type ExpressionValidationResult = ApplicationError | MathNode;
 
 export class ExpressionValidator {
   constructor() {}
+
+  validateRecursive(
+    expr: string,
+    data: Expression,
+    scope: Scope
+  ): ExpressionValidationResult {
+    const { err, node } = this.validateSyntax(expr);
+    if (err) return err;
+
+    const { err: scopeErr } = this.initializeScope(node, data, scope);
+    if (scopeErr) return scopeErr;
+
+    try {
+      node.traverse((node, path, parent) => {
+        const res = this.validateNode(node, parent, scope);
+        if ("code" in res) throw res;
+      });
+    } catch (err) {
+      return err as ApplicationError;
+    }
+
+    return node;
+  }
+
+  initializeScope(
+    node: MathNode,
+    data: Expression,
+    scope: Scope
+  ): SyntaxValidationResult {
+    if (node instanceof FunctionAssignmentNode) {
+      if (isInScope(node.name, data, scope)) {
+        return {
+          err: this.makeExpressionError(
+            `
+              You've defined '${node.name}' in more than one place. Try deleting some of the definitions of '${node.name}'.
+              `,
+            "invalid_variable_declaration"
+          ),
+          node: undefined,
+        };
+      }
+
+      if (node.params.length) {
+        scope[node.params[0]] = 0;
+      }
+    } else if (node instanceof AssignmentNode) {
+      const variable = node.object.name;
+
+      if (variable === "f" || GlobalMathConstants.has(variable))
+        return {
+          err: this.makeExpressionError(
+            `'${variable}' is a restricted symbol. Try using a different one instead.`,
+            "invalid_variable_declaration"
+          ),
+          node: undefined,
+        };
+      else {
+        if (isInScope(variable, data, scope)) {
+          return {
+            err: this.makeExpressionError(
+              `
+                You've defined '${variable}' in more than one place. Try deleting some of the definitions of '${variable}'.
+                `,
+              "invalid_variable_declaration"
+            ),
+            node: undefined,
+          };
+        }
+      }
+    }
+
+    return { err: undefined, node };
+  }
 
   validateNode(node: MathNode, parent: MathNode | undefined, scope: Scope) {
     if (node instanceof ConstantNode) {
@@ -179,7 +257,16 @@ export class ExpressionValidator {
     }
 
     if (parent instanceof AssignmentNode && parent.object === node) return node;
-    if (parent instanceof FunctionNode && parent.fn === node) return node;
+
+    if (parent instanceof FunctionNode && parent.fn === node) {
+      if (node.name in scope && typeof scope[node.name] === "number")
+        return this.makeExpressionError(
+          `'${node.name}' is not a function. Try removing the parenthesis.`,
+          "invalid_variable_declaration"
+        );
+
+      return node;
+    }
 
     // f(x) = symbol
     if (!(node.name in scope)) {
@@ -356,3 +443,5 @@ export class ExpressionValidator {
     };
   }
 }
+
+export default new ExpressionValidator();
