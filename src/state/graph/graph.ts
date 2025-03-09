@@ -5,7 +5,6 @@ import {
   Expression,
   ExpressionType,
   GraphData,
-  isExpression,
   Item,
   ItemData,
   ItemType,

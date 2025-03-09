@@ -215,6 +215,8 @@ const ExpressionListItem = React.memo(
     );
   },
   (prev, cur) => {
+    // console.log(!scopeDepsChanged(prev.scope, cur.scope, cur.item), cur.item);
+    // console.log(prev.scope === cur.scope);
     if (
       prev.idx === cur.idx &&
       prev.focused === cur.focused &&
@@ -226,3 +228,32 @@ const ExpressionListItem = React.memo(
     return false;
   }
 );
+
+// function scopeDepsChanged(
+//   prevScope: Scope,
+//   curScope: Scope,
+//   prevItem: Item,
+//   curItem: Item
+// ): boolean {
+
+//   if (!isExpression(curItem)) return false;
+//   if (prevItem !== curItem) return true
+
+//   const prevData = prevItem.data as Expression;
+//   const curData = curItem.data as Expression;
+
+//   //   for (let i = 0; i < curData.parsedContent.scopeDeps.length; i++) {
+//   //   if (
+//   //     prevScope[data.parsedContent.scopeDeps[i]] ===
+//   //     curScope[data.parsedContent.scopeDeps[i]]
+//   //   )
+//   //     continue;
+//   //   return true;
+//   // }
+
+//   // if (!curData.parsedContent || !curData.parsedContent.scopeDeps.length ||
+//   //   prevData.parsedContent
+//   // ) return false;
+
+//   // return false;
+// }

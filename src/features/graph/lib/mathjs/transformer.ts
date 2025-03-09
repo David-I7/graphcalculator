@@ -37,6 +37,15 @@ export class ExpressionTransformer {
     if (node instanceof AssignmentNode) {
       const variable = node.object.name;
 
+      if (variable === "f" || GlobalMathConstants.has(variable))
+        return {
+          err: this.validator.makeExpressionError(
+            `'${variable}' is a restricted symbol. Try using a different one instead.`,
+            "invalid_variable_declaration"
+          ),
+          node: undefined,
+        };
+
       if (variable === "y" || variable === "x") {
         const fn = new FunctionAssignmentNode(
           "f",
