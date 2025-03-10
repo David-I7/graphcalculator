@@ -7,7 +7,11 @@ import {
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
-import { ExpressionValidationResult, ExpressionValidator } from "./validation";
+import {
+  ExpressionValidationResult,
+  ExpressionValidator,
+  ValidationContext,
+} from "./validation";
 import { GlobalMathConstants, isGlobalFunctionRegex } from "../../data/math";
 import { ItemData, Scope } from "../../../../state/graph/types";
 import { isInScope } from "../../../../state/graph/controllers";
@@ -53,20 +57,24 @@ export class ExpressionTransformer {
           node.value
         );
 
-        scope[fn.params[0]] = 0;
+        const transformContext = {
+          scope,
+          variable,
+        };
 
-        return this.transformNode(fn, undefined, scope);
+        return this.transformNode(fn, undefined, transformContext);
       }
     }
 
-    this.validator.initializeScope(node, data, scope);
-    return this.transformNode(node, undefined, scope);
+    const ctx = this.validator.initializeContext(node, data, scope);
+    if ("code" in ctx) return { err: ctx, node: undefined };
+    return this.transformNode(node, undefined, ctx);
   }
 
   transformNode(
     outerNode: MathNode,
     outerParent: MathNode | undefined,
-    scope: Scope
+    ctx: ValidationContext
   ): TransformedResult {
     let transformedNode!: MathNode;
     let res!: ExpressionValidationResult;
@@ -75,84 +83,36 @@ export class ExpressionTransformer {
         const parent = outerNode === innerNode ? outerParent : innerParent;
 
         if (innerNode instanceof FunctionNode) {
-          const res = this.transformImplicitMultiplication(
-            innerNode,
-            parent,
-            scope
-          );
-          if ("code" in res) {
-            throw res;
-          }
+          const res = this.transformImplicitMultiplication(innerNode, parent);
+          if ("code" in res) throw res;
 
           if (innerNode !== res) {
-            const subNode = this.transformNode(res, parent, scope);
+            const subNode = this.transformNode(res, parent, ctx);
             if (subNode.err) throw subNode.err;
             return subNode.node;
           }
         } else if (innerNode instanceof SymbolNode) {
-          const res = this.transformImplicitMultiplication(
-            innerNode,
-            parent,
-            scope
-          );
-          if ("code" in res) {
-            throw res;
-          }
+          const res = this.transformImplicitMultiplication(innerNode, parent);
+          if ("code" in res) throw res;
 
           if (innerNode !== res && res instanceof OperatorNode) {
-            const leftNode = this.transformNode(res.args[0], res, scope);
+            const leftNode = this.transformNode(res.args[0], res, ctx);
             if (leftNode.err) throw leftNode.err;
-            const rightNode = this.transformNode(res.args[1], res, scope);
+            const rightNode = this.transformNode(res.args[1], res, ctx);
             if (rightNode.err) throw rightNode.err;
             return res;
           }
         } else if (innerNode instanceof OperatorNode && innerNode.op === "^") {
-          if (innerNode.args[0] instanceof FunctionNode) {
-            const left = this.transformNode(
-              innerNode.args[0],
-              innerNode,
-              scope
-            ) as TransformedResult<OperatorNode>;
-            if (left.err) throw left.err;
-            const right = this.transformNode(
-              innerNode.args[1],
-              innerNode,
-              scope
-            );
-            if (right.err) throw right.err;
+          const res = this.transformPowerOperator(innerNode, ctx);
+          if ("code" in res) throw res;
 
-            innerNode.args[0] = left.node.args[1];
-            left.node.args[1] = innerNode;
-            return left.node;
-          } else if (innerNode.args[0] instanceof SymbolNode) {
-            if (
-              innerNode.args[0].name.length > 1 &&
-              !GlobalMathConstants.has(innerNode.args[0].name)
-            ) {
-              const left = this.transformNode(
-                innerNode.args[0],
-                innerNode,
-                scope
-              ) as TransformedResult<OperatorNode>;
-              if (left.err) throw left.err;
-              const right = this.transformNode(
-                innerNode.args[1],
-                innerNode,
-                scope
-              );
-              if (right.err) throw right.err;
-
-              innerNode.args[0] = left.node.args[1];
-              left.node.args[1] = innerNode;
-              return left.node;
-            }
+          if (innerNode !== res) {
+            return res;
           }
         }
 
-        res = this.validator.validateNode(innerNode, parent, scope);
-        if ("code" in res) {
-          throw res;
-        }
+        res = this.validator.validateNode(innerNode, parent, ctx);
+        if ("code" in res) throw res;
 
         return innerNode;
       });
@@ -163,11 +123,9 @@ export class ExpressionTransformer {
     return { err: undefined, node: transformedNode };
   }
 
-  splitMultiplication(
-    node: SymbolNode,
-    scope: Scope
-  ): ExpressionValidationResult {
+  splitMultiplication(node: SymbolNode): ExpressionValidationResult {
     if (GlobalMathConstants.has(node.name)) return node;
+    if (node.name.length === 1) return node;
 
     const splitSymbol = (
       transformed: OperatorNode<"*", "multiply", MathNode[]> | undefined,
@@ -201,20 +159,6 @@ export class ExpressionTransformer {
       return str[i] === "p" && str[i + 1] === "i";
     };
 
-    const createError = (i: number) => {
-      if (!(node.name[i] in scope)) {
-        return this.validator.makeExpressionError(
-          `Too many variables, try defining '${node.name[i]}'.`,
-          "invalid_variable_declaration"
-        );
-      } else {
-        return this.validator.makeExpressionError(
-          `Too many variables, try defining '${node.name[i + 1]}'.`,
-          "invalid_variable_declaration"
-        );
-      }
-    };
-
     let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
     let i = 0;
     while (i < node.name.length) {
@@ -225,21 +169,17 @@ export class ExpressionTransformer {
         } else if (isPi(node.name, i + 1)) {
           transformed = splitSymbol(transformed, i, i + 1, i + 3);
           i += 3;
-        } else if (node.name[i] in scope && node.name[i + 1] in scope) {
+        } else {
           transformed = splitSymbol(transformed, i, i + 1, i + 2);
           i += 2;
-        } else {
-          return createError(i);
         }
       } else {
         if (isPi(node.name, i)) {
           transformed = splitSymbol(transformed, i, i + 2);
           i += 2;
-        } else if (node.name[i] in scope) {
+        } else {
           transformed = splitSymbol(transformed, i, i + 1);
           i += 1;
-        } else {
-          return createError(i);
         }
       }
     }
@@ -247,10 +187,56 @@ export class ExpressionTransformer {
     return transformed;
   }
 
+  transformPowerOperator(
+    node: OperatorNode<"^", "pow">,
+    ctx: ValidationContext
+  ): ExpressionValidationResult {
+    if (node.args[0] instanceof FunctionNode) {
+      const left = this.transformNode(
+        node.args[0],
+        node,
+        ctx
+      ) as TransformedResult<OperatorNode | FunctionNode>;
+      if (left.err) throw left.err;
+      const right = this.transformNode(node.args[1], node, ctx);
+      if (right.err) throw right.err;
+
+      if (left.node instanceof FunctionNode) {
+        node.args[1] = right.node;
+        return new OperatorNode("^", "pow", node.args, false);
+      }
+
+      node.args[0] = left.node.args[1];
+      node.args[1] = right.node;
+      left.node.args[1] = node;
+      return left.node;
+    } else if (node.args[0] instanceof SymbolNode) {
+      if (
+        node.args[0].name.length > 1 &&
+        !GlobalMathConstants.has(node.args[0].name)
+      ) {
+        const left = this.transformNode(
+          node.args[0],
+          node,
+          ctx
+        ) as TransformedResult<OperatorNode>;
+        if (left.err) throw left.err;
+        const right = this.transformNode(node.args[1], node, ctx);
+        if (right.err) throw right.err;
+
+        node.args[0] = left.node.args[1];
+        node.args[1] = right.node;
+        left.node.args[1] = node;
+        return left.node;
+      }
+    }
+
+    return node;
+  }
+
   transformImplicitMultiplication(
     node: FunctionNode | SymbolNode,
-    parent: MathNode | undefined,
-    scope: Scope
+    parent: MathNode | undefined
   ): ExpressionValidationResult {
     if (node instanceof FunctionNode) {
       if (!parent || node.fn.name.length === 1) return node;
@@ -273,7 +259,6 @@ export class ExpressionTransformer {
         } else {
           //xsinx
           //function sin must have an argument
-
           return this.validator.makeExpressionError(
             `Function '${match[0]}' requires an argument. For example, try typing: '${match[0]}(x)'.`,
             "invalid_function_declaration"
@@ -282,11 +267,10 @@ export class ExpressionTransformer {
       }
 
       // case xn()
-
       const symbolNode = new SymbolNode(
         node.fn.name.substring(0, node.fn.name.length - 1)
       );
-      const resNode = this.splitMultiplication(symbolNode, scope);
+      const resNode = this.splitMultiplication(symbolNode);
       if ("code" in resNode) return resNode;
       node.fn.name = node.fn.name.substring(node.fn.name.length - 1);
       const transformedNode = new OperatorNode(
@@ -301,86 +285,7 @@ export class ExpressionTransformer {
       // example input: xpc
       if (parent instanceof FunctionNode && node === parent.fn) return node;
 
-      if (node.name.length === 1) return node;
-
-      return this.splitMultiplication(node, scope);
-
-      // const splitSymbol = (
-      //   transformed: OperatorNode<"*", "multiply", MathNode[]> | undefined,
-      //   start1: number,
-      //   end1: number,
-      //   end2?: number
-      // ) => {
-      //   if (transformed) {
-      //     transformed = new OperatorNode(
-      //       "*",
-      //       "multiply",
-      //       [transformed, new SymbolNode(node.name.substring(start1, end1))],
-      //       true
-      //     );
-      //   } else {
-      //     transformed = new OperatorNode(
-      //       "*",
-      //       "multiply",
-      //       [
-      //         new SymbolNode(node.name.substring(start1, end1)),
-      //         new SymbolNode(node.name.substring(end1, end2)),
-      //       ],
-      //       true
-      //     );
-      //   }
-
-      //   return transformed;
-      // };
-
-      // const isPi = (str: string, i: number) => {
-      //   return str[i] === "p" && str[i + 1] === "i";
-      // };
-
-      // const createError = (i: number) => {
-      //   if (!(node.name[i] in scope)) {
-      //     return this.validator.makeExpressionError(
-      //       `Too many variables, try defining '${node.name[i]}'.`,
-      //       "invalid_variable_declaration"
-      //     );
-      //   } else {
-      //     return this.validator.makeExpressionError(
-      //       `Too many variables, try defining '${node.name[i + 1]}'.`,
-      //       "invalid_variable_declaration"
-      //     );
-      //   }
-      // };
-
-      // let transformed!: OperatorNode<"*", "multiply", MathNode[]>;
-      // let i = 0;
-      // while (i < node.name.length) {
-      //   if (!transformed) {
-      //     if (isPi(node.name, i)) {
-      //       transformed = splitSymbol(transformed, i, i + 2, i + 3);
-      //       i += 3;
-      //     } else if (isPi(node.name, i + 1)) {
-      //       transformed = splitSymbol(transformed, i, i + 1, i + 3);
-      //       i += 3;
-      //     } else if (node.name[i] in scope && node.name[i + 1] in scope) {
-      //       transformed = splitSymbol(transformed, i, i + 1, i + 2);
-      //       i += 2;
-      //     } else {
-      //       return createError(i);
-      //     }
-      //   } else {
-      //     if (isPi(node.name, i)) {
-      //       transformed = splitSymbol(transformed, i, i + 2);
-      //       i += 2;
-      //     } else if (node.name[i] in scope) {
-      //       transformed = splitSymbol(transformed, i, i + 1);
-      //       i += 1;
-      //     } else {
-      //       return createError(i);
-      //     }
-      //   }
-      // }
-
-      // return transformed;
+      return this.splitMultiplication(node);
     }
   }
 }

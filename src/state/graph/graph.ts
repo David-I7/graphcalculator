@@ -5,6 +5,7 @@ import {
   Expression,
   ExpressionType,
   GraphData,
+  isExpression,
   Item,
   ItemData,
   ItemType,
@@ -237,8 +238,11 @@ const graphSlice = createSlice({
         const depGraph = state.currentGraph.items.dependencyGraph;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
-          scope[action.payload.parsedContent.name] =
-            action.payload.parsedContent.node;
+          scope[action.payload.parsedContent.name] = {
+            type: "function",
+            node: action.payload.parsedContent.node,
+            deps: action.payload.parsedContent.scopeDeps,
+          };
 
           addDependencies(
             action.payload.parsedContent.name,
@@ -306,8 +310,12 @@ const graphSlice = createSlice({
         const depGraph = state.currentGraph.items.dependencyGraph;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
-          scope[action.payload.parsedContent.name] =
-            action.payload.parsedContent.value;
+          scope[action.payload.parsedContent.name] = {
+            type: "variable",
+            node: action.payload.parsedContent.node,
+            value: action.payload.parsedContent.value,
+            deps: action.payload.parsedContent.scopeDeps,
+          };
 
           addDependencies(
             action.payload.parsedContent.name,
@@ -391,7 +399,12 @@ function updateScopeSync(
         const node = parse(expr.parsedContent!.node) as AssignmentNode;
         const newContent = variableParser.parse(node, scope);
         expr.parsedContent = newContent;
-        scope[newContent.name] = newContent.value;
+        scope[newContent.name] = {
+          value: newContent.value,
+          node: newContent.node,
+          deps: newContent.scopeDeps,
+          type: "variable",
+        };
         break;
       }
       case "function": {

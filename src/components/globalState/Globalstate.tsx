@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import MobileState from "./mobile/MobileState";
 import { useFetch } from "../../hooks/api";
 import { getGraphs } from "../../lib/api/graph";
-import { parser } from "mathjs";
+import { parse, parser } from "mathjs";
 
 const Globalstate = () => {
   return (
     <>
-      <MobileState />
-      {/* <Test /> */}
+      {/* <MobileState /> */}
+      <Test />
     </>
   );
 };
@@ -16,6 +16,7 @@ const Globalstate = () => {
 export default Globalstate;
 
 function Test() {
+  console.log(parse("g(x) = 2f(x)^x"));
   const mathParser = parser();
   mathParser.evaluate("b(x) = pi");
   mathParser.evaluate("a=b");
