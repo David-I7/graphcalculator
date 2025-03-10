@@ -5,7 +5,11 @@ import {
   parse,
   SymbolNode,
 } from "mathjs";
-import { GlobalMathFunctions, restrictedVariables } from "../../data/math";
+import {
+  GlobalMathConstants,
+  GlobalMathFunctions,
+  restrictedVariables,
+} from "../../data/math";
 import { InternalScope, Scope } from "../../../../state/graph/types";
 
 export function getAllSymbols(node: MathNode): Set<string> {
@@ -15,6 +19,7 @@ export function getAllSymbols(node: MathNode): Set<string> {
     if (node instanceof SymbolNode) {
       if (
         GlobalMathFunctions.has(node.name) ||
+        GlobalMathConstants.has(node.name) ||
         restrictedVariables.has(node.name)
       )
         return;
@@ -46,10 +51,10 @@ export function createDependencies(
     if (context && symbol in context) return;
 
     const val = globalScope[symbol];
-    if (typeof val === "number") {
-      scope[symbol] = val;
+    if (val.type === "variable") {
+      scope[symbol] = val.value;
     } else {
-      fns.push([symbol, val]);
+      fns.push([symbol, val.node]);
     }
     scopeDeps.push(symbol);
   });

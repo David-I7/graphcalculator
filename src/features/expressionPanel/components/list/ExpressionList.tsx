@@ -115,7 +115,7 @@ function ExpressionListRenderer() {
     }
   }, [items.length]);
 
-  console.log(items);
+  console.log(scope, dependencyGraph);
 
   return (
     <ol className="expression-list" ref={draggableContainerRef}>

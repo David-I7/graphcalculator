@@ -17,7 +17,10 @@ import {
   restrictedVariables,
 } from "../../data/math";
 import { Expression, Scope } from "../../../../state/graph/types";
-import { isInScope } from "../../../../state/graph/controllers";
+import {
+  isCircularReference,
+  isInScope,
+} from "../../../../state/graph/controllers";
 
 const ErrorCause = {
   invalid_function_declaration: 0,
@@ -41,6 +44,7 @@ export type SyntaxValidationResult =
     };
 
 export type ValidationContext = {
+  type: "functionAssignment" | "variableAssignment" | "point";
   variable: string;
   scope: Scope;
 };
@@ -63,7 +67,7 @@ export class ExpressionValidator {
 
     try {
       node.traverse((node, path, parent) => {
-        const res = this.validateNode(node, parent, scope);
+        const res = this.validateNode(node, parent, ctx);
         if ("code" in res) throw res;
       });
     } catch (err) {
@@ -90,6 +94,7 @@ export class ExpressionValidator {
 
       if (node.params.length) {
         return {
+          type: "functionAssignment",
           scope,
           variable: node.params[0],
         };
@@ -114,12 +119,14 @@ export class ExpressionValidator {
       }
 
       return {
+        type: "variableAssignment",
         scope,
         variable,
       };
     }
 
     return {
+      type: "point",
       scope,
       variable: "",
     };
@@ -133,11 +140,11 @@ export class ExpressionValidator {
     if (node instanceof ConstantNode) {
       return this.validateConstantNode(node, parent);
     } else if (node instanceof SymbolNode) {
-      return this.validateSymbolNode(node, parent, scope);
+      return this.validateSymbolNode(node, parent, ctx);
     } else if (node instanceof OperatorNode) {
       return this.validateOperatorNode(node as unknown as OperatorNode, parent);
     } else if (node instanceof FunctionNode) {
-      return this.validateFunctionNode(node, parent, scope);
+      return this.validateFunctionNode(node, parent, ctx);
     } else if (node instanceof FunctionAssignmentNode) {
       return this.validateFunctionAssignmentNode(node, parent);
     } else if (node instanceof ParenthesisNode) {
@@ -253,7 +260,7 @@ export class ExpressionValidator {
   validateSymbolNode(
     node: SymbolNode,
     parent: MathNode | undefined,
-    scope: Scope
+    ctx: ValidationContext
   ): ExpressionValidationResult {
     // assumption is that parent is already valid.
 
@@ -268,29 +275,21 @@ export class ExpressionValidator {
     }
 
     if (parent instanceof AssignmentNode && parent.object === node) return node;
+    if (parent instanceof FunctionNode && parent.fn === node) return node;
 
-    if (parent instanceof FunctionNode && parent.fn === node) {
-      if (node.name in scope && typeof scope[node.name] === "number")
-        return this.makeExpressionError(
-          `'${node.name}' is not a function. Try removing the parenthesis.`,
-          "invalid_variable_declaration"
-        );
-
-      return node;
-    }
-
-    // f(x) = symbol
-    if (!(node.name in scope)) {
-      if (
-        parent instanceof AssignmentNode &&
-        node.name === parent.object.name
-      ) {
+    if (node.name === ctx.variable) {
+      if (ctx.type === "variableAssignment") {
         return this.makeExpressionError(
           `We only support implicit functions of x and y.`,
           "unsupported_feature"
         );
       }
 
+      return node;
+    }
+
+    // f(x) = symbol
+    if (!(node.name in ctx.scope || node.name === ctx.variable)) {
       if (restrictedVariables.has(node.name)) {
         return this.makeExpressionError(
           `'${node.name}' is a restricted symbol. Try using a different one instead.`,
@@ -303,7 +302,14 @@ export class ExpressionValidator {
         "invalid_variable_declaration"
       );
     } else {
-      if (typeof scope[node.name] === "string") {
+      if (isCircularReference(ctx.variable, node.name, ctx.scope)) {
+        return this.makeExpressionError(
+          `'${ctx.variable}' and '${node.name}' can't be defined in terms of eachother.`,
+          "invalid_variable_declaration"
+        );
+      }
+
+      if (ctx.scope[node.name].type === "function") {
         return this.makeExpressionError(
           `'${node.name}' is a function. Try using parenthesis.`,
           "invalid_variable_declaration"
@@ -342,39 +348,43 @@ export class ExpressionValidator {
   validateFunctionNode(
     node: FunctionNode,
     parent: MathNode | undefined,
-    scope: Scope
+    ctx: ValidationContext
   ): ExpressionValidationResult {
     const requiredArgs = 1;
 
-    if (node.fn instanceof SymbolNode) {
-      if (node.fn.name.length === 1) {
-        if (!(node.fn.name in scope))
-          return this.makeExpressionError(
-            `Function ${node.fn.name} is not defined.`,
-            "invalid_variable_declaration"
-          );
-      }
+    if (!(node.fn instanceof SymbolNode))
+      return this.makeExpressionError("", "unknown");
 
-      if (node.args.length > requiredArgs) {
+    //fn name
+    if (node.fn.name.length === 1) {
+      if (ctx.scope[node.fn.name].type === "variable") {
         return this.makeExpressionError(
-          `We only support functions with 1 argument.`,
+          `'${node.fn.name}' is not a function. Try removing the parenthesis.`,
+          "invalid_variable_declaration"
+        );
+      }
+    } else {
+      if (!GlobalMathFunctions.has(node.fn.name))
+        return this.makeExpressionError(
+          `Function '${node.fn.name}' is not defined.`,
           "invalid_function_declaration"
         );
-      } else if (node.args.length < requiredArgs)
-        return this.makeExpressionError(
-          `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`,
-          "invalid_function_declaration"
-        );
-      // else if (!(node.args[0] instanceof SymbolNode))
-      //   return this.makeExpressionError(
-      //     "Calling functions is not supported yet.",
-      //     "unsupported_feature"
-      //   );
     }
+
+    //fn args
+    if (node.args.length > requiredArgs) {
+      return this.makeExpressionError(
+        `We only support functions with 1 argument.`,
+        "invalid_function_declaration"
+      );
+    } else if (node.args.length < requiredArgs)
+      return this.makeExpressionError(
+        `Function '${node.fn.name}' requires an argument. For example, try typing: '${node.fn.name}(x)'.`,
+        "invalid_function_declaration"
+      );
 
     if (!parent) {
       // valid Function node, just not assigned any value
-
       if (!(node.args[0] instanceof SymbolNode)) {
         return this.makeExpressionError(
           "Calling functions is not supported yet.",
