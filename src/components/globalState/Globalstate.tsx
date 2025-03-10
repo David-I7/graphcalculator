@@ -7,8 +7,8 @@ import { parse, parser } from "mathjs";
 const Globalstate = () => {
   return (
     <>
-      <MobileState />
-      {/* <Test /> */}
+      {/* <MobileState /> */}
+      <Test />
     </>
   );
 };
