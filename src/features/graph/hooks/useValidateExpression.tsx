@@ -65,8 +65,7 @@ const useValidateExpression = ({
       return;
     }
 
-    const clonedScope = { ...scope };
-    const res = ExpressionTransformer.transform(item.data, clonedScope);
+    const res = ExpressionTransformer.transform(item.data, scope);
 
     if (res.err) {
       // console.log(res.err);
@@ -123,8 +122,7 @@ const useValidateExpression = ({
     if (!item.data.content) return;
 
     if (!item.data.parsedContent) {
-      const clonedScope = { ...scope };
-      const res = ExpressionTransformer.transform(item.data, clonedScope);
+      const res = ExpressionTransformer.transform(item.data, scope);
 
       if (res.err) {
         // console.log(res.err);
@@ -165,11 +163,10 @@ const useValidateExpression = ({
         }
       }
     } else {
-      const clonedScope = { ...scope };
       const res = ExpressionValidator.validateRecursive(
         item.data.parsedContent.node,
         item.data,
-        clonedScope
+        scope
       );
       if ("code" in res) {
         setError(res);

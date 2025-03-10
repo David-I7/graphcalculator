@@ -22,7 +22,7 @@ export function createNewGraph(): ClientGraphData {
     thumb: "",
     name: "Untitled",
     items: {
-      scope: { e: Math.E, pi: Math.PI },
+      scope: {},
       dependencyGraph: {},
       nextId: 2,
       focusedId: 1,
@@ -47,26 +47,26 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
   const depGraph: SerializedAdjList = {};
   let maxId: number = 1;
 
-  for (let i = 0; i < graph.items.length; i++) {
-    const item = graph.items[i];
-    maxId = Math.max(maxId, item.id);
+  // for (let i = 0; i < graph.items.length; i++) {
+  //   const item = graph.items[i];
+  //   maxId = Math.max(maxId, item.id);
 
-    if (isExpression(item) && item.data.parsedContent) {
-      if (item.data.type === "variable") {
-        scope[item.data.parsedContent.name] = item.data.parsedContent.value;
-        addDependencies(
-          item.data.parsedContent.name,
-          item.data.parsedContent.scopeDeps,
-          depGraph
-        );
-      } else if (item.data.type == "function") {
-        const fnName = item.data.parsedContent.name;
-        if (restrictedVariables.has(fnName)) continue;
-        scope[fnName] = item.data.parsedContent.node;
-        addDependencies(fnName, item.data.parsedContent.scopeDeps, depGraph);
-      }
-    }
-  }
+  //   if (isExpression(item) && item.data.parsedContent) {
+  //     if (item.data.type === "variable") {
+  //       scope[item.data.parsedContent.name] = item.data.parsedContent.value;
+  //       addDependencies(
+  //         item.data.parsedContent.name,
+  //         item.data.parsedContent.scopeDeps,
+  //         depGraph
+  //       );
+  //     } else if (item.data.type == "function") {
+  //       const fnName = item.data.parsedContent.name;
+  //       if (restrictedVariables.has(fnName)) continue;
+  //       scope[fnName] = item.data.parsedContent.node;
+  //       addDependencies(fnName, item.data.parsedContent.scopeDeps, depGraph);
+  //     }
+  //   }
+  // }
 
   return {
     ...graph,
@@ -121,21 +121,34 @@ export function deleteFromScope(
   depGraph: SerializedAdjList,
   scope: Scope
 ) {
-  const queue: string[] = [deleted];
+  delete scope[deleted];
 
-  while (queue.length) {
-    const v = queue.pop()!;
-    if (!(v in scope)) continue;
-    delete scope[v];
+  // const queue: string[] = [deleted];
 
-    const edges = depGraph[v];
+  // while (queue.length) {
+  //   const v = queue.pop()!;
+  //   if (!(v in scope)) continue;
+  //   delete scope[v];
 
-    edges.forEach((edge) => {
-      if (edge in scope) {
-        queue.push(edge);
-      }
-    });
+  //   const edges = depGraph[v];
+
+  //   edges.forEach((edge) => {
+  //     if (edge in scope) {
+  //       queue.push(edge);
+  //     }
+  //   });
+  // }
+}
+
+export function isCircularReference(a: string, b: string, scope: Scope) {
+  if (a === b) return true;
+  if (!scope[b].deps.length) return false;
+
+  for (let i = 0; i < scope[b].deps.length; i++) {
+    if (isCircularReference(a, scope[b].deps[i], scope)) return true;
   }
+
+  return false;
 }
 
 export function isInScope(

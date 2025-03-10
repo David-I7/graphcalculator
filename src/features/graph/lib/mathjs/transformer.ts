@@ -14,7 +14,6 @@ import {
 } from "./validation";
 import { GlobalMathConstants, isGlobalFunctionRegex } from "../../data/math";
 import { ItemData, Scope } from "../../../../state/graph/types";
-import { isInScope } from "../../../../state/graph/controllers";
 
 type TransformedResult<T extends MathNode = MathNode> =
   | {
@@ -41,15 +40,6 @@ export class ExpressionTransformer {
     if (node instanceof AssignmentNode) {
       const variable = node.object.name;
 
-      if (variable === "f" || GlobalMathConstants.has(variable))
-        return {
-          err: this.validator.makeExpressionError(
-            `'${variable}' is a restricted symbol. Try using a different one instead.`,
-            "invalid_variable_declaration"
-          ),
-          node: undefined,
-        };
-
       if (variable === "y" || variable === "x") {
         const fn = new FunctionAssignmentNode(
           "f",
@@ -57,9 +47,10 @@ export class ExpressionTransformer {
           node.value
         );
 
-        const transformContext = {
+        const transformContext: ValidationContext = {
+          type: "functionAssignment",
           scope,
-          variable,
+          variable: fn.params[0],
         };
 
         return this.transformNode(fn, undefined, transformContext);

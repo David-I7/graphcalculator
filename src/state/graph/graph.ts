@@ -250,12 +250,7 @@ const graphSlice = createSlice({
             depGraph
           );
 
-          updateScopeSync(
-            action.payload.parsedContent.name,
-            state.currentGraph.items.data,
-            depGraph,
-            scope
-          );
+          updateScopeSync(action.payload.parsedContent.name, depGraph, scope);
         }
 
         expr.type = "function";
@@ -323,12 +318,7 @@ const graphSlice = createSlice({
             depGraph
           );
 
-          updateScopeSync(
-            action.payload.parsedContent.name,
-            state.currentGraph.items.data,
-            depGraph,
-            scope
-          );
+          updateScopeSync(action.payload.parsedContent.name, depGraph, scope);
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
@@ -365,7 +355,6 @@ const selectExpression = () => {};
 
 function updateScopeSync(
   updated: string,
-  items: Item[],
   depGraph: SerializedAdjList,
   scope: Scope
 ) {
@@ -377,28 +366,26 @@ function updateScopeSync(
 
   topologyOrder = topologyOrder.slice(updatedIdx + 1);
 
-  const exprMap: Record<string, Expression> = {};
-  items.forEach((item) => {
-    if (
-      isExpression(item) &&
-      item.data.parsedContent &&
-      "name" in item.data.parsedContent
-    ) {
-      exprMap[item.data.parsedContent.name] = item.data;
-    }
-  });
+  // const exprMap: Record<string, Expression> = {};
+  // items.forEach((item) => {
+  //   if (
+  //     isExpression(item) &&
+  //     item.data.parsedContent &&
+  //     "name" in item.data.parsedContent
+  //   ) {
+  //     exprMap[item.data.parsedContent.name] = item.data;
+  //   }
+  // });
 
   for (const v of topologyOrder) {
-    const expr = exprMap[v];
+    const expr = scope[v];
 
-    if (!expr || !dependenciesInScope(expr.parsedContent!.scopeDeps, scope))
-      continue;
+    if (!expr || !dependenciesInScope(expr.deps, scope)) continue;
 
     switch (expr.type) {
       case "variable": {
-        const node = parse(expr.parsedContent!.node) as AssignmentNode;
+        const node = parse(expr.node) as AssignmentNode;
         const newContent = variableParser.parse(node, scope);
-        expr.parsedContent = newContent;
         scope[newContent.name] = {
           value: newContent.value,
           node: newContent.node,

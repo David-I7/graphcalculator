@@ -18,7 +18,7 @@ export default Globalstate;
 function Test() {
   console.log(parse("g(x) = 2f(x)^x"));
   const mathParser = parser();
-  mathParser.evaluate("b(x) = pi");
+  mathParser.evaluate("b(x) = e*pi");
   mathParser.evaluate("a=b");
   const f = mathParser.get("a");
 
