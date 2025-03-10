@@ -61,8 +61,21 @@ export type Expression<T extends ExpressionType = ExpressionType> =
 // Client State
 
 export type Scope = {
-  [index: string]: string | number;
+  [index: string]: ScopeValue;
 };
+
+type ScopeValue =
+  | {
+      type: "function";
+      node: string;
+      deps: string[];
+    }
+  | {
+      type: "variable";
+      node: string;
+      value: number;
+      deps: string[];
+    };
 
 export type InternalScope = {
   [index: string]: (() => number) | number;
