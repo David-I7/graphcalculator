@@ -9,12 +9,14 @@ import {
 import ResizableTextarea from "../../../../components/input/ResizableTextarea";
 import { useClickOutside, useFocus } from "../../../../hooks/dom";
 import { Item, ItemType } from "../../../../state/graph/types";
+import { ApplicationError } from "../../../../state/error/error";
 
 type ExpressionTextAreaProps<T extends ItemType = ItemType> = {
   focused: boolean;
   item: Item<T>;
   dispatch: ReturnType<typeof useAppDispatch>;
   idx: number;
+  error: ApplicationError | null;
 };
 
 const handleFocus = (id: number) => {
@@ -47,6 +49,7 @@ const FunctionTextArea = ({
   item,
   dispatch,
   idx,
+  error,
 }: ExpressionTextAreaProps<"expression">) => {
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -90,7 +93,7 @@ const FunctionTextArea = ({
           },
         }}
       />
-      {item.data.type === "variable" && item.data.parsedContent && (
+      {item.data.type === "variable" && !error && (
         <div
           style={{
             height: "2.5rem",
@@ -99,7 +102,7 @@ const FunctionTextArea = ({
             fontSize: "1.5rem",
           }}
         >
-          = {item.data.parsedContent.value}
+          = {item.data.parsedContent!.value}
         </div>
       )}
     </div>

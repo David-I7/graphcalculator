@@ -115,7 +115,7 @@ function ExpressionListRenderer() {
     }
   }, [items.length]);
 
-  console.log(scope, dependencyGraph);
+  console.log(scope, dependencyGraph, items);
 
   return (
     <ol className="expression-list" ref={draggableContainerRef}>
@@ -188,6 +188,7 @@ const ExpressionListItem = React.memo(
           idx={idx}
           dispatch={dispatch}
           focused={focused}
+          error={error}
         />
 
         <ButtonTarget
@@ -215,14 +216,11 @@ const ExpressionListItem = React.memo(
     );
   },
   (prev, cur) => {
-    if (
+    return (
       prev.idx === cur.idx &&
       prev.focused === cur.focused &&
       prev.item === cur.item &&
       prev.scope === cur.scope
-    )
-      return true;
-
-    return false;
+    );
   }
 );

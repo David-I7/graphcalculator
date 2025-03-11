@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApplicationError } from "../../../state/error/error";
 import {
   removeParsedContent,
@@ -6,19 +6,9 @@ import {
   updatePointExpr,
   updateVariableExpr,
 } from "../../../state/graph/graph";
-import {
-  Expression,
-  isExpression,
-  Item,
-  Scope,
-} from "../../../state/graph/types";
+import { isExpression, Item, Scope } from "../../../state/graph/types";
 import ExpressionTransformer from "../lib/mathjs/transformer";
-import {
-  AssignmentNode,
-  FunctionAssignmentNode,
-  ObjectNode,
-  parse,
-} from "mathjs";
+import { AssignmentNode, FunctionAssignmentNode, ObjectNode } from "mathjs";
 import {
   functionParser,
   pointParser,
@@ -26,6 +16,7 @@ import {
 } from "../lib/mathjs/parse";
 import { useAppDispatch } from "../../../state/hooks";
 import ExpressionValidator from "../lib/mathjs/validation";
+import { dependenciesInScope } from "../../../state/graph/controllers";
 
 const useValidateExpression = ({
   idx,
@@ -68,7 +59,6 @@ const useValidateExpression = ({
     const res = ExpressionTransformer.transform(item.data, scope);
 
     if (res.err) {
-      // console.log(res.err);
       if (item.data.parsedContent) {
         dispatch(
           removeParsedContent({
@@ -114,68 +104,24 @@ const useValidateExpression = ({
         setError(null);
       }
     }
-
-    //runs 2 times when something get added or removed from scope...
   }, [item.data.content]);
 
   useEffect(() => {
-    if (!item.data.content) return;
+    if (!item.data.parsedContent) return;
 
-    if (!item.data.parsedContent) {
-      const res = ExpressionTransformer.transform(item.data, scope);
-
-      if (res.err) {
-        // console.log(res.err);
-        setError(res.err);
-      } else {
-        // console.log(res.node);
-        if (res.node instanceof FunctionAssignmentNode) {
-          const parsedContent = functionParser.parse(res.node, scope);
-          dispatch(
-            updateFunctionExpr({
-              id: item.id,
-              idx,
-              parsedContent,
-            })
-          );
-        } else if (res.node instanceof AssignmentNode) {
-          const parsedContent = variableParser.parse(res.node, scope);
-          dispatch(
-            updateVariableExpr({
-              id: item.id,
-              idx,
-              parsedContent,
-            })
-          );
-        } else if (res.node instanceof ObjectNode) {
-          const parsedContent = pointParser.parse(res.node, scope);
-          dispatch(
-            updatePointExpr({
-              id: item.id,
-              idx,
-              parsedContent,
-            })
-          );
-        }
-
-        if (error) {
-          setError(null);
-        }
+    if (dependenciesInScope(item.data.parsedContent.scopeDeps, scope)) {
+      if (error) {
+        setError(null);
       }
-    } else {
-      const res = ExpressionValidator.validateRecursive(
-        item.data.parsedContent.node,
-        item.data,
-        scope
-      );
-      if ("code" in res) {
-        setError(res);
-      } else {
-        if (error) {
-          setError(null);
-        }
-      }
+      return;
     }
+
+    const err = ExpressionValidator.validateRecursive(
+      item.data.content,
+      item.data,
+      scope
+    );
+    setError(err as ApplicationError);
   }, [scope]);
 
   return error;
