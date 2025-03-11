@@ -4,6 +4,7 @@ import {
   FunctionNode,
   MathNode,
   OperatorNode,
+  ParenthesisNode,
   SymbolNode,
 } from "mathjs";
 import { ApplicationError } from "../../../../state/error/error";
@@ -74,19 +75,28 @@ export class ExpressionTransformer {
         const parent = outerNode === innerNode ? outerParent : innerParent;
 
         if (innerNode instanceof FunctionNode) {
-          const res = this.transformImplicitMultiplication(innerNode, parent);
+          const res = this.transformImplicitMultiplication(
+            innerNode,
+            parent,
+            ctx
+          );
           if ("code" in res) throw res;
-
-          if (innerNode !== res) {
-            const subNode = this.transformNode(res, parent, ctx);
-            if (subNode.err) throw subNode.err;
-            return subNode.node;
+          if (res instanceof OperatorNode) {
+            const leftNode = this.transformNode(res.args[0], res, ctx);
+            if (leftNode.err) throw leftNode.err;
+            const rightNode = this.transformNode(res.args[1], res, ctx);
+            if (rightNode.err) throw rightNode.err;
+            return res;
           }
         } else if (innerNode instanceof SymbolNode) {
-          const res = this.transformImplicitMultiplication(innerNode, parent);
+          const res = this.transformImplicitMultiplication(
+            innerNode,
+            parent,
+            ctx
+          );
           if ("code" in res) throw res;
 
-          if (innerNode !== res && res instanceof OperatorNode) {
+          if (res instanceof OperatorNode) {
             const leftNode = this.transformNode(res.args[0], res, ctx);
             if (leftNode.err) throw leftNode.err;
             const rightNode = this.transformNode(res.args[1], res, ctx);
@@ -178,6 +188,17 @@ export class ExpressionTransformer {
     return transformed;
   }
 
+  splitFunctionNode(node: FunctionNode) {
+    if (node.args.length !== 1) return node;
+
+    return new OperatorNode(
+      "*",
+      "multiply",
+      [new SymbolNode(node.fn.name), new ParenthesisNode(node.args[0])],
+      false
+    );
+  }
+
   transformPowerOperator(
     node: OperatorNode<"^", "pow">,
     ctx: ValidationContext
@@ -227,10 +248,21 @@ export class ExpressionTransformer {
 
   transformImplicitMultiplication(
     node: FunctionNode | SymbolNode,
-    parent: MathNode | undefined
+    parent: MathNode | undefined,
+    ctx: ValidationContext
   ): ExpressionValidationResult {
     if (node instanceof FunctionNode) {
-      if (!parent || node.fn.name.length === 1) return node;
+      // s()
+      if (!parent || node.fn.name.length === 1) {
+        if (
+          node.fn.name in ctx.scope &&
+          ctx.scope[node.fn.name].type === "function"
+        ) {
+          return node;
+        } else {
+          return this.splitFunctionNode(node);
+        }
+      }
 
       const match = node.fn.name.match(isGlobalFunctionRegex);
       if (match) {
