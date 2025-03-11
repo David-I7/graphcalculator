@@ -1,10 +1,18 @@
 // GRAPH
 
+import {
+  AssignmentNode,
+  FunctionAssignmentNode,
+  MathNode,
+  ObjectNode,
+} from "mathjs";
 import { CSS_VARIABLES } from "../../data/css/variables";
 import { restrictedVariables } from "../../features/graph/data/math";
+import ExpressionTransformer from "../../features/graph/lib/mathjs/transformer";
 import { AdjacencyList, SerializedAdjList } from "../../helpers/dts";
 import {
   ClientGraphData,
+  Expression,
   GraphData,
   isExpression,
   Item,
@@ -12,6 +20,11 @@ import {
   ItemType,
   Scope,
 } from "./types";
+import {
+  functionParser,
+  pointParser,
+  variableParser,
+} from "../../features/graph/lib/mathjs/parse";
 
 export function createNewGraph(): ClientGraphData {
   const createdAt = new Date().toJSON();
@@ -116,28 +129,8 @@ export function createNewItem<T extends ItemType>(
 
 // SCOPE
 
-export function deleteFromScope(
-  deleted: string,
-  depGraph: SerializedAdjList,
-  scope: Scope
-) {
+export function deleteFromScope(deleted: string, scope: Scope) {
   delete scope[deleted];
-
-  // const queue: string[] = [deleted];
-
-  // while (queue.length) {
-  //   const v = queue.pop()!;
-  //   if (!(v in scope)) continue;
-  //   delete scope[v];
-
-  //   const edges = depGraph[v];
-
-  //   edges.forEach((edge) => {
-  //     if (edge in scope) {
-  //       queue.push(edge);
-  //     }
-  //   });
-  // }
 }
 
 export function isCircularReference(a: string, b: string, scope: Scope) {
@@ -204,4 +197,155 @@ export function removeDependencies(
       }
     }
   });
+}
+
+export function updateScopeSync(
+  updated: string,
+  depGraph: SerializedAdjList,
+  items: Item[],
+  scope: Scope
+) {
+  let topologyOrder = AdjacencyList.topologicSort(depGraph);
+  if (!topologyOrder) throw new Error("Cycle has been detected");
+
+  const updatedIdx = topologyOrder.findIndex((v) => v === updated);
+  if (updatedIdx === -1 || updatedIdx === topologyOrder.length - 1) return;
+
+  topologyOrder = topologyOrder.slice(updatedIdx + 1);
+
+  const varToItem: Record<string, Expression> = {};
+  const nonScopedExpr: Expression[] = [];
+  items.forEach((item) => {
+    if (
+      isExpression(item) &&
+      item.data.parsedContent &&
+      "name" in item.data.parsedContent
+    ) {
+      varToItem[item.data.parsedContent.name] = item.data;
+    } else if (isExpression(item) && item.data.parsedContent) {
+      nonScopedExpr.push(item.data);
+    }
+  });
+
+  const updatedExpr: Set<string> = new Set(updated);
+  for (const v of topologyOrder) {
+    const expr = varToItem[v];
+
+    if (!expr || !dependenciesInScope(expr.parsedContent!.scopeDeps, scope))
+      continue;
+
+    updatedExpr.add(v);
+    switch (expr.type) {
+      case "variable": {
+        const res = ExpressionTransformer.transform(expr, scope);
+        if (res.err) {
+          expr.parsedContent = undefined;
+          delete scope[v];
+          break;
+        }
+
+        const newContent = variableParser.parse(
+          res.node as AssignmentNode,
+          scope
+        );
+        expr.parsedContent = newContent;
+        scope[newContent.name] = {
+          value: newContent.value,
+          node: newContent.node,
+          deps: newContent.scopeDeps,
+          type: "variable",
+        };
+        break;
+      }
+      case "function": {
+        // this means that it is now safe to compute function
+        // for dependents
+
+        const res = ExpressionTransformer.transform(expr, scope);
+        if (res.err) {
+          expr.parsedContent = undefined;
+          delete scope[v];
+          break;
+        }
+
+        const newContent = functionParser.parse(
+          res.node as FunctionAssignmentNode,
+          scope
+        );
+        expr.parsedContent = newContent;
+        scope[newContent.name] = {
+          node: newContent.node,
+          deps: newContent.scopeDeps,
+          type: "function",
+        };
+        break;
+      }
+      default: {
+        throw new Error(`Type is not implemented.`);
+      }
+    }
+  }
+
+  const isDependent = (deps: string[], updated: Set<string>): boolean => {
+    for (let i = 0; i < deps.length; i++) {
+      if (updated.has(deps[i])) return true;
+    }
+    return false;
+  };
+  nonScopedExpr.forEach((expr) => {
+    if (!isDependent(expr.parsedContent!.scopeDeps, updatedExpr)) return;
+
+    switch (expr.type) {
+      case "variable": {
+        // should never happen
+        throw new Error("All varaibles should be inside scope");
+      }
+      case "function": {
+        // anon functions like y=x or f(x)
+        const res = ExpressionTransformer.transform(expr, scope);
+        if (res.err) {
+          expr.parsedContent = undefined;
+          return;
+        }
+
+        expr.parsedContent = functionParser.parse(
+          res.node as FunctionAssignmentNode,
+          scope
+        );
+        return;
+      }
+      case "point": {
+        const res = ExpressionTransformer.transform(expr, scope);
+        if (res.err) {
+          expr.parsedContent = undefined;
+          return;
+        }
+
+        expr.parsedContent = pointParser.parse(
+          res.node as ObjectNode<{ x: MathNode; y: MathNode }>,
+          scope
+        );
+        return;
+      }
+    }
+  });
+}
+
+export function deleteScopeSync(
+  deleted: string,
+  depGraph: SerializedAdjList,
+  scope: Scope
+) {
+  delete scope[deleted];
+  let topologyOrder = AdjacencyList.topologicSort(depGraph);
+  if (!topologyOrder) throw new Error("Cycle has been detected");
+
+  const updatedIdx = topologyOrder.findIndex((v) => v === deleted);
+  if (updatedIdx === -1 || updatedIdx === topologyOrder.length - 1) return;
+
+  topologyOrder = topologyOrder.slice(updatedIdx + 1);
+
+  for (const v of topologyOrder) {
+    delete scope[v];
+  }
 }

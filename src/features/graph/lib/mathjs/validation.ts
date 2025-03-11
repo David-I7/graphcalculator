@@ -314,6 +314,16 @@ export class ExpressionValidator {
           "invalid_variable_declaration"
         );
       }
+
+      if (
+        !(parent instanceof FunctionNode && parent.fn === node) &&
+        ctx.scope[node.name].type === "function"
+      ) {
+        return this.makeExpressionError(
+          `'${node.name}' is a function. Try using parenthesis.`,
+          "invalid_variable_declaration"
+        );
+      }
     }
 
     return node;

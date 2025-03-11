@@ -27,7 +27,6 @@ function useGraphFunction({
   const dispatch = useAppDispatch();
   const command = useRef<DrawFunctionCommand | null>(null);
 
-  console.log(node);
   useEffect(() => {
     if (!node || !graph) return;
 

@@ -1,31 +1,24 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AdjacencyList, SerializedAdjList, swap } from "../../helpers/dts";
+import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
   ExpressionType,
   GraphData,
   isExpression,
-  Item,
   ItemData,
   ItemType,
-  Scope,
 } from "./types";
 import {
   addDependencies,
   createNewGraph,
   createNewItem,
-  deleteFromScope,
-  dependenciesInScope,
+  deleteScopeSync,
   removeDependencies,
   restoreSavedGraph,
   saveCurrentGraph,
+  updateScopeSync,
 } from "./controllers";
-import {
-  pointParser,
-  variableParser,
-} from "../../features/graph/lib/mathjs/parse";
-import { AssignmentNode, MathNode, ObjectNode, parse } from "mathjs";
 import { restrictedVariables } from "../../features/graph/data/math";
 
 interface GraphState {
@@ -107,7 +100,7 @@ const graphSlice = createSlice({
         ) {
           const scope = items.scope;
           const depGraph = items.dependencyGraph;
-          deleteFromScope(item.data.parsedContent.name, depGraph, scope);
+          deleteScopeSync(item.data.parsedContent.name, depGraph, scope);
           removeDependencies(
             item.data.parsedContent.name,
             item.data.parsedContent.scopeDeps,
@@ -200,7 +193,7 @@ const graphSlice = createSlice({
         // previous value
         if (expr.type !== "point" && expr.parsedContent) {
           if (!restrictedVariables.has(expr.parsedContent.name)) {
-            deleteFromScope(expr.parsedContent.name, depGraph, scope);
+            deleteScopeSync(expr.parsedContent.name, depGraph, scope);
             removeDependencies(
               expr.parsedContent.name,
               expr.parsedContent.scopeDeps,
@@ -250,7 +243,12 @@ const graphSlice = createSlice({
             depGraph
           );
 
-          updateScopeSync(action.payload.parsedContent.name, depGraph, scope);
+          updateScopeSync(
+            action.payload.parsedContent.name,
+            depGraph,
+            state.currentGraph.items.data,
+            scope
+          );
         }
 
         expr.type = "function";
@@ -318,7 +316,12 @@ const graphSlice = createSlice({
             depGraph
           );
 
-          updateScopeSync(action.payload.parsedContent.name, depGraph, scope);
+          updateScopeSync(
+            action.payload.parsedContent.name,
+            depGraph,
+            state.currentGraph.items.data,
+            scope
+          );
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
@@ -348,63 +351,3 @@ export const {
   updatePointExpr,
   updateVariableExpr,
 } = graphSlice.actions;
-
-// SELECTORS
-
-const selectExpression = () => {};
-
-function updateScopeSync(
-  updated: string,
-  depGraph: SerializedAdjList,
-  scope: Scope
-) {
-  let topologyOrder = AdjacencyList.topologicSort(depGraph);
-  if (!topologyOrder) throw new Error("Cycle has been detected");
-
-  const updatedIdx = topologyOrder.findIndex((v) => v === updated);
-  if (updatedIdx === -1 || updatedIdx === topologyOrder.length - 1) return;
-
-  topologyOrder = topologyOrder.slice(updatedIdx + 1);
-
-  // const exprMap: Record<string, Expression> = {};
-  // items.forEach((item) => {
-  //   if (
-  //     isExpression(item) &&
-  //     item.data.parsedContent &&
-  //     "name" in item.data.parsedContent
-  //   ) {
-  //     exprMap[item.data.parsedContent.name] = item.data;
-  //   }
-  // });
-
-  // TODO , NEED TO UPDATE THE DEPENDANT IN THE EXPR LIST ALSO TO RERENDER
-  // WITH NEW CONTENT, THIS INCLUDES POINTS AND VARIABLES
-
-  for (const v of topologyOrder) {
-    const expr = scope[v];
-
-    if (!expr || !dependenciesInScope(expr.deps, scope)) continue;
-
-    switch (expr.type) {
-      case "variable": {
-        const node = parse(expr.node) as AssignmentNode;
-        const newContent = variableParser.parse(node, scope);
-        scope[newContent.name] = {
-          value: newContent.value,
-          node: newContent.node,
-          deps: newContent.scopeDeps,
-          type: "variable",
-        };
-        break;
-      }
-      case "function": {
-        // this means that it is now safe to compute function
-        // for dependents
-        break;
-      }
-      default: {
-        throw new Error(`Type is not implemented.`);
-      }
-    }
-  }
-}
