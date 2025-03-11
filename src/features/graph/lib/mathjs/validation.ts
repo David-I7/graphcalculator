@@ -29,6 +29,7 @@ const ErrorCause = {
   syntax: 4,
   unsupported_feature: 5,
   invalid_variable_declaration: 6,
+  undeclared_variable: 7,
 };
 
 const isPointRegex = /\(([^,)]+\)?),(.*)\)/;
@@ -275,7 +276,12 @@ export class ExpressionValidator {
     }
 
     if (parent instanceof AssignmentNode && parent.object === node) return node;
-    if (parent instanceof FunctionNode && parent.fn === node) return node;
+    if (
+      parent instanceof FunctionNode &&
+      parent.fn === node &&
+      GlobalMathFunctions.has(node.name)
+    )
+      return node;
 
     if (node.name === ctx.variable) {
       if (ctx.type === "variableAssignment") {
@@ -299,19 +305,12 @@ export class ExpressionValidator {
 
       return this.makeExpressionError(
         `Too many variables, try defining '${node.name}'.`,
-        "invalid_variable_declaration"
+        "undeclared_variable"
       );
     } else {
       if (isCircularReference(ctx.variable, node.name, ctx.scope)) {
         return this.makeExpressionError(
           `'${ctx.variable}' and '${node.name}' can't be defined in terms of eachother.`,
-          "invalid_variable_declaration"
-        );
-      }
-
-      if (ctx.scope[node.name].type === "function") {
-        return this.makeExpressionError(
-          `'${node.name}' is a function. Try using parenthesis.`,
           "invalid_variable_declaration"
         );
       }
@@ -357,18 +356,20 @@ export class ExpressionValidator {
 
     //fn name
     if (node.fn.name.length === 1) {
-      if (ctx.scope[node.fn.name].type === "variable") {
-        return this.makeExpressionError(
-          `'${node.fn.name}' is not a function. Try removing the parenthesis.`,
-          "invalid_variable_declaration"
-        );
+      if (ctx.scope[node.fn.name]) {
+        if (ctx.scope[node.fn.name].type === "variable") {
+          return this.makeExpressionError(
+            `'${node.fn.name}' is not a function. Try removing the parenthesis.`,
+            "invalid_variable_declaration"
+          );
+        }
+      } else {
+        if (!GlobalMathFunctions.has(node.fn.name))
+          return this.makeExpressionError(
+            `Function '${node.fn.name}' is not defined.`,
+            "invalid_function_declaration"
+          );
       }
-    } else {
-      if (!GlobalMathFunctions.has(node.fn.name))
-        return this.makeExpressionError(
-          `Function '${node.fn.name}' is not defined.`,
-          "invalid_function_declaration"
-        );
     }
 
     //fn args
@@ -385,6 +386,9 @@ export class ExpressionValidator {
 
     if (!parent) {
       // valid Function node, just not assigned any value
+      // show value instead of error
+      // in an = sign like in a variable
+
       if (!(node.args[0] instanceof SymbolNode)) {
         return this.makeExpressionError(
           "Calling functions is not supported yet.",

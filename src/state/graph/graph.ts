@@ -98,7 +98,7 @@ const graphSlice = createSlice({
 
         if (items.data[action.payload.idx].id !== action.payload.id) return;
 
-        const item = items.data[action.payload.id];
+        const item = items.data[action.payload.idx];
 
         if (
           isExpression(item) &&
@@ -376,6 +376,9 @@ function updateScopeSync(
   //     exprMap[item.data.parsedContent.name] = item.data;
   //   }
   // });
+
+  // TODO , NEED TO UPDATE THE DEPENDANT IN THE EXPR LIST ALSO TO RERENDER
+  // WITH NEW CONTENT, THIS INCLUDES POINTS AND VARIABLES
 
   for (const v of topologyOrder) {
     const expr = scope[v];
