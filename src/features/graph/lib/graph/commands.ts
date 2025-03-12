@@ -3,7 +3,7 @@ import { CSS_VARIABLES } from "../../../../data/css/variables";
 import {
   GraphCommand,
   GraphCommandController,
-  MouseEventData,
+  PointerDownEventData,
 } from "../../interfaces";
 import { Graph } from "./graph";
 import {
@@ -17,13 +17,6 @@ import {
   toScientificNotation,
 } from "./utils";
 import { Expression } from "../../../../state/graph/types";
-
-type DrawData = {
-  scaledStep: number;
-  scaler: number;
-  majorGridLine: number;
-  scientificNotation: string[];
-};
 
 export class CommandController implements GraphCommandController {
   public commands: GraphCommand[] = [];
@@ -59,33 +52,39 @@ export class CommandController implements GraphCommandController {
 }
 
 export class DrawGridCommand implements GraphCommand {
-  protected labelsPadding: number = 14;
-  constructor(public graph: Graph) {}
+  protected settings: {
+    labelsPadding: number;
+    labelStrokeWidth: number;
+    minorGridline: number;
+    majorGridline: number;
+  };
+
+  constructor(public graph: Graph) {
+    this.settings = {
+      labelsPadding: this.graph.dpr * 14,
+      labelStrokeWidth: this.graph.dpr * 3,
+      majorGridline: this.graph.dpr * 0.5,
+      minorGridline: this.graph.dpr * 0.25,
+    };
+  }
+
   draw(): void {
     this.graph.ctx.save();
     this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLowest;
-    this.graph.ctx.lineWidth = 0.5;
+    this.graph.ctx.lineWidth = this.settings.minorGridline;
 
-    const scaledStep = this.graph.scales.scaledStep;
-    const scaler: number = this.graph.scales.scaler;
-    const majorGridLine = this.graph.scales.majorGridLine;
-    const scientificNotation = this.graph.scales.getRawScaler().split("e");
-    const drawData = {
-      scaler,
-      majorGridLine,
-      scientificNotation,
-      scaledStep,
-    };
-
-    this.drawVerticalLeft(drawData);
-    this.drawVerticalRight(drawData);
+    this.drawVerticalLeft();
+    this.drawVerticalRight();
 
     //center
-
-    this.graph.ctx.fillText(`0`, -this.labelsPadding, this.labelsPadding);
+    this.graph.ctx.fillText(
+      `0`,
+      -this.settings.labelsPadding,
+      this.settings.labelsPadding
+    );
 
     this.drawHorizontalTop();
-    this.drawHorizontalBottom(drawData);
+    this.drawHorizontalBottom();
 
     this.graph.ctx.restore();
   }
@@ -109,7 +108,7 @@ export class DrawGridCommand implements GraphCommand {
     for (y; y > this.graph.clientTop; y -= this.graph.scales.scaledStep) {
       if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
-        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.lineWidth = this.settings.majorGridline;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
@@ -142,7 +141,7 @@ export class DrawGridCommand implements GraphCommand {
     }
   }
 
-  drawHorizontalBottom(data: DrawData) {
+  drawHorizontalBottom() {
     if (this.graph.clientBottom < 0) return;
 
     let count: number = 1;
@@ -161,7 +160,7 @@ export class DrawGridCommand implements GraphCommand {
     for (y; y < this.graph.clientBottom; y += this.graph.scales.scaledStep) {
       if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
-        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.lineWidth = this.settings.majorGridline;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
@@ -195,7 +194,7 @@ export class DrawGridCommand implements GraphCommand {
     }
   }
 
-  drawVerticalLeft(data: DrawData) {
+  drawVerticalLeft() {
     if (this.graph.clientLeft > 0) return;
 
     let count: number = 1;
@@ -214,7 +213,7 @@ export class DrawGridCommand implements GraphCommand {
     for (x; x > this.graph.clientLeft; x -= this.graph.scales.scaledStep) {
       if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
-        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.lineWidth = this.settings.majorGridline;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
@@ -247,7 +246,7 @@ export class DrawGridCommand implements GraphCommand {
       count++;
     }
   }
-  drawVerticalRight(data: DrawData) {
+  drawVerticalRight() {
     if (this.graph.clientRight < 0) return;
 
     let count: number = 1;
@@ -266,7 +265,7 @@ export class DrawGridCommand implements GraphCommand {
     for (x; x < this.graph.clientRight; x += this.graph.scales.scaledStep) {
       if (count % this.graph.scales.majorGridLine === 0) {
         this.graph.ctx.save();
-        this.graph.ctx.lineWidth = 1;
+        this.graph.ctx.lineWidth = this.settings.majorGridline;
         this.graph.ctx.strokeStyle = CSS_VARIABLES.borderLow;
 
         // grid lines
@@ -382,7 +381,7 @@ export class DrawGridCommand implements GraphCommand {
 
   renderLabel(label: string, axis: "x" | "y", coord: number) {
     this.graph.ctx.strokeStyle = "white";
-    this.graph.ctx.lineWidth = 4;
+    this.graph.ctx.lineWidth = this.settings.labelStrokeWidth;
 
     if (axis === "y") {
       const textMetrics = this.graph.ctx.measureText(label);
@@ -390,35 +389,43 @@ export class DrawGridCommand implements GraphCommand {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
         this.graph.ctx.strokeText(
           label,
-          this.graph.clientLeft + textMetrics.width / 2 + this.labelsPadding,
+          this.graph.clientLeft +
+            textMetrics.width / 2 +
+            this.settings.labelsPadding / 2,
           coord
         );
         this.graph.ctx.fillText(
           label,
-          this.graph.clientLeft + textMetrics.width / 2 + this.labelsPadding,
+          this.graph.clientLeft +
+            textMetrics.width / 2 +
+            this.settings.labelsPadding / 2,
           coord
         );
       } else if (0 > this.graph.clientRight) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
         this.graph.ctx.strokeText(
           label,
-          this.graph.clientRight - this.labelsPadding - textMetrics.width / 2,
+          this.graph.clientRight -
+            this.settings.labelsPadding / 2 -
+            textMetrics.width / 2,
           coord
         );
         this.graph.ctx.fillText(
           label,
-          this.graph.clientRight - this.labelsPadding - textMetrics.width / 2,
+          this.graph.clientRight -
+            this.settings.labelsPadding / 2 -
+            textMetrics.width / 2,
           coord
         );
       } else {
         this.graph.ctx.strokeText(
           label,
-          -textMetrics.width / 2 - this.labelsPadding / 2,
+          -textMetrics.width / 2 - this.settings.labelsPadding / 2,
           coord
         );
         this.graph.ctx.fillText(
           label,
-          -textMetrics.width / 2 - this.labelsPadding / 2,
+          -textMetrics.width / 2 - this.settings.labelsPadding / 2,
           coord
         );
       }
@@ -428,35 +435,35 @@ export class DrawGridCommand implements GraphCommand {
         this.graph.ctx.strokeText(
           label,
           coord,
-          this.graph.clientTop + this.labelsPadding
+          this.graph.clientTop + this.settings.labelsPadding
         );
         this.graph.ctx.fillText(
           label,
           coord,
-          this.graph.clientTop + this.labelsPadding
+          this.graph.clientTop + this.settings.labelsPadding
         );
       } else if (0 > this.graph.clientBottom) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
         this.graph.ctx.strokeText(
           label,
           coord,
-          this.graph.clientBottom - this.labelsPadding
+          this.graph.clientBottom - this.settings.labelsPadding
         );
         this.graph.ctx.fillText(
           label,
           coord,
-          this.graph.clientBottom - this.labelsPadding
+          this.graph.clientBottom - this.settings.labelsPadding
         );
       } else {
-        this.graph.ctx.strokeText(label, coord, this.labelsPadding);
-        this.graph.ctx.fillText(label, coord, this.labelsPadding);
+        this.graph.ctx.strokeText(label, coord, this.settings.labelsPadding);
+        this.graph.ctx.fillText(label, coord, this.settings.labelsPadding);
       }
     }
   }
 
   renderScientificLabel(labels: string[], axis: "x" | "y", coord: number) {
     this.graph.ctx.strokeStyle = "white";
-    this.graph.ctx.lineWidth = 4;
+    this.graph.ctx.lineWidth = this.settings.labelStrokeWidth;
 
     if (axis === "y") {
       if (0 < this.graph.clientLeft) {
@@ -464,7 +471,7 @@ export class DrawGridCommand implements GraphCommand {
         this.drawScientificLabel(
           labels,
           "y",
-          this.graph.clientLeft + this.labelsPadding,
+          this.graph.clientLeft + this.settings.labelsPadding,
           coord
         );
       } else if (0 > this.graph.clientRight) {
@@ -472,11 +479,16 @@ export class DrawGridCommand implements GraphCommand {
         this.drawScientificLabel(
           labels,
           "y",
-          this.graph.clientRight - this.labelsPadding,
+          this.graph.clientRight - this.settings.labelsPadding,
           coord
         );
       } else {
-        this.drawScientificLabel(labels, "y", -this.labelsPadding, coord);
+        this.drawScientificLabel(
+          labels,
+          "y",
+          -this.settings.labelsPadding,
+          coord
+        );
       }
     } else {
       if (0 < this.graph.clientTop) {
@@ -485,7 +497,7 @@ export class DrawGridCommand implements GraphCommand {
           labels,
           "x",
           coord,
-          this.graph.clientTop + this.labelsPadding * 1.5
+          this.graph.clientTop + this.settings.labelsPadding * 1.2
         );
       } else if (0 > this.graph.clientBottom) {
         this.graph.ctx.fillStyle = CSS_VARIABLES.onSurfaceBody;
@@ -493,10 +505,15 @@ export class DrawGridCommand implements GraphCommand {
           labels,
           "x",
           coord,
-          this.graph.clientBottom - this.labelsPadding * 1.5
+          this.graph.clientBottom - this.settings.labelsPadding
         );
       } else {
-        this.drawScientificLabel(labels, "x", coord, this.labelsPadding * 1.5);
+        this.drawScientificLabel(
+          labels,
+          "x",
+          coord,
+          this.settings.labelsPadding * 1.2
+        );
       }
     }
   }
@@ -560,7 +577,9 @@ export class DrawAxisCommand implements GraphCommand {
 
     this.graph.ctx.strokeStyle = CSS_VARIABLES.borderHigh;
     this.graph.ctx.fillStyle = CSS_VARIABLES.borderHigh;
-    this.graph.ctx.lineWidth = 2;
+    this.graph.ctx.lineWidth = 1.5 * this.graph.dpr;
+    const height = 10 * this.graph.dpr;
+    const halfBaseWidth = 6 * this.graph.dpr;
 
     // y axis
     if (
@@ -572,12 +591,12 @@ export class DrawAxisCommand implements GraphCommand {
       this.graph.ctx.beginPath();
       this.graph.ctx.moveTo(0, -this.graph.canvasCenterY - this.graph.offsetY);
       this.graph.ctx.lineTo(
-        -6,
-        -this.graph.canvasCenterY - this.graph.offsetY + 10
+        -halfBaseWidth,
+        -this.graph.canvasCenterY - this.graph.offsetY + height
       );
       this.graph.ctx.lineTo(
-        +6,
-        -this.graph.canvasCenterY - this.graph.offsetY + 10
+        halfBaseWidth,
+        -this.graph.canvasCenterY - this.graph.offsetY + height
       );
       this.graph.ctx.closePath();
       this.graph.ctx.fill();
@@ -596,12 +615,12 @@ export class DrawAxisCommand implements GraphCommand {
       this.graph.ctx.beginPath();
       this.graph.ctx.moveTo(this.graph.canvasCenterX - this.graph.offsetX, 0);
       this.graph.ctx.lineTo(
-        this.graph.canvasCenterX - this.graph.offsetX - 10,
-        -6
+        this.graph.canvasCenterX - this.graph.offsetX - height,
+        -halfBaseWidth
       );
       this.graph.ctx.lineTo(
-        this.graph.canvasCenterX - this.graph.offsetX - 10,
-        +6
+        this.graph.canvasCenterX - this.graph.offsetX - height,
+        +halfBaseWidth
       );
       this.graph.ctx.closePath();
       this.graph.ctx.fill();
@@ -654,7 +673,6 @@ function hasDerivative(node: DFNode): node is DFNode<FunctionAssignmentNode> {
 }
 
 export class DrawFunctionCommand implements GraphCommand {
-  // protected tooltipCommand: DrawTooltipCommand;
   protected pointController: FunctionPointController;
 
   constructor(
@@ -698,7 +716,6 @@ export class DrawFunctionCommand implements GraphCommand {
         }
       }
     } catch (err) {
-      console.log(err);
     } finally {
       this.graph.ctx.restore();
     }
@@ -1109,7 +1126,6 @@ export class DrawFunctionCommand implements GraphCommand {
   }
 
   destroy(): void {
-    // this.tooltipCommand.destroy();
     this.pointController.destroy();
     this.graph.removeCommand(this);
   }
@@ -1141,7 +1157,9 @@ class FunctionPointController implements GraphCommand {
   };
   protected hoveredPoint: PointData | null = null;
   protected highlightedPoints: (PointData & { id: string })[] = [];
-  protected boundHandleMouseDown: ReturnType<typeof this.handleMouseDown.bind>;
+  protected boundHandlePointerDown: ReturnType<
+    typeof this.handlePointerDown.bind
+  >;
   protected tooltip: DrawTooltip;
   constructor(
     public graph: Graph,
@@ -1151,8 +1169,8 @@ class FunctionPointController implements GraphCommand {
     this.pointRadius = graph.dpr * 4;
     this.tooltip = new DrawTooltip(graph);
     this.syncState(this.functionCommand.commandState.status);
-    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
-    this.graph.on("mouseDown", this.boundHandleMouseDown);
+    this.boundHandlePointerDown = this.handlePointerDown.bind(this);
+    this.graph.on("pointerDown", this.boundHandlePointerDown);
   }
 
   syncState<T extends CommandState["status"]>(status: T) {
@@ -1174,7 +1192,7 @@ class FunctionPointController implements GraphCommand {
     }
   }
 
-  handleMouseDown(e: MouseEventData) {
+  handlePointerDown(e: PointerDownEventData) {
     if (this.functionCommand.settings.hidden) return;
 
     const tolerance = 0.25 * this.graph.scales.scaler;
@@ -1255,6 +1273,7 @@ class FunctionPointController implements GraphCommand {
 
       this.setData(outerX, outerY);
       this.functionCommand.setStatus("dragged");
+      this.graph.canvas.setPointerCapture(e.pointerId);
     } else {
       if (this.functionCommand.commandState.status !== "idle") {
         this.functionCommand.setStatus("idle");
@@ -1356,7 +1375,7 @@ class FunctionPointController implements GraphCommand {
 
   init() {
     this.graph.canvas.addEventListener(
-      "mousemove",
+      "pointermove",
       (e) => {
         if (this.functionCommand.commandState.status === "idle") return;
 
@@ -1421,8 +1440,8 @@ class FunctionPointController implements GraphCommand {
       },
       { signal: this.destroyController!.signal }
     );
-    window.addEventListener(
-      "mouseup",
+    this.graph.canvas.addEventListener(
+      "pointerup",
       (e) => {
         this.functionCommand.setStatus("focused");
       },
@@ -1555,7 +1574,7 @@ class FunctionPointController implements GraphCommand {
 
   destroy(): void {
     this.destroyController?.abort();
-    this.graph.removeListener("mouseDown", this.boundHandleMouseDown);
+    this.graph.removeListener("pointerDown", this.boundHandlePointerDown);
   }
 }
 
@@ -1755,7 +1774,7 @@ class DrawTooltip {
 export class DrawPointCommand implements GraphCommand {
   // protected destroyController: AbortController | null = new AbortController()
   protected isHighlighted: boolean = false;
-  protected boundMousedown;
+  protected boundPointerdown;
   protected tooltip: DrawTooltip;
   constructor(
     public graph: Graph,
@@ -1766,11 +1785,11 @@ export class DrawPointCommand implements GraphCommand {
     this.tooltip = new DrawTooltip(graph);
     this.graph.addCommand(this);
 
-    this.boundMousedown = this.handleMouseDown.bind(this);
-    this.graph.on("mouseDown", this.boundMousedown);
+    this.boundPointerdown = this.handlePointerDown.bind(this);
+    this.graph.on("pointerDown", this.boundPointerdown);
   }
 
-  handleMouseDown(e: MouseEventData) {
+  handlePointerDown(e: PointerDownEventData) {
     if (this.settings.hidden) return;
 
     const { graphX, graphY } = e;
@@ -1829,6 +1848,6 @@ export class DrawPointCommand implements GraphCommand {
 
   destroy(): void {
     this.graph.removeCommand(this);
-    this.graph.removeListener("mouseDown", this.boundMousedown);
+    this.graph.removeListener("pointerDown", this.boundPointerdown);
   }
 }

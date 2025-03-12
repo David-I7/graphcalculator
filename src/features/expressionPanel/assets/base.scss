@@ -167,6 +167,27 @@
   }
 }
 
+.function-input-container {
+  color: base.$on-surface-body-high;
+  font-weight: base.$fw-medium;
+  padding-block: 0.5rem;
+  margin-right: 3.5rem;
+  padding-left: 1rem;
+  overflow: hidden;
+
+  .function-input {
+    @extend .font-body-xl;
+    width: 100%;
+    outline: none;
+    resize: none;
+    border: none;
+    background-color: transparent;
+    height: calc(1lh + 0.25rem);
+    overflow: hidden;
+    display: block;
+  }
+}
+
 @media screen and (max-width: 500px) {
   .expression-panel {
     top: 50%;

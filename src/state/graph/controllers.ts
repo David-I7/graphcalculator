@@ -7,7 +7,7 @@ import {
   ObjectNode,
 } from "mathjs";
 import { CSS_VARIABLES } from "../../data/css/variables";
-import { restrictedVariables } from "../../features/graph/data/math";
+import { v4 as uuid } from "uuid";
 import ExpressionTransformer from "../../features/graph/lib/mathjs/transformer";
 import { AdjacencyList, SerializedAdjList } from "../../helpers/dts";
 import {
@@ -29,7 +29,7 @@ import {
 export function createNewGraph(): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
-    id: crypto.randomUUID(),
+    id: uuid(),
     createdAt,
     modifiedAt: createdAt,
     thumb: "",

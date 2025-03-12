@@ -1,9 +1,9 @@
 import { Graph } from "../lib/graph/graph";
-import { MouseEvent, ScaleEvent } from "../lib/graph/graphEvents";
+import { PointerDownEvent, ScaleEvent } from "../lib/graph/graphEvents";
 
 export const eventMap: Record<Event_Name, new (graph: Graph) => BusEvent> = {
   scale: ScaleEvent,
-  mouseDown: MouseEvent,
+  pointerDown: PointerDownEvent,
 };
 
 type BaseEventDefaults = {
@@ -16,14 +16,15 @@ export type ScaleEventData = {
   offsetX: number;
   offsetY: number;
 } & BaseEventDefaults;
-export type MouseEventData = {
+export type PointerDownEventData = {
   graphX: number;
   graphY: number;
+  pointerId: number;
 } & BaseEventDefaults;
 
 export type EventDataMap = {
   scale: ScaleEventData;
-  mouseDown: MouseEventData;
+  pointerDown: PointerDownEventData;
 };
 
 export type Event_Name = keyof EventDataMap;

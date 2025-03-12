@@ -106,8 +106,10 @@ export class GraphSettings {
     let lastMouseY = 0;
 
     this.graph.canvas.addEventListener(
-      "mousedown",
+      "pointerdown",
       (e) => {
+        console.log(this.graph);
+
         const xTiles =
           (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
           this.graph.scales.scaledStep;
@@ -118,28 +120,47 @@ export class GraphSettings {
           this.graph.scales.scaledStep;
         const graphY = yTiles * this.graph.scales.scaler;
 
-        const cutomEvent = {
+        const customEvent = {
           graphX,
           graphY,
-          preventDefault(debug?: string) {
+          preventDefault() {
             this.defaultPrevented = true;
           },
           defaultPrevented: false,
+          pointerId: e.pointerId,
         };
-        this.graph.dispatch("mouseDown", cutomEvent);
+        this.graph.dispatch("pointerDown", customEvent);
 
-        if (cutomEvent.defaultPrevented) {
+        if (customEvent.defaultPrevented) {
           return;
         }
 
         this.isDragging = true;
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
+
+        this.graph.canvas.setPointerCapture(e.pointerId);
+        this.graph.canvas.addEventListener(
+          "pointermove",
+          throttleMouseMove.throttleFunc
+        );
+        this.graph.canvas.addEventListener(
+          "pointerup",
+          () => {
+            this.isDragging = false;
+            this.graph.canvas.removeEventListener(
+              "pointermove",
+              throttleMouseMove.throttleFunc
+            );
+          },
+          { signal: this.destroyController.signal, once: true }
+        );
       },
       { signal: this.destroyController.signal }
     );
 
     const throttleMouseMove = throttle((e) => {
+      // console.log(e);
       if (this.graph.destroyed) return;
       if (!this.isDragging) return;
 
@@ -148,32 +169,14 @@ export class GraphSettings {
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
 
+      console.log(dx, dy);
+
       this.offsetX += dx;
       this.offsetY += dy;
       this.updateClientPosition(this.offsetX, this.offsetY);
 
       this.graph.ctx.translate(dx, dy);
     }, 10);
-
-    this.graph.canvas.addEventListener(
-      "mousemove",
-      throttleMouseMove.throttleFunc,
-      { signal: this.destroyController.signal }
-    );
-    this.graph.canvas.addEventListener(
-      "mouseup",
-      () => {
-        this.isDragging = false;
-      },
-      { signal: this.destroyController.signal }
-    );
-    this.graph.canvas.addEventListener(
-      "mouseleave",
-      () => {
-        this.isDragging = false;
-      },
-      { signal: this.destroyController.signal }
-    );
   }
 
   private updateClientPosition(offsetX: number, offsetY: number) {
