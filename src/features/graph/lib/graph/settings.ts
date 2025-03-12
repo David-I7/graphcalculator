@@ -108,6 +108,8 @@ export class GraphSettings {
     this.graph.canvas.addEventListener(
       "pointerdown",
       (e) => {
+        console.log(this.graph);
+
         const xTiles =
           (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
           this.graph.scales.scaledStep;
@@ -139,15 +141,24 @@ export class GraphSettings {
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
 
+<<<<<<< HEAD
         this.graph.canvas.setPointerCapture(pointerId);
+=======
+        this.graph.canvas.setPointerCapture(e.pointerId);
+>>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
         this.graph.canvas.addEventListener(
           "pointermove",
           throttleMouseMove.throttleFunc
         );
         this.graph.canvas.addEventListener(
           "pointerup",
+<<<<<<< HEAD
           (e: PointerEvent) => {
             pointerId = null;
+=======
+          () => {
+            this.isDragging = false;
+>>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
             this.graph.canvas.removeEventListener(
               "pointermove",
               throttleMouseMove.throttleFunc
@@ -159,7 +170,12 @@ export class GraphSettings {
       { signal: this.destroyController.signal }
     );
 
+<<<<<<< HEAD
     const throttleMouseMove = throttle((e: PointerEvent) => {
+=======
+    const throttleMouseMove = throttle((e) => {
+      // console.log(e);
+>>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
       if (this.graph.destroyed) return;
 
       if (pointerId !== e.pointerId) return;
@@ -169,12 +185,18 @@ export class GraphSettings {
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
 
+      console.log(dx, dy);
+
       this.offsetX += dx;
       this.offsetY += dy;
       this.updateClientPosition(this.offsetX, this.offsetY);
 
       this.graph.ctx.translate(dx, dy);
+<<<<<<< HEAD
     }, 5);
+=======
+    }, 10);
+>>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
   }
 
   private updateClientPosition(offsetX: number, offsetY: number) {
