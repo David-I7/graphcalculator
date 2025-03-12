@@ -86,35 +86,7 @@ const FunctionTextArea = ({
           }}
         ></input>
       </div>
-      {/* <ResizableTextarea
-        ref={ref}
-        container={{
-          className: "font-medium",
-          style: {
-            color: CSS_VARIABLES.onSurfaceBodyHigh,
-            paddingRight: "3.5rem",
-            paddingLeft: "1rem",
-          },
-        }}
-        textarea={{
-          autoFocus: focused,
-          value: item.data.content,
-          onFocus: () => {
-            if (!focused) {
-              dispatch(setFocusedItem(item.id));
-            }
-          },
-          onChange: (e) => {
-            dispatch(
-              updateItemContent({
-                id: item.id,
-                content: e.target.value,
-                idx: idx,
-              })
-            );
-          },
-        }}
-      /> */}
+
       {item.data.type === "variable" && !error && item.data.parsedContent && (
         <div
           style={{

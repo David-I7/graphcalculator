@@ -4,7 +4,6 @@ import ExpressionPanelResizer from "./ExpressionPanelResizer";
 import GraphMenu from "../menu/GraphMenu";
 import { ResizableInput } from "../../../../components/input/ResizableInput";
 import ExpressionPanelNewItem from "./ExpressionPanelNewItem";
-import { CSS_VARIABLES } from "../../../../data/css/variables";
 
 const defaultValue = "Untitled";
 
