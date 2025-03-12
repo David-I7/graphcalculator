@@ -14,7 +14,6 @@ export class GraphSettings {
   public clientBottom!: number;
   public clientLeft!: number;
   public clientRight!: number;
-  public isDragging: boolean = false;
 
   constructor(private graph: Graph) {
     this.dpr = window.devicePixelRatio || 1;
@@ -104,12 +103,11 @@ export class GraphSettings {
 
     let lastMouseX = 0;
     let lastMouseY = 0;
+    let pointerId: number | null = null;
 
     this.graph.canvas.addEventListener(
       "pointerdown",
       (e) => {
-        console.log(this.graph);
-
         const xTiles =
           (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
           this.graph.scales.scaledStep;
@@ -135,19 +133,21 @@ export class GraphSettings {
           return;
         }
 
-        this.isDragging = true;
+        if (pointerId === null) pointerId = e.pointerId;
+        else return;
+
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
 
-        this.graph.canvas.setPointerCapture(e.pointerId);
+        this.graph.canvas.setPointerCapture(pointerId);
         this.graph.canvas.addEventListener(
           "pointermove",
           throttleMouseMove.throttleFunc
         );
         this.graph.canvas.addEventListener(
           "pointerup",
-          () => {
-            this.isDragging = false;
+          (e: PointerEvent) => {
+            pointerId = null;
             this.graph.canvas.removeEventListener(
               "pointermove",
               throttleMouseMove.throttleFunc
@@ -159,24 +159,22 @@ export class GraphSettings {
       { signal: this.destroyController.signal }
     );
 
-    const throttleMouseMove = throttle((e) => {
-      // console.log(e);
+    const throttleMouseMove = throttle((e: PointerEvent) => {
       if (this.graph.destroyed) return;
-      if (!this.isDragging) return;
+
+      if (pointerId !== e.pointerId) return;
 
       const dx = e.clientX - lastMouseX;
       const dy = e.clientY - lastMouseY;
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
 
-      console.log(dx, dy);
-
       this.offsetX += dx;
       this.offsetY += dy;
       this.updateClientPosition(this.offsetX, this.offsetY);
 
       this.graph.ctx.translate(dx, dy);
-    }, 10);
+    }, 5);
   }
 
   private updateClientPosition(offsetX: number, offsetY: number) {

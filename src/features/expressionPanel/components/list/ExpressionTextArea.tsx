@@ -68,7 +68,7 @@ const FunctionTextArea = ({
         <input
           className="function-input"
           ref={ref}
-          autoFocus={focused}
+          // autoFocus={focused}
           value={item.data.content}
           onFocus={() => {
             if (!focused) {

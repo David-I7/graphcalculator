@@ -56,7 +56,6 @@ export function useFocus<T extends HTMLElement>(
     if (!ref.current) return;
 
     if (toggle) {
-      ref.current.focus();
       onFocus?.();
     }
 
