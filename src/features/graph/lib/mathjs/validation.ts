@@ -296,6 +296,8 @@ export class ExpressionValidator {
 
     // f(x) = symbol
     if (!(node.name in ctx.scope || node.name === ctx.variable)) {
+      if (GlobalMathConstants.has(node.name)) return node;
+
       if (restrictedVariables.has(node.name)) {
         return this.makeExpressionError(
           `'${node.name}' is a restricted symbol. Try using a different one instead.`,

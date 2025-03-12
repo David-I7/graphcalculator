@@ -1,4 +1,8 @@
-import { BusEvent, MouseEventData, ScaleEventData } from "../../interfaces";
+import {
+  BusEvent,
+  PointerDownEventData,
+  ScaleEventData,
+} from "../../interfaces";
 import { Graph } from "./graph";
 
 // TODO
@@ -18,6 +22,7 @@ export class ScaleEvent implements BusEvent {
       "wheel",
       (e) => {
         e.preventDefault();
+
         const zoomDirection = e.deltaY > 0 ? "OUT" : "IN";
 
         const event: ScaleEventData = {
@@ -68,7 +73,7 @@ export class ScaleEvent implements BusEvent {
   }
 }
 
-export class MouseEvent implements BusEvent {
+export class PointerDownEvent implements BusEvent {
   protected destroyController: AbortController | null = null;
   public callbacks: Function[] = [];
   constructor(public graph: Graph) {}
@@ -85,7 +90,7 @@ export class MouseEvent implements BusEvent {
     }
   }
 
-  execute(event: MouseEventData): void {
+  execute(event: PointerDownEventData): void {
     for (let i = this.callbacks.length - 1; i >= 0; --i) {
       this.callbacks[i](event);
       if (event.defaultPrevented) return;

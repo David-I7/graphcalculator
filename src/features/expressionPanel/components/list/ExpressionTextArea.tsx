@@ -51,7 +51,7 @@ const FunctionTextArea = ({
   idx,
   error,
 }: ExpressionTextAreaProps<"expression">) => {
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = useRef<HTMLInputElement>(null);
 
   const onFocus = useCallback(() => handleFocus(item.id), [item.id]);
   const onBlur = useCallback(() => handleBlur(item.id), [item.id]);
@@ -64,7 +64,29 @@ const FunctionTextArea = ({
         display: "grid",
       }}
     >
-      <ResizableTextarea
+      <div className="function-input-container">
+        <input
+          className="function-input"
+          ref={ref}
+          autoFocus={focused}
+          value={item.data.content}
+          onFocus={() => {
+            if (!focused) {
+              dispatch(setFocusedItem(item.id));
+            }
+          }}
+          onChange={(e) => {
+            dispatch(
+              updateItemContent({
+                id: item.id,
+                content: e.target.value,
+                idx: idx,
+              })
+            );
+          }}
+        ></input>
+      </div>
+      {/* <ResizableTextarea
         ref={ref}
         container={{
           className: "font-medium",
@@ -92,8 +114,8 @@ const FunctionTextArea = ({
             );
           },
         }}
-      />
-      {item.data.type === "variable" && !error && (
+      /> */}
+      {item.data.type === "variable" && !error && item.data.parsedContent && (
         <div
           style={{
             height: "2.5rem",
@@ -120,15 +142,9 @@ const NoteTextArea = ({
     handleFocus(item.id);
   }, [item.id]);
   const onBlur = useCallback(() => {
-    dispatch(resetFocusedItem(item.id));
     handleBlur(item.id);
   }, [item.id]);
-  const elementSelector = useCallback(
-    () => document.querySelector(".expression-panel") as HTMLDivElement,
-    []
-  );
 
-  useClickOutside(focused, elementSelector, onBlur);
   useFocus(focused, ref, onFocus, onBlur);
 
   return (
@@ -145,7 +161,7 @@ const NoteTextArea = ({
       }}
       textarea={{
         onFocus: () => {
-          dispatch(setFocusedItem(item.id));
+          if (!focused) dispatch(setFocusedItem(item.id));
         },
         autoFocus: focused,
         value: item.data.content,
