@@ -75,14 +75,8 @@ export class GraphSettings {
         Math.abs(e.prevdOriginX) > centerZoomRadius ||
         Math.abs(e.prevdOriginY) > centerZoomRadius
       ) {
-        const newdOriginX = this.graph.scales.distanceFromOrigin(e.graphX);
-        const newdOriginY = this.graph.scales.distanceFromOrigin(e.graphY);
-
-        const dx = newdOriginX - e.prevdOriginX;
-        const dy = newdOriginY - e.prevdOriginY;
-
-        const pushX = Math.floor(dx);
-        const pushY = Math.floor(dy);
+        const pushX = Math.floor(e.scaleDx);
+        const pushY = Math.floor(e.scaleDy);
 
         this.offsetX += -pushX;
         this.offsetY += -pushY;
