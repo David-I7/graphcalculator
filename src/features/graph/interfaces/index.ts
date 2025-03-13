@@ -13,8 +13,10 @@ type BaseEventDefaults = {
 
 export type ScaleEventData = {
   zoomDirection: "IN" | "OUT";
-  offsetX: number;
-  offsetY: number;
+  graphX: number;
+  graphY: number;
+  prevdOriginX: number;
+  prevdOriginY: number;
 } & BaseEventDefaults;
 export type PointerDownEventData = {
   graphX: number;

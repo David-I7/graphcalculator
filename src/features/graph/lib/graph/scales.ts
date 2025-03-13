@@ -15,7 +15,7 @@ export class Scales {
   private scalesIndex: number;
   private scalesArray: string[] = [];
   constructor(private graph: Graph, private step: number, private n: number) {
-    this.step = this.step * this.graph.dpr;
+    this.step = this.step * (window.devicePixelRatio || 1);
     this._scaledStep = this.step;
     this.zoom = 1;
     this.scalesIndex = this.n * 3;
@@ -51,6 +51,30 @@ export class Scales {
 
   get scaledStep(): number {
     return this._scaledStep;
+  }
+
+  calculateGraphCoordinates(offsetX: number, offsetY: number) {
+    const yTiles =
+      (offsetY * this.graph.dpr -
+        (this.graph.canvasCenterY + this.graph.offsetY)) /
+      this.graph.scales.scaledStep;
+    const graphY = yTiles * this.graph.scales.scaler;
+
+    const xTiles =
+      (offsetX * this.graph.dpr -
+        (this.graph.canvasCenterX + this.graph.offsetX)) /
+      this.graph.scales.scaledStep;
+    const graphX = xTiles * this.graph.scales.scaler;
+
+    return { graphX, graphY };
+  }
+
+  distanceFromOrigin(c: number) {
+    // constant * normfactor = d from origin
+    // c = graphX or graphY
+    // normfactor = scaledStep / scaler
+    const normFactor = this.scaledStep / this.scaler;
+    return c * normFactor;
   }
 
   private init() {

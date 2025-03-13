@@ -2,7 +2,7 @@ import { throttle } from "../../../../helpers/performance";
 import { Graph } from "./graph";
 
 export class GraphSettings {
-  protected MAX_TRANSLATE = 1000000;
+  MAX_TRANSLATE = 1000000;
   protected destroyController: AbortController = new AbortController();
   protected resizeObserver!: ResizeObserver;
   public dpr: number;
@@ -47,8 +47,7 @@ export class GraphSettings {
   private initEvents() {
     //scoped variables
 
-    const ease: number = 10;
-    const wheelTolerance: number = 75;
+    const centerZoomRadius: number = 75;
     let prevWidth: number = this.graph.canvas.offsetWidth;
     let prevHeight: number = this.graph.canvas.offsetHeight;
 
@@ -73,31 +72,22 @@ export class GraphSettings {
 
     this.graph.on("scale", (e) => {
       if (
-        (this.clientBottom < -this.MAX_TRANSLATE ||
-          this.clientTop > this.MAX_TRANSLATE ||
-          this.clientLeft > this.MAX_TRANSLATE ||
-          this.clientRight < -this.MAX_TRANSLATE) &&
-        e.zoomDirection === "IN"
-      )
-        return;
+        Math.abs(e.prevdOriginX) > centerZoomRadius ||
+        Math.abs(e.prevdOriginY) > centerZoomRadius
+      ) {
+        const newdOriginX = this.graph.scales.distanceFromOrigin(e.graphX);
+        const newdOriginY = this.graph.scales.distanceFromOrigin(e.graphY);
 
-      const dx = e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX);
-      const dy = e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY);
+        const dx = newdOriginX - e.prevdOriginX;
+        const dy = newdOriginY - e.prevdOriginY;
 
-      if (Math.abs(dx) > wheelTolerance || Math.abs(dy) > wheelTolerance) {
-        const roundedX = Math.round(dx / ease);
-        const roundedY = Math.round(dy / ease);
-        if (e.zoomDirection === "IN") {
-          this.offsetX += -roundedX;
-          this.offsetY += -roundedY;
-          this.updateClientPosition(this.offsetX, this.offsetY);
-          this.graph.ctx.translate(-roundedX, -roundedY);
-        } else {
-          this.offsetX += roundedX;
-          this.offsetY += roundedY;
-          this.updateClientPosition(this.offsetX, this.offsetY);
-          this.graph.ctx.translate(roundedX, roundedY);
-        }
+        const pushX = Math.floor(dx);
+        const pushY = Math.floor(dy);
+
+        this.offsetX += -pushX;
+        this.offsetY += -pushY;
+        this.updateClientPosition(this.offsetX, this.offsetY);
+        this.graph.ctx.translate(-pushX, -pushY);
       }
     });
 
@@ -108,8 +98,6 @@ export class GraphSettings {
     this.graph.canvas.addEventListener(
       "pointerdown",
       (e) => {
-        console.log(this.graph);
-
         const xTiles =
           (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
           this.graph.scales.scaledStep;
@@ -141,24 +129,15 @@ export class GraphSettings {
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
 
-<<<<<<< HEAD
         this.graph.canvas.setPointerCapture(pointerId);
-=======
-        this.graph.canvas.setPointerCapture(e.pointerId);
->>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
         this.graph.canvas.addEventListener(
           "pointermove",
           throttleMouseMove.throttleFunc
         );
         this.graph.canvas.addEventListener(
           "pointerup",
-<<<<<<< HEAD
           (e: PointerEvent) => {
             pointerId = null;
-=======
-          () => {
-            this.isDragging = false;
->>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
             this.graph.canvas.removeEventListener(
               "pointermove",
               throttleMouseMove.throttleFunc
@@ -170,12 +149,7 @@ export class GraphSettings {
       { signal: this.destroyController.signal }
     );
 
-<<<<<<< HEAD
     const throttleMouseMove = throttle((e: PointerEvent) => {
-=======
-    const throttleMouseMove = throttle((e) => {
-      // console.log(e);
->>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
       if (this.graph.destroyed) return;
 
       if (pointerId !== e.pointerId) return;
@@ -185,18 +159,12 @@ export class GraphSettings {
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
 
-      console.log(dx, dy);
-
       this.offsetX += dx;
       this.offsetY += dy;
       this.updateClientPosition(this.offsetX, this.offsetY);
 
       this.graph.ctx.translate(dx, dy);
-<<<<<<< HEAD
     }, 5);
-=======
-    }, 10);
->>>>>>> 4d921f7ca8f64332dabb3caa482f2e00c41b3cd6
   }
 
   private updateClientPosition(offsetX: number, offsetY: number) {
@@ -219,7 +187,7 @@ export class GraphSettings {
 
     // reset ctx settings
 
-    this.graph.ctx.font = `500 ${16 * this.dpr}px Inter`;
+    this.graph.ctx.font = `500 ${12 * this.dpr}px Inter`;
     this.graph.ctx.textAlign = "center";
     this.graph.ctx.textBaseline = "middle";
   }
