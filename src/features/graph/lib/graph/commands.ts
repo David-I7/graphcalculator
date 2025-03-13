@@ -1357,22 +1357,6 @@ class FunctionPointController implements GraphCommand {
     this.data.coord.y = -y * normFactor;
   }
 
-  private calculateGraphCoordinates(offsetX: number, offsetY: number) {
-    const yTiles =
-      (offsetY * this.graph.dpr -
-        (this.graph.canvasCenterY + this.graph.offsetY)) /
-      this.graph.scales.scaledStep;
-    const graphY = yTiles * this.graph.scales.scaler;
-
-    const xTiles =
-      (offsetX * this.graph.dpr -
-        (this.graph.canvasCenterX + this.graph.offsetX)) /
-      this.graph.scales.scaledStep;
-    const graphX = xTiles * this.graph.scales.scaler;
-
-    return { graphX, graphY };
-  }
-
   init() {
     this.graph.canvas.addEventListener(
       "pointermove",
@@ -1382,7 +1366,7 @@ class FunctionPointController implements GraphCommand {
         let closest: ReturnType<typeof this.functionCommand.getClosestPoint> =
           null;
 
-        const { graphX, graphY } = this.calculateGraphCoordinates(
+        const { graphX, graphY } = this.graph.scales.calculateGraphCoordinates(
           e.offsetX,
           e.offsetY
         );

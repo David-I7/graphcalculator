@@ -21,13 +21,16 @@ export class Graph implements MessageBus {
     public canvas: HTMLCanvasElement,
     public ctx: CanvasRenderingContext2D
   ) {
+    this.scales = new Scales(this, 25, 100);
     this.settings = new GraphSettings(this);
     this.commandController = new CommandController();
-    this.scales = new Scales(this, 25, 100);
   }
 
   get dpr() {
     return this.settings.dpr;
+  }
+  get MAX_TRANSLATE() {
+    return this.settings.MAX_TRANSLATE;
   }
   get offsetX() {
     return this.settings.offsetX;

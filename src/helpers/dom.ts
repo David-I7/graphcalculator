@@ -26,3 +26,7 @@ export function getParentElement<T extends HTMLElement>(
 
   return parent;
 }
+
+export function isTouchEnabled() {
+  return "ontouchstart" in window || navigator.maxTouchPoints > 0;
+}
