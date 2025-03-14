@@ -13,6 +13,8 @@ import { AdjacencyList, SerializedAdjList } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
+  ExpressionSettings,
+  ExpressionType,
   GraphData,
   isExpression,
   Item,
@@ -108,12 +110,7 @@ export function createNewItem<T extends ItemType>(
         type: "function",
         content: content ? content : "",
         parsedContent: undefined,
-        settings: {
-          color: `hsl(${Math.floor(Math.random() * 360)},${
-            CSS_VARIABLES.baseSaturation
-          },${CSS_VARIABLES.baseLightness})`,
-          hidden: false,
-        },
+        settings: createSettings("function"),
       },
     } as Item<"expression">;
   }
@@ -125,6 +122,33 @@ export function createNewItem<T extends ItemType>(
       content: "",
     },
   } as Item<"note">;
+}
+
+export function createSettings<T extends keyof ExpressionSettings>(
+  type: T
+): ExpressionSettings[T] {
+  if (type === "function") {
+    return {
+      color: `hsl(${Math.floor(Math.random() * 360)},${
+        CSS_VARIABLES.baseSaturation
+      },${CSS_VARIABLES.baseLightness})`,
+      hidden: false,
+      opacity: 1,
+      strokeSize: 3,
+      lineType: "linear",
+    } as ExpressionSettings[T];
+  } else if (type === "point") {
+    return {
+      color: `hsl(${Math.floor(Math.random() * 360)},${
+        CSS_VARIABLES.baseSaturation
+      },${CSS_VARIABLES.baseLightness})`,
+      hidden: false,
+      strokeSize: 4,
+      opacity: 1,
+    } as ExpressionSettings[T];
+  }
+
+  throw new Error(`${type} has no settings.`);
 }
 
 // SCOPE

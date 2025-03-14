@@ -16,7 +16,7 @@ import {
   roundToNeareastMultiple,
   toScientificNotation,
 } from "./utils";
-import { Expression } from "../../../../state/graph/types";
+import { Expression, ExpressionSettings } from "../../../../state/graph/types";
 
 export class CommandController implements GraphCommandController {
   public commands: GraphCommand[] = [];
@@ -678,7 +678,7 @@ export class DrawFunctionCommand implements GraphCommand {
   constructor(
     public graph: Graph,
     public data: FnState,
-    public settings: Expression<"function">["settings"],
+    public settings: ExpressionSettings["function"],
     public commandState: CommandState
   ) {
     this.pointController = new FunctionPointController(graph, this);
@@ -700,7 +700,7 @@ export class DrawFunctionCommand implements GraphCommand {
 
       this.graph.ctx.strokeStyle = this.settings.color;
       this.graph.ctx.fillStyle = this.settings.color;
-      this.graph.ctx.lineWidth = 2 * this.graph.dpr;
+      this.graph.ctx.lineWidth = this.settings.strokeSize * this.graph.dpr;
 
       if (this.data.f.param === "y") {
         this.drawFunctionOfY();
@@ -1199,8 +1199,6 @@ class FunctionPointController implements GraphCommand {
       e.preventDefault();
       return;
     }
-
-    console.log("down", e.pointerId);
 
     const tolerance = 0.5 * this.graph.scales.scaler;
     const param = this.functionCommand.data.f.param;
@@ -1776,7 +1774,7 @@ export class DrawPointCommand implements GraphCommand {
   constructor(
     public graph: Graph,
     public data: NonNullable<Expression<"point">["parsedContent"]>,
-    public settings: Expression<"point">["settings"],
+    public settings: ExpressionSettings["point"],
     public commandState: CommandState
   ) {
     this.tooltip = new DrawTooltip(graph);
@@ -1831,7 +1829,7 @@ export class DrawPointCommand implements GraphCommand {
     this.graph.ctx.arc(
       this.data.x * normFactor,
       -this.data.y * normFactor,
-      8,
+      this.settings.strokeSize * this.graph.dpr,
       0,
       Math.PI * 2
     );

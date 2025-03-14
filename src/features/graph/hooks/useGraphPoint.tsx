@@ -59,7 +59,7 @@ export function useGraphPoint({
     if (!command.current) return;
 
     command.current.settings = data.settings;
-  }, [data.settings.color, data.settings.hidden]);
+  }, [data.settings]);
 
   return null;
 }
