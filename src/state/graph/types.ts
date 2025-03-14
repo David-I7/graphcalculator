@@ -12,8 +12,19 @@ export type GraphData = {
 };
 
 export type ExpressionSettings = {
-  color: string;
-  hidden: boolean;
+  point: {
+    color: string;
+    hidden: boolean;
+    strokeSize: number;
+    opacity: number;
+  };
+  function: {
+    color: string;
+    hidden: boolean;
+    strokeSize: number;
+    lineType: "dotted" | "dashed" | "linear";
+    opacity: number;
+  };
 };
 
 export type Item<T extends keyof ItemData = ItemType> = {
@@ -47,7 +58,7 @@ export type Expression<T extends ExpressionType = ExpressionType> =
         parsedContent:
           | { x: number; y: number; node: string; scopeDeps: string[] }
           | undefined;
-        settings: ExpressionSettings;
+        settings: ExpressionSettings[T];
       }
     : {
         type: T;
@@ -55,7 +66,7 @@ export type Expression<T extends ExpressionType = ExpressionType> =
         parsedContent:
           | { name: string; node: string; scopeDeps: string[] }
           | undefined;
-        settings: ExpressionSettings;
+        settings: ExpressionSettings["function"];
       };
 
 // Client State

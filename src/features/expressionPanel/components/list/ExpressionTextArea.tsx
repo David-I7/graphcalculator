@@ -54,7 +54,10 @@ const FunctionTextArea = ({
   const ref = useRef<HTMLInputElement>(null);
 
   const onFocus = useCallback(() => handleFocus(item.id), [item.id]);
-  const onBlur = useCallback(() => handleBlur(item.id), [item.id]);
+  const onBlur = useCallback(() => {
+    ref.current?.blur();
+    handleBlur(item.id);
+  }, [item.id]);
 
   useFocus(focused, ref, onFocus, onBlur);
 

@@ -13,6 +13,7 @@ import {
   addDependencies,
   createNewGraph,
   createNewItem,
+  createSettings,
   deleteScopeSync,
   removeDependencies,
   restoreSavedGraph,
@@ -202,6 +203,10 @@ const graphSlice = createSlice({
           }
         }
 
+        if (action.payload.type === "variable") {
+          //@ts-ignore
+          delete ["settings"];
+        }
         expr.type = action.payload.type;
         expr.parsedContent = undefined;
       }
@@ -219,7 +224,7 @@ const graphSlice = createSlice({
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as Expression<"function">;
+        const expr = item.data as Expression;
 
         const scope = state.currentGraph.items.scope;
         const depGraph = state.currentGraph.items.dependencyGraph;
@@ -245,6 +250,10 @@ const graphSlice = createSlice({
           );
         }
 
+        if (expr.type !== "function") {
+          //@ts-ignore
+          expr.settings = createSettings("function");
+        }
         expr.type = "function";
         expr.parsedContent = action.payload.parsedContent;
       }
@@ -262,8 +271,12 @@ const graphSlice = createSlice({
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ItemData["expression"];
+        const expr = item.data as Expression;
 
+        if (expr.type !== "point") {
+          //@ts-ignore
+          expr.settings = createSettings("point");
+        }
         expr.type = "point";
         expr.parsedContent = action.payload.parsedContent;
       }
@@ -281,7 +294,7 @@ const graphSlice = createSlice({
 
         if (item.id !== action.payload.id || item.type !== "expression") return;
 
-        const expr = item.data as ItemData["expression"];
+        const expr = item.data as Expression;
 
         const scope = state.currentGraph.items.scope;
         const depGraph = state.currentGraph.items.dependencyGraph;
@@ -306,6 +319,11 @@ const graphSlice = createSlice({
             state.currentGraph.items.data,
             scope
           );
+        }
+
+        if (expr.type !== "variable") {
+          //@ts-ignore
+          delete ["settings"];
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
