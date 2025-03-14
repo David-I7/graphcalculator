@@ -1202,7 +1202,7 @@ class FunctionPointController implements GraphCommand {
 
     console.log("down", e.pointerId);
 
-    const tolerance = 0.25 * this.graph.scales.scaler;
+    const tolerance = 0.5 * this.graph.scales.scaler;
     const param = this.functionCommand.data.f.param;
     let outerX!: number;
     let outerY!: number;

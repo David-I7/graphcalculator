@@ -15,7 +15,7 @@
 
   &__resizer {
     position: absolute;
-
+    z-index: 9;
     top: 0;
     bottom: 0;
     left: 100%;
@@ -23,15 +23,18 @@
     &:hover {
       cursor: e-resize;
     }
+
     &::before {
       content: "";
       pointer-events: none;
       position: absolute;
+      z-index: -1;
       top: 0;
       left: -50%;
       bottom: 0;
       width: 50%;
-      box-shadow: 3px 0px 3px base.$shadow-level2;
+      box-shadow: 1px 0px 2px base.$shadow-level2,
+        4px 0px 5px base.$shadow-level1;
     }
   }
 }
@@ -211,7 +214,8 @@
         height: 50%;
         bottom: auto;
         width: auto;
-        box-shadow: 0px -3px 3px base.$shadow-level2;
+        box-shadow: 0px -1px 2px base.$shadow-level2,
+          0px -4px 5px base.$shadow-level1;
       }
     }
   }

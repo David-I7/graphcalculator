@@ -281,6 +281,7 @@ export class Scales {
       zoomDirection === "IN"
     )
       return;
+
     if (
       this.scalesIndex === this.scalesArray.length - 1 &&
       newZoom < this.MIN_ZOOM &&

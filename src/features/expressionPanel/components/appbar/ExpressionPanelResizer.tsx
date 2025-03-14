@@ -34,8 +34,7 @@ const ExpressionPanelResizer = () => {
   usePopulateRef(expressionPanelRef, { selector: ".expression-panel" });
 
   useEffect(() => {
-    if (!graphContainerRef.current || !expressionPanelRef.current)
-      throw new Error("No refernce to graph container or expression panel");
+    if (!graphContainerRef.current || !expressionPanelRef.current) return;
 
     const resizerController = new AbortController();
     let windowController: AbortController;
@@ -43,7 +42,7 @@ const ExpressionPanelResizer = () => {
     isOpen &&
       !isMobile &&
       resizerRef.current!.addEventListener(
-        "mousedown",
+        "pointerdown",
         (e) => {
           if (isMobile) return;
 
@@ -52,20 +51,23 @@ const ExpressionPanelResizer = () => {
           windowController?.abort();
 
           //setup
-          document.body.style.cursor = "e-resize";
+          if (e.pointerType !== "touch") {
+            document.body.style.cursor = "e-resize";
+          }
           windowController = new AbortController();
+          resizerRef.current!.setPointerCapture(e.pointerId);
 
-          window.addEventListener("mousemove", onMouseMove, {
+          resizerRef.current!.addEventListener("pointermove", onPointMove, {
             signal: windowController.signal,
           });
-          window.addEventListener("mouseleave", onMouseLeave, {
+          resizerRef.current!.addEventListener("pointerleave", onPointLeave, {
             signal: windowController.signal,
           });
-          window.addEventListener("mouseup", onMouseLeave, {
+          resizerRef.current!.addEventListener("pointerup", onPointLeave, {
             signal: windowController.signal,
           });
 
-          function onMouseMove(e: MouseEvent) {
+          function onPointMove(e: PointerEvent) {
             const offsetX = e.clientX - expressionPanelRef.current!.offsetWidth;
 
             if (
@@ -83,12 +85,14 @@ const ExpressionPanelResizer = () => {
             }px)`;
           }
 
-          function onMouseLeave() {
-            document.body.style.cursor = "default";
+          function onPointLeave(e: PointerEvent) {
+            if (e.pointerType !== "touch") {
+              document.body.style.cursor = "default";
+            }
             windowController.abort();
           }
         },
-        { signal: resizerController.signal }
+        { signal: resizerController.signal, passive: false }
       );
 
     const throttledResize = throttle(() => {
@@ -118,34 +122,33 @@ const ExpressionPanelResizer = () => {
 
   return (
     <>
-      {isOpen && (
-        <>
-          <ButtonTarget
-            onClick={(e) => {
-              if (isMobile) {
-                expressionPanelRef.current!.animate(
-                  AnimateSlideY(),
-                  animationOptions.current
-                );
-                graphContainerRef.current!.style.height = "100%";
-              } else {
-                expressionPanelRef.current!.animate(
-                  AnimateSlideX(),
-                  animationOptions.current
-                );
-                graphContainerRef.current!.style.width = "100%";
-              }
-              setTimeout(() => {
-                setIsOpen(!isOpen);
-              }, CSS_VARIABLES.animationSpeedDefault);
-            }}
-            className="button--hovered bg-surface-container-low"
-          >
-            {isMobile ? <ArrowDown /> : <ArrowLeft />}
-          </ButtonTarget>
-          <div ref={resizerRef} className="expression-panel__resizer"></div>
-        </>
-      )}
+      <>
+        <ButtonTarget
+          onClick={(e) => {
+            if (isMobile) {
+              expressionPanelRef.current!.animate(
+                AnimateSlideY(),
+                animationOptions.current
+              );
+              graphContainerRef.current!.style.height = "100%";
+            } else {
+              expressionPanelRef.current!.animate(
+                AnimateSlideX(),
+                animationOptions.current
+              );
+              graphContainerRef.current!.style.width = "100%";
+            }
+            setTimeout(() => {
+              setIsOpen(!isOpen);
+            }, CSS_VARIABLES.animationSpeedDefault);
+          }}
+          className="button--hovered bg-surface-container-low"
+        >
+          {isMobile ? <ArrowDown /> : <ArrowLeft />}
+        </ButtonTarget>
+        <div ref={resizerRef} className="expression-panel__resizer"></div>
+      </>
+
       {!isOpen &&
         createPortal(
           <ButtonTarget
