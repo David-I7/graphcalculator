@@ -41,25 +41,24 @@ function useDraggable<T extends HTMLElement, U extends HTMLElement>({
       (e) => {
         let match: boolean = false;
 
-        const target = e.target as T;
+        const target = e.target as HTMLElement | null;
         if (proxyClassname) {
           e.dataTransfer?.setDragImage(new Image(), 0, 0);
-          if (target.matches(`.${proxyClassname}`)) {
-            let parent = target.parentElement;
-            while (
-              parent !== null &&
-              parent !== draggableContainerRef.current
-            ) {
-              if (parent.matches(`.${sharedClassname}`)) {
-                handleDragStart(parent as T, draggingClassname, setup);
-                match = true;
-                break;
-              }
-              parent = parent.parentElement;
+          let parent = target;
+          while (parent !== null && parent !== draggableContainerRef.current) {
+            if (parent.matches(`.${proxyClassname}`)) {
+              handleDragStart(
+                parent.parentElement as T,
+                draggingClassname,
+                setup
+              );
+              match = true;
+              break;
             }
+            parent = parent.parentElement;
           }
-        } else if (target.matches(`.${sharedClassname}`)) {
-          handleDragStart(target, draggingClassname, setup);
+        } else if (target!.matches(`.${sharedClassname}`)) {
+          handleDragStart(target as T, draggingClassname, setup);
           match = true;
         }
 
@@ -74,23 +73,26 @@ function useDraggable<T extends HTMLElement, U extends HTMLElement>({
           draggableContainerRef.current?.addEventListener(
             "dragend",
             (e) => {
-              const target = e.target as T;
+              const target = e.target as HTMLElement | null;
               if (proxyClassname) {
-                if (target.matches(`.${proxyClassname}`)) {
-                  let parent = target.parentElement;
-                  while (
-                    parent !== null &&
-                    parent !== draggableContainerRef.current
-                  ) {
-                    if (parent.matches(`.${draggingClassname}`)) {
-                      handleDragEnd(parent as T, draggingClassname, cleanup);
-                      break;
-                    }
-                    parent = parent.parentElement;
+                let parent = target;
+                while (
+                  parent !== null &&
+                  parent !== draggableContainerRef.current
+                ) {
+                  if (parent.matches(`.${proxyClassname}`)) {
+                    if (parent.parentElement?.matches(`.${draggingClassname}`))
+                      handleDragEnd(
+                        parent.parentElement as T,
+                        draggingClassname,
+                        cleanup
+                      );
+                    break;
                   }
+                  parent = parent.parentElement;
                 }
-              } else if (target.matches(`.${draggingClassname}`)) {
-                handleDragEnd(target, draggingClassname, cleanup);
+              } else if (target!.matches(`.${draggingClassname}`)) {
+                handleDragEnd(target as T, draggingClassname, cleanup);
               }
 
               draggableContainerRef.current?.removeEventListener(
@@ -112,23 +114,24 @@ function useDraggable<T extends HTMLElement, U extends HTMLElement>({
       (e) => {
         let match: boolean = false;
 
-        const target = e.target as T;
+        const target = e.target as HTMLElement | null;
         if (proxyClassname) {
-          if (target.matches(`.${proxyClassname}`)) {
-            let parent = target.parentElement;
-            while (
-              parent !== null &&
-              parent !== draggableContainerRef.current
-            ) {
-              if (parent.matches(`.${sharedClassname}`)) {
-                match = handleTouchStart(parent as T, draggingClassname, setup);
-                break;
-              }
-              parent = parent.parentElement;
+          let parent = target;
+          while (parent !== null && parent !== draggableContainerRef.current) {
+            if (parent.matches(`.${proxyClassname}`)) {
+              handleTouchStart(
+                parent.parentElement as T,
+                draggingClassname,
+                setup
+              );
+              match = true;
+              break;
             }
+            parent = parent.parentElement;
           }
-        } else if (target.matches(`.${sharedClassname}`)) {
-          match = handleTouchStart(target, draggingClassname, setup);
+        } else if (target!.matches(`.${sharedClassname}`)) {
+          handleTouchStart(target as T, draggingClassname, setup);
+          match = true;
         }
 
         if (match) {
@@ -147,23 +150,26 @@ function useDraggable<T extends HTMLElement, U extends HTMLElement>({
           draggableContainerRef.current?.addEventListener(
             "touchend",
             (e) => {
-              const target = e.target as T;
+              const target = e.target as HTMLElement | null;
               if (proxyClassname) {
-                if (target.matches(`.${proxyClassname}`)) {
-                  let parent = target.parentElement;
-                  while (
-                    parent !== null &&
-                    parent !== draggableContainerRef.current
-                  ) {
-                    if (parent.matches(`.${draggingClassname}`)) {
-                      handleTouchEnd(parent as T, draggingClassname, cleanup);
-                      break;
-                    }
-                    parent = parent.parentElement;
+                let parent = target;
+                while (
+                  parent !== null &&
+                  parent !== draggableContainerRef.current
+                ) {
+                  if (parent.matches(`.${proxyClassname}`)) {
+                    if (parent.parentElement?.matches(`.${draggingClassname}`))
+                      handleTouchEnd(
+                        parent.parentElement as T,
+                        draggingClassname,
+                        cleanup
+                      );
+                    break;
                   }
+                  parent = parent.parentElement;
                 }
-              } else if (target.matches(`.${draggingClassname}`)) {
-                handleTouchEnd(target, draggingClassname, cleanup);
+              } else if (target!.matches(`.${draggingClassname}`)) {
+                handleTouchEnd(target as T, draggingClassname, cleanup);
               }
 
               draggableContainerRef.current?.removeEventListener(

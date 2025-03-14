@@ -115,8 +115,6 @@ function ExpressionListRenderer() {
     }
   }, [items.length]);
 
-  console.log(items);
-
   return (
     <ol className="expression-list" ref={draggableContainerRef}>
       {items.length > 0 &&
