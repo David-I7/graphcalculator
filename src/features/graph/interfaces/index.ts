@@ -17,6 +17,8 @@ export type ScaleEventData = {
   graphY: number;
   prevdOriginX: number;
   prevdOriginY: number;
+  scaleDx: number;
+  scaleDy: number;
 } & BaseEventDefaults;
 export type PointerDownEventData = {
   graphX: number;

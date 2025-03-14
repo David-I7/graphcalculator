@@ -121,20 +121,22 @@ function useDraggable<T extends HTMLElement, U extends HTMLElement>({
               parent !== draggableContainerRef.current
             ) {
               if (parent.matches(`.${sharedClassname}`)) {
-                handleTouchStart(parent as T, draggingClassname, setup);
-                match = true;
+                match = handleTouchStart(parent as T, draggingClassname, setup);
                 break;
               }
               parent = parent.parentElement;
             }
           }
         } else if (target.matches(`.${sharedClassname}`)) {
-          handleTouchStart(target, draggingClassname, setup);
-          match = true;
+          match = handleTouchStart(target, draggingClassname, setup);
         }
 
         if (match) {
           const wrapper = handleTouchMove(sharedClassname, draggingClassname);
+          const touchcancelWrapper = (e: TouchEvent) => {
+            const ev = new Event("touchend");
+            draggableContainerRef.current!.dispatchEvent(ev);
+          };
 
           draggableContainerRef.current?.addEventListener(
             "touchmove",
@@ -168,21 +170,18 @@ function useDraggable<T extends HTMLElement, U extends HTMLElement>({
                 "touchmove",
                 wrapper
               );
+              draggableContainerRef.current?.removeEventListener(
+                "touchcancel",
+                touchcancelWrapper
+              );
             },
             { signal: eventAborter.signal, once: true }
           );
 
           draggableContainerRef.current?.addEventListener(
             "touchcancel",
-            (e) => {
-              const ev = new Event("touchend");
-              draggableContainerRef.current!.dispatchEvent(ev);
-              draggableContainerRef.current?.removeEventListener(
-                "touchmove",
-                wrapper
-              );
-            },
-            { signal: eventAborter.signal }
+            touchcancelWrapper,
+            { signal: eventAborter.signal, once: true }
           );
         }
       },
