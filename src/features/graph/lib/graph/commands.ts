@@ -1150,6 +1150,7 @@ type PointData = {
 
 class FunctionPointController implements GraphCommand {
   protected pointRadius: number;
+  protected pointerId: number | null = null;
   protected destroyController: AbortController | null = null;
   protected data: PointData = {
     coord: { x: 0, y: 0 },
@@ -1194,6 +1195,12 @@ class FunctionPointController implements GraphCommand {
 
   handlePointerDown(e: PointerDownEventData) {
     if (this.functionCommand.settings.hidden) return;
+    if (this.pointerId !== null) {
+      e.preventDefault();
+      return;
+    }
+
+    console.log("down", e.pointerId);
 
     const tolerance = 0.25 * this.graph.scales.scaler;
     const param = this.functionCommand.data.f.param;
@@ -1271,9 +1278,10 @@ class FunctionPointController implements GraphCommand {
         }
       }
 
+      this.pointerId = e.pointerId;
       this.setData(outerX, outerY);
       this.functionCommand.setStatus("dragged");
-      this.graph.canvas.setPointerCapture(e.pointerId);
+      this.graph.canvas.setPointerCapture(this.pointerId);
     } else {
       if (this.functionCommand.commandState.status !== "idle") {
         this.functionCommand.setStatus("idle");
@@ -1362,6 +1370,7 @@ class FunctionPointController implements GraphCommand {
       "pointermove",
       (e) => {
         if (this.functionCommand.commandState.status === "idle") return;
+        if (e.pointerId !== this.pointerId) return;
 
         let closest: ReturnType<typeof this.functionCommand.getClosestPoint> =
           null;
@@ -1427,6 +1436,10 @@ class FunctionPointController implements GraphCommand {
     this.graph.canvas.addEventListener(
       "pointerup",
       (e) => {
+        if (e.pointerId === this.pointerId) {
+          this.graph.canvas.releasePointerCapture(this.pointerId);
+          this.pointerId = null;
+        }
         this.functionCommand.setStatus("focused");
       },
       { signal: this.destroyController!.signal }

@@ -101,9 +101,10 @@ export function handleTouchStart<T extends HTMLElement>(
     `.${draggingClassname}`
   );
   // prevent multiple touches
-  if (draggedElement) return;
+  if (draggedElement) return false;
   currentTarget.classList.add(draggingClassname);
   setup?.(currentTarget);
+  return true;
 }
 
 export function handleTouchEnd<T extends HTMLElement>(

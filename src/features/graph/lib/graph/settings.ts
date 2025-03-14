@@ -92,15 +92,10 @@ export class GraphSettings {
     this.graph.canvas.addEventListener(
       "pointerdown",
       (e) => {
-        const xTiles =
-          (e.offsetX * this.dpr - (this.canvasCenterX + this.offsetX)) /
-          this.graph.scales.scaledStep;
-        const graphX = xTiles * this.graph.scales.scaler;
-
-        const yTiles =
-          (e.offsetY * this.dpr - (this.canvasCenterY + this.offsetY)) /
-          this.graph.scales.scaledStep;
-        const graphY = yTiles * this.graph.scales.scaler;
+        const { graphX, graphY } = this.graph.scales.calculateGraphCoordinates(
+          e.offsetX,
+          e.offsetY
+        );
 
         const customEvent = {
           graphX,
@@ -117,24 +112,30 @@ export class GraphSettings {
           return;
         }
 
-        if (pointerId === null) pointerId = e.pointerId;
-        else return;
+        if (pointerId === null) {
+          pointerId = e.pointerId;
+        } else {
+          if (e.pointerId !== pointerId) {
+            const ev = new Event("pointerup");
+            this.graph.canvas.dispatchEvent(ev);
+            return;
+          }
+        }
 
+        e.preventDefault();
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
 
         this.graph.canvas.setPointerCapture(pointerId);
-        this.graph.canvas.addEventListener(
-          "pointermove",
-          throttleMouseMove.throttleFunc
-        );
+        this.graph.canvas.addEventListener("pointermove", throttleMouseMove);
         this.graph.canvas.addEventListener(
           "pointerup",
           (e: PointerEvent) => {
+            this.graph.canvas.releasePointerCapture(pointerId!);
             pointerId = null;
             this.graph.canvas.removeEventListener(
               "pointermove",
-              throttleMouseMove.throttleFunc
+              throttleMouseMove
             );
           },
           { signal: this.destroyController.signal, once: true }
@@ -143,7 +144,7 @@ export class GraphSettings {
       { signal: this.destroyController.signal }
     );
 
-    const throttleMouseMove = throttle((e: PointerEvent) => {
+    const throttleMouseMove = (e: PointerEvent) => {
       if (this.graph.destroyed) return;
 
       if (pointerId !== e.pointerId) return;
@@ -158,7 +159,7 @@ export class GraphSettings {
       this.updateClientPosition(this.offsetX, this.offsetY);
 
       this.graph.ctx.translate(dx, dy);
-    }, 5);
+    };
   }
 
   private updateClientPosition(offsetX: number, offsetY: number) {

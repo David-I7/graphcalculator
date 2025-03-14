@@ -1,4 +1,3 @@
-import { isTouchEnabled } from "../../../../helpers/dom";
 import {
   BusEvent,
   PointerDownEventData,
