@@ -105,3 +105,19 @@ export type ClientGraphData = Omit<GraphData, "items"> & {
 export function isExpression(item: Item): item is Item<"expression"> {
   return item.type == "expression";
 }
+
+export function isFunction(
+  data: ItemData["expression"]
+): data is Expression<"function"> {
+  return data.type === "function";
+}
+export function isVariable(
+  data: ItemData["expression"]
+): data is Expression<"variable"> {
+  return data.type === "variable";
+}
+export function isPoint(
+  data: ItemData["expression"]
+): data is Expression<"point"> {
+  return data.type === "point";
+}

@@ -184,10 +184,30 @@
       left: 0.875rem;
     }
   }
-  &__type__function {
+  &-type-function {
     @include base.inlineGridCenter();
     border-radius: base.$br-round;
     overflow: hidden;
+  }
+}
+
+.expression-settings {
+  position: absolute;
+  width: 12rem;
+  background-color: base.$secondary-container;
+  border-radius: base.$br-200;
+  height: 200px;
+  z-index: 30;
+  top: 0;
+  left: calc(100% + 1rem);
+
+  @include base.beforeAbsolute("&") {
+    top: 0.5rem;
+    left: -0.9rem;
+    bottom: auto;
+    right: auto;
+    transform: rotate(-90deg);
+    @include base.cssTriangle(1rem, 0.75rem, base.$secondary-container);
   }
 }
 
