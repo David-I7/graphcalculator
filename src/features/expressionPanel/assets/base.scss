@@ -176,7 +176,6 @@
     z-index: 30;
     text-align: center;
     cursor: text;
-    user-select: text;
 
     @include base.beforeAbsolute("&") {
       @include base.cssTriangle(0.25rem, 0.25rem, base.$inverse-surface);
@@ -210,6 +209,22 @@
     height: calc(1lh + 0.25rem);
     overflow: hidden;
     display: block;
+  }
+
+  & ~ .function-input-value-container {
+    @include base.flexCenter();
+    @extend .font-body-m;
+    padding-right: 0.75rem;
+    margin-bottom: 0.5rem;
+    place-self: flex-end;
+    gap: 0.25rem;
+
+    & > .function-input-value {
+      padding: 0.25rem 0.5rem;
+      color: base.$on-surface-body-high;
+      background-color: base.$surface-container-low;
+      border-radius: base.$br-100;
+    }
   }
 }
 

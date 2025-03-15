@@ -10,6 +10,7 @@ import ResizableTextarea from "../../../../components/input/ResizableTextarea";
 import { useClickOutside, useFocus } from "../../../../hooks/dom";
 import { Item, ItemType } from "../../../../state/graph/types";
 import { ApplicationError } from "../../../../state/error/error";
+import { clampNumber } from "../../../graph/lib/graph/utils";
 
 type ExpressionTextAreaProps<T extends ItemType = ItemType> = {
   focused: boolean;
@@ -43,6 +44,14 @@ const ExpressionTextArea = (props: ExpressionTextAreaProps) => {
 };
 
 export default ExpressionTextArea;
+
+const isValidValue = (item: Item<"expression">): boolean => {
+  return (
+    item.data.parsedContent !== undefined &&
+    (item.data.parsedContent?.scopeDeps.length > 0 ||
+      item.data.parsedContent?.node.search(/e|pi/) !== -1)
+  );
+};
 
 const FunctionTextArea = ({
   focused,
@@ -90,16 +99,12 @@ const FunctionTextArea = ({
         ></input>
       </div>
 
-      {item.data.type === "variable" && !error && item.data.parsedContent && (
-        <div
-          style={{
-            height: "2.5rem",
-            padding: "0.5rem",
-            placeSelf: "flex-end",
-            fontSize: "1.5rem",
-          }}
-        >
-          = {item.data.parsedContent!.value}
+      {!error && item.data.type === "variable" && isValidValue(item) && (
+        <div className="function-input-value-container">
+          ={" "}
+          <div className="function-input-value">
+            {clampNumber(item.data.parsedContent!.value, 8)}
+          </div>
         </div>
       )}
     </div>

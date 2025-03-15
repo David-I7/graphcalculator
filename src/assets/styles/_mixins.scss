@@ -22,6 +22,11 @@
   place-content: center;
 }
 
+@mixin flexCenter {
+  display: flex;
+  align-items: center;
+}
+
 @mixin flexBetween {
   display: flex;
   align-items: center;

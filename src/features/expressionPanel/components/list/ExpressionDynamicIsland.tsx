@@ -25,125 +25,153 @@ const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
     return (
       <ExpressionDynamicIsland.error
         error={props.error}
-        idx={props.index + 1}
+        pos={props.index + 1}
       />
     );
   }
 
-  return (
-    <div draggable className="dynamic-island">
-      <div className="dynamic-island__index">{props.index + 1}</div>
-      <div className="dynamic-island__type">
-        <>
-          {props.item.type === "expression" ? (
-            <ExpressionDynamicIsland.Expression
-              {...(props as ExpressionDynamicIslandProps<"expression">)}
-            />
-          ) : (
-            <Quotes width={28} height={28} />
-          )}
-        </>
+  if (!props.item.data.content.length)
+    return (
+      <div draggable className="dynamic-island">
+        <div className="dynamic-island__index">{props.index + 1}</div>
+        <div className="dynamic-island__type"></div>
       </div>
-    </div>
+    );
+
+  return (
+    <>
+      {props.item.type === "expression" ? (
+        <ExpressionDynamicIsland.Expression
+          {...(props as ExpressionDynamicIslandProps<"expression">)}
+        />
+      ) : (
+        <ExpressionDynamicIsland.Note pos={props.index + 1} />
+      )}
+    </>
   );
 };
 
 export default ExpressionDynamicIsland;
+
+ExpressionDynamicIsland.Note = ({ pos }: { pos: number }) => {
+  return (
+    <div draggable className="dynamic-island">
+      <div className="dynamic-island__index">{pos}</div>
+      <div className="dynamic-island__type">
+        <Quotes width={28} height={28} />
+      </div>
+    </div>
+  );
+};
 
 ExpressionDynamicIsland.Expression = function ({
   dispatch,
   index,
   item,
 }: ExpressionDynamicIslandProps<"expression">) {
-  if (!item.data.content.length) return null;
-
   switch (item.data.type) {
     case "function":
       return (
-        <button
-          onClick={(e) => {
-            dispatch(
-              toggleExpressionVisibility({
-                hidden: !(item.data as Expression<"function">).settings.hidden,
-                id: item.id,
-                idx: index,
-              })
-            );
-          }}
-          aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
-            item.type
-          } ${index}`}
-          style={{
-            backgroundColor: item.data.settings.hidden
-              ? "transparent"
-              : item.data.settings.color,
-          }}
-          className="dynamic-island__type__function"
-        >
-          {item.data.settings.hidden ? (
-            <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
-          ) : (
-            <Function width={28} height={28} style={{ cursor: "pointer" }} />
-          )}
-        </button>
+        <div draggable className="dynamic-island">
+          <div className="dynamic-island__index">{index + 1}</div>
+          <div className="dynamic-island__type">
+            <button
+              onClick={(e) => {
+                dispatch(
+                  toggleExpressionVisibility({
+                    hidden: !(item.data as Expression<"function">).settings
+                      .hidden,
+                    id: item.id,
+                    idx: index,
+                  })
+                );
+              }}
+              aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
+                item.type
+              } ${index}`}
+              style={{
+                backgroundColor: item.data.settings.hidden
+                  ? "transparent"
+                  : item.data.settings.color,
+              }}
+              className="dynamic-island__type__function"
+            >
+              {item.data.settings.hidden ? (
+                <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
+              ) : (
+                <Function
+                  width={28}
+                  height={28}
+                  style={{ cursor: "pointer" }}
+                />
+              )}
+            </button>
+          </div>
+        </div>
       );
     case "variable":
       return (
-        <button className="dynamic-island__type__function">
-          <VariableAssignment width={28} height={28} />
-        </button>
+        <div draggable className="dynamic-island">
+          <div className="dynamic-island__index">{index + 1}</div>
+          <div className="dynamic-island__type">
+            <VariableAssignment width={28} height={28} />
+          </div>
+        </div>
       );
 
     case "point":
       return (
-        <button
-          onClick={(e) => {
-            dispatch(
-              toggleExpressionVisibility({
-                hidden: !(item.data as Expression<"point">).settings.hidden,
-                id: item.id,
-                idx: index,
-              })
-            );
-          }}
-          aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
-            item.type
-          } ${index}`}
-          style={{
-            backgroundColor: item.data.settings.hidden
-              ? "transparent"
-              : item.data.settings.color,
-          }}
-          className="dynamic-island__type__function"
-        >
-          {item.data.settings.hidden ? (
-            <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
-          ) : (
-            <Point width={28} height={28} style={{ cursor: "pointer" }} />
-          )}
-        </button>
+        <div draggable className="dynamic-island">
+          <div className="dynamic-island__index">{index + 1}</div>
+          <div className="dynamic-island__type">
+            <button
+              onClick={(e) => {
+                dispatch(
+                  toggleExpressionVisibility({
+                    hidden: !(item.data as Expression<"point">).settings.hidden,
+                    id: item.id,
+                    idx: index,
+                  })
+                );
+              }}
+              aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
+                item.type
+              } ${index}`}
+              style={{
+                backgroundColor: item.data.settings.hidden
+                  ? "transparent"
+                  : item.data.settings.color,
+              }}
+              className="dynamic-island__type__function"
+            >
+              {item.data.settings.hidden ? (
+                <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
+              ) : (
+                <Point width={28} height={28} style={{ cursor: "pointer" }} />
+              )}
+            </button>
+          </div>
+        </div>
       );
   }
 };
 
 ExpressionDynamicIsland.error = ({
   error,
-  idx,
+  pos,
 }: {
   error: ApplicationError;
-  idx: number;
+  pos: number;
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const errorRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(isOpen, errorRef, () => setIsOpen(false));
 
-  console.log(isOpen);
-
   return (
     <div draggable className="dynamic-island">
       <div className="dynamic-island__index">
-        {idx}
+        {pos}
 
         <div
           onClick={(e) => {
