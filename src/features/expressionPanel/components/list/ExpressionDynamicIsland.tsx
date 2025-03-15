@@ -10,6 +10,8 @@ import { useAppDispatch } from "../../../../state/hooks";
 import { toggleExpressionVisibility } from "../../../../state/graph/graph";
 import { Expression, Item, ItemType } from "../../../../state/graph/types";
 import { ApplicationError } from "../../../../state/error/error";
+import { useRef, useState } from "react";
+import { useClickOutside } from "../../../../hooks/dom";
 
 type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
@@ -21,20 +23,10 @@ type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
 const ExpressionDynamicIsland = (props: ExpressionDynamicIslandProps) => {
   if (props.error) {
     return (
-      <div draggable className="dynamic-island">
-        <div className="dynamic-island__index">
-          {props.index + 1}
-          <div className="dynamic-island__type">
-            <Warning
-              color={props.error.type !== "unknown" ? "currentColor" : "orange"}
-              width={28}
-              height={28}
-            >
-              <title>{props.error.message}</title>
-            </Warning>
-          </div>
-        </div>
-      </div>
+      <ExpressionDynamicIsland.error
+        error={props.error}
+        idx={props.index + 1}
+      />
     );
   }
 
@@ -132,4 +124,45 @@ ExpressionDynamicIsland.Expression = function ({
         </button>
       );
   }
+};
+
+ExpressionDynamicIsland.error = ({
+  error,
+  idx,
+}: {
+  error: ApplicationError;
+  idx: number;
+}) => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(isOpen, errorRef, () => setIsOpen(false));
+
+  console.log(isOpen);
+
+  return (
+    <div draggable className="dynamic-island">
+      <div className="dynamic-island__index">
+        {idx}
+
+        <div
+          onClick={(e) => {
+            if (isOpen && e.target === errorRef.current) return;
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="dynamic-island__type"
+        >
+          <Warning width={28} height={28}>
+            <title>{error.message}</title>
+          </Warning>
+          {isOpen && (
+            <div ref={errorRef} className="dynamic-island__error">
+              {error.message}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };

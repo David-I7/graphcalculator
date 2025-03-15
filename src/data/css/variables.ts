@@ -18,7 +18,7 @@ export const CSS_VARIABLES = {
 
   // CONTAINERS (lower emphasis than their non-container values)
   primaryContainer: "#99aff7",
-  secondaryContainer: "#8b8b8b",
+  secondaryContainer: "#a8a8a8",
   onPrimaryContainer: "#0f0f0f",
   onSecondaryContainer: "#0f0f0f",
 
