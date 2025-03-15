@@ -1177,6 +1177,7 @@ class FunctionPointController implements GraphCommand {
   syncState<T extends CommandState["status"]>(status: T) {
     if (status === "idle") {
       this.hoveredPoint = null;
+      this.pointerId = null;
       this.highlightedPoints = [];
       this.destroyController?.abort();
       this.destroyController = null;
@@ -1367,8 +1368,11 @@ class FunctionPointController implements GraphCommand {
     this.graph.canvas.addEventListener(
       "pointermove",
       (e) => {
-        if (this.functionCommand.commandState.status === "idle") return;
-        if (e.pointerId !== this.pointerId) return;
+        if (
+          e.pointerId !== this.pointerId &&
+          this.functionCommand.commandState.status === "dragged"
+        )
+          return;
 
         let closest: ReturnType<typeof this.functionCommand.getClosestPoint> =
           null;
@@ -1436,9 +1440,9 @@ class FunctionPointController implements GraphCommand {
       (e) => {
         if (e.pointerId === this.pointerId) {
           this.graph.canvas.releasePointerCapture(this.pointerId);
+          this.functionCommand.setStatus("focused");
           this.pointerId = null;
         }
-        this.functionCommand.setStatus("focused");
       },
       { signal: this.destroyController!.signal }
     );

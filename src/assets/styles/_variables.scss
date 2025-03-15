@@ -10,12 +10,12 @@ $on-secondary: #f0f0f0;
 $inverse-surface: black;
 $inverse-on-surface-body: #aaaaaa;
 $inverse-on-surface-heading: #f0f0f0;
-$inverse-primary: "";
-$inverse-on-primary: "";
+$inverse-primary: #99aff7;
+$inverse-on-primary: #0f0f0f;
 
 // CONTAINERS (lower emphasis than their non-container values)
 $primary-container: #99aff7;
-$secondary-container: #8b8b8b;
+$secondary-container: #a8a8a8;
 $on-primary-container: #0f0f0f;
 $on-secondary-container: #0f0f0f;
 
@@ -70,7 +70,7 @@ $fs-h3: 2rem;
 $fs-h4: 1.75rem;
 
 // LINE HEIGHT
-$lh-scaler-body: 1.5;
+$lh-scaler-body: 1.2;
 $lh-scaler-headings: 1.2;
 
 $lh-body-xs: $fs-body-xs * $lh-scaler-body;

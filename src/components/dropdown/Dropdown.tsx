@@ -149,9 +149,6 @@ Dropdown.Menu = <T,>({
     </ul>
   );
 };
-Dropdown.MenuItem = () => {
-  return <li>{}</li>;
-};
 
 // Convinience component over styling a dropdown as a button
 
