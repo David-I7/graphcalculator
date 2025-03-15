@@ -36,6 +36,17 @@ export function roundToNeareastMultiple(
   return rounded * multiple;
 }
 
+export function roundValue(val: number, precision: number) {
+  let rounded!: number;
+  if (precision <= 0) {
+    rounded = roundToNeareastMultiple(val, 10, -precision);
+  } else {
+    rounded = clampNumber(val, precision);
+  }
+
+  return rounded;
+}
+
 export function toScientificNotation(nr: number, precision: number) {
   const exp = nr.toExponential().split("e");
   return [

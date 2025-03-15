@@ -14,6 +14,7 @@ import {
   newtonsMethod,
   pointsIntersect,
   roundToNeareastMultiple,
+  roundValue,
   toScientificNotation,
 } from "./utils";
 import { Expression, ExpressionSettings } from "../../../../state/graph/types";
@@ -1258,14 +1259,8 @@ class FunctionPointController implements GraphCommand {
 
           this.highlightedPoints.push({
             val: {
-              x: this.roundValue(
-                point.x,
-                this.tooltip.settings.maxFractionDigits
-              ),
-              y: this.roundValue(
-                point.y,
-                this.tooltip.settings.maxFractionDigits
-              ),
+              x: roundValue(point.x, this.tooltip.settings.maxFractionDigits),
+              y: roundValue(point.y, this.tooltip.settings.maxFractionDigits),
             },
             coord: {
               x: point.xCoord,
@@ -1288,17 +1283,6 @@ class FunctionPointController implements GraphCommand {
     }
   }
 
-  private roundValue(val: number, precision: number) {
-    let rounded!: number;
-    if (precision <= 0) {
-      rounded = roundToNeareastMultiple(val, 10, -precision + 2);
-    } else {
-      rounded = clampNumber(val, precision);
-    }
-
-    return rounded;
-  }
-
   private calculateValues<T extends "x" | "y">(
     e: T extends "x"
       ? { graphX: number; graphY?: number }
@@ -1307,48 +1291,34 @@ class FunctionPointController implements GraphCommand {
   ): { x: number; y: number } {
     const maxFractionDigits = this.tooltip.settings.maxFractionDigits;
     const precision = 2 - this.graph.scales.exponent;
+    const fn = this.functionCommand.data.f.f;
     let x: number = e["graphX"]! ? e["graphX"]! : 0;
     let y: number = -e["graphY"]! ? -e["graphY"]! : 0;
 
     if (param === "y") {
+      y = roundValue(y, precision);
+      x = fn(y);
       if (precision <= 0) {
-        y = this.roundValue(y, precision);
-        x = this.functionCommand.data.f.f(y);
-        if (isComplex(x)) {
-        } else {
-          x = this.roundValue(x, precision);
+        if (!isComplex(x)) {
+          x = roundValue(x, precision);
         }
       } else if (precision > 0 && precision <= 7) {
-        y = this.roundValue(y, precision);
-        x = this.functionCommand.data.f.f(y);
-        if (isComplex(x)) {
-        } else {
-          x = clampNumber(x, maxFractionDigits);
+        if (!isComplex(x)) {
+          x = roundValue(x, maxFractionDigits);
         }
-      } else {
-        y = this.roundValue(y, precision);
-        x = this.functionCommand.data.f.f(y);
       }
     } else {
-      const fn = this.functionCommand.data.f.f;
+      x = roundValue(x, precision);
+      y = fn(x);
 
       if (precision <= 0) {
-        x = this.roundValue(x, precision);
-        y = fn(x);
-        if (typeof y === "object") {
-        } else {
-          y = this.roundValue(y, precision);
+        if (!isComplex(y)) {
+          y = roundValue(y, precision);
         }
       } else if (precision > 0 && precision <= 7) {
-        x = this.roundValue(x, precision);
-        y = fn(x);
-        if (typeof y === "object") {
-        } else {
-          y = clampNumber(y, maxFractionDigits);
+        if (!isComplex(y)) {
+          y = roundValue(y, maxFractionDigits);
         }
-      } else {
-        x = this.roundValue(x, precision);
-        y = fn(x);
       }
     }
     return { x, y };
@@ -1413,11 +1383,11 @@ class FunctionPointController implements GraphCommand {
             document.body.style.cursor = "pointer";
             this.hoveredPoint = {
               val: {
-                x: this.roundValue(
+                x: roundValue(
                   closest.x,
                   this.tooltip.settings.maxFractionDigits
                 ),
-                y: this.roundValue(
+                y: roundValue(
                   closest.y,
                   this.tooltip.settings.maxFractionDigits
                 ),
@@ -1608,8 +1578,7 @@ class DrawTooltip {
       };
     } else {
       // for values <= 1e-7 js converts then to
-      // scientific notation, don't have a solution yet
-
+      // scientific notation
       return `(${
         xVal !== 0 && Math.abs(xVal) <= 9.99e-7
           ? showFullPrecision
@@ -1839,8 +1808,15 @@ export class DrawPointCommand implements GraphCommand {
     );
     this.graph.ctx.fill();
 
-    if (this.isHighlighted)
-      this.tooltip.drawTooltip(this.data.x, this.data.y, xCoord, yCoord);
+    if (this.isHighlighted) {
+      this.tooltip.drawTooltip(
+        roundValue(this.data.x, this.tooltip.settings.maxFractionDigits),
+        roundValue(this.data.y, this.tooltip.settings.maxFractionDigits),
+        xCoord,
+        yCoord,
+        false
+      );
+    }
 
     this.graph.ctx.restore();
   }

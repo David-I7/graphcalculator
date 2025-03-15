@@ -202,9 +202,9 @@ const ExpressionListItem = React.memo(
           }}
           title={`Delete ${item.type} ${idx + 1}`}
           className="button--hovered"
-          style={{ position: "absolute", top: "0.5rem", right: "0" }}
+          style={{ position: "absolute", top: "0.25rem", right: "0" }}
         >
-          <Close />
+          <Close width={32} height={32} />
         </ButtonTarget>
 
         {!error && (

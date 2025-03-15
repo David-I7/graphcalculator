@@ -114,6 +114,25 @@ Dropdown.Chevron = () => {
   );
 };
 
+Dropdown.Content = ({
+  UserContent,
+}: {
+  UserContent: (props: {
+    ariaControlsId: string;
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  }) => ReactNode;
+}) => {
+  const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
+
+  return (
+    <>
+      {isOpen && (
+        <UserContent ariaControlsId={ariaControlsID} setIsOpen={setIsOpen} />
+      )}
+    </>
+  );
+};
+
 Dropdown.Menu = <T,>({
   data,
   ListItem,
@@ -129,7 +148,7 @@ Dropdown.Menu = <T,>({
   }) => ReactNode;
   onClick: (arg: T) => void;
 }) => {
-  const { isOpen, setIsOpen } = useDropdownContext();
+  const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
 
   const handleClick = useCallback(
     (arg: T) => {
@@ -142,7 +161,7 @@ Dropdown.Menu = <T,>({
   if (!isOpen) return;
 
   return (
-    <ul className={styles.dropdownMenu}>
+    <ul className={styles.dropdownMenu} id={ariaControlsID}>
       {data.map((item, i) => {
         return <ListItem handleClick={handleClick} data={item} key={i} />;
       })}

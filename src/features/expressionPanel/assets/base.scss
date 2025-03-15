@@ -176,7 +176,6 @@
     z-index: 30;
     text-align: center;
     cursor: text;
-    user-select: text;
 
     @include base.beforeAbsolute("&") {
       @include base.cssTriangle(0.25rem, 0.25rem, base.$inverse-surface);
@@ -185,10 +184,30 @@
       left: 0.875rem;
     }
   }
-  &__type__function {
+  &-type-function {
     @include base.inlineGridCenter();
     border-radius: base.$br-round;
     overflow: hidden;
+  }
+}
+
+.expression-settings {
+  position: absolute;
+  width: 12rem;
+  background-color: base.$secondary-container;
+  border-radius: base.$br-200;
+  height: 200px;
+  z-index: 30;
+  top: 0;
+  left: calc(100% + 1rem);
+
+  @include base.beforeAbsolute("&") {
+    top: 0.5rem;
+    left: -0.9rem;
+    bottom: auto;
+    right: auto;
+    transform: rotate(-90deg);
+    @include base.cssTriangle(1rem, 0.75rem, base.$secondary-container);
   }
 }
 
@@ -210,6 +229,22 @@
     height: calc(1lh + 0.25rem);
     overflow: hidden;
     display: block;
+  }
+
+  & ~ .function-input-value-container {
+    @include base.flexCenter();
+    @extend .font-body-m;
+    padding-right: 0.75rem;
+    margin-bottom: 0.5rem;
+    place-self: flex-end;
+    gap: 0.25rem;
+
+    & > .function-input-value {
+      padding: 0.25rem 0.5rem;
+      color: base.$on-surface-body-high;
+      background-color: base.$surface-container-low;
+      border-radius: base.$br-100;
+    }
   }
 }
 
