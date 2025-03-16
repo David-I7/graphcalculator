@@ -114,20 +114,28 @@ Dropdown.Chevron = () => {
   );
 };
 
-Dropdown.Content = ({
-  UserContent,
+export type UserContentProps = {
+  isOpen: boolean;
+  ariaControlsId: string;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  children?: ReactNode;
+};
+
+Dropdown.CustomMenu = ({
+  Menu,
+  children,
 }: {
-  UserContent: (props: {
-    ariaControlsId: string;
-    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  }) => ReactNode;
+  Menu: (props: UserContentProps) => ReactNode;
+  children: ReactNode;
 }) => {
   const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
 
   return (
     <>
       {isOpen && (
-        <UserContent ariaControlsId={ariaControlsID} setIsOpen={setIsOpen} />
+        <Menu isOpen ariaControlsId={ariaControlsID} setIsOpen={setIsOpen}>
+          {children}
+        </Menu>
       )}
     </>
   );

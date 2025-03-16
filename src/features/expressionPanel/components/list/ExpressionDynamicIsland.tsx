@@ -18,9 +18,19 @@ import {
   ItemType,
 } from "../../../../state/graph/types";
 import { ApplicationError } from "../../../../state/error/error";
-import { JSX, ReactNode, SetStateAction, useRef, useState } from "react";
+import {
+  JSX,
+  ReactNode,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useClickOutside } from "../../../../hooks/dom";
-import Dropdown from "../../../../components/dropdown/Dropdown";
+import Dropdown, {
+  UserContentProps,
+} from "../../../../components/dropdown/Dropdown";
+import { usePopulateRef } from "../../../../hooks/reactutils";
 
 type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
@@ -158,7 +168,15 @@ ExpressionDynamicIsland.Function = ({
           )}
         </Dropdown.Button>
 
-        <Dropdown.Content UserContent={FunctionSettings} />
+        <Dropdown.CustomMenu Menu={SettingsMenu}>
+          <div>Lines</div>
+          <div>
+            <div></div>
+            <div></div>
+          </div>
+          <hr></hr>
+          <div></div>
+        </Dropdown.CustomMenu>
       </Dropdown>
     </div>
   );
@@ -256,18 +274,65 @@ ExpressionDynamicIsland.Error = ({
   );
 };
 
-function FunctionSettings({
+function SettingsMenu({
   setIsOpen,
   ariaControlsId,
-}: {
-  ariaControlsId: string;
-  setIsOpen: React.Dispatch<SetStateAction<boolean>>;
-}): ReactNode {
+  isOpen,
+  children,
+}: UserContentProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const expressionListRef = useRef<HTMLDivElement>(null);
+
+  usePopulateRef(expressionListRef, {
+    cb() {
+      return document.querySelector(
+        ".expression-list-container"
+      ) as HTMLDivElement;
+    },
+  });
+
+  useEffect(() => {
+    if (!expressionListRef.current || !menuRef.current) return;
+
+    if (
+      expressionListRef.current.scrollHeight ===
+      expressionListRef.current.offsetHeight
+    )
+      return;
+
+    const expressionListRefCurrent = expressionListRef.current;
+
+    const repositionMenu = () => {
+      if (!expressionListRefCurrent || !menuRef.current) return;
+
+      const menuRect = menuRef.current.getBoundingClientRect();
+      const padding = 12;
+      const overflow =
+        expressionListRefCurrent.offsetTop +
+        expressionListRefCurrent.offsetHeight -
+        menuRect.bottom;
+
+      if (overflow < 0) {
+        menuRef.current.style.transform = `translateY(max(${
+          overflow - padding
+        }px,calc(-100% + 2rem)))`;
+      }
+    };
+
+    repositionMenu();
+  }, [isOpen]);
+
   return (
-    <div
-      className="expression-settings"
-      id={ariaControlsId}
-      onClick={(e) => e.stopPropagation()}
-    ></div>
+    <>
+      <div
+        ref={menuRef}
+        className="expression-settings"
+        id={ariaControlsId}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+      <div className="expression-settings-triangle"></div>
+    </>
   );
 }
