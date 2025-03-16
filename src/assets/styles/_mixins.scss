@@ -36,6 +36,16 @@
 @mixin beforeAbsolute($selector: "", $content: "") {
   #{$selector}::before {
     content: $content;
+    display: inline-block;
+    position: absolute;
+    inset: 0;
+    @content;
+  }
+}
+
+@mixin afterAbsolute($selector: "", $content: "") {
+  #{$selector}::after {
+    content: $content;
     position: absolute;
     inset: 0;
     @content;

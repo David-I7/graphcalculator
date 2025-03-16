@@ -1,0 +1,69 @@
+@use "../../assets/styles/base" as base;
+
+.switch {
+  visibility: hidden;
+  width: 0;
+  height: 0;
+
+  & + label {
+    position: relative;
+    display: inline-block;
+    height: 1.125rem;
+    width: 2.25rem;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    @include base.beforeAbsolute("&") {
+      width: 100%;
+      border-radius: base.$br-400;
+      height: 0.625rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: base.$surface-container;
+    }
+
+    @include base.afterAbsolute("&") {
+      width: 1.125rem;
+      aspect-ratio: 1;
+      border-radius: base.$br-round;
+      background-color: base.$surface-container-low;
+      box-shadow: base.$box-shadow;
+      transition: transform base.$an-sp-fast ease-out,
+        background-color base.$an-sp-fast ease-out;
+    }
+  }
+
+  &:focus {
+    & + label {
+      &::before {
+        // outline: 1px solid base.$border-normal;
+        background-color: green;
+      }
+    }
+  }
+
+  &:checked {
+    & + label {
+      &::after {
+        transform: translateX(100%);
+        background-color: base.$primary;
+      }
+      &::before {
+        background-color: color-mix(in srgb, base.$primary 30%, white 70%);
+      }
+    }
+  }
+
+  &:disabled {
+    & + label {
+      &::after {
+        background-color: base.$secondary;
+      }
+      &::before {
+        background-color: base.$secondary-container;
+      }
+    }
+  }
+}

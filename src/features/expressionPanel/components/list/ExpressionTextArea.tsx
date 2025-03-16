@@ -74,6 +74,7 @@ const FunctionTextArea = ({
     <div
       style={{
         display: "grid",
+        flex: 1,
       }}
     >
       <div className="function-input-container">

@@ -174,7 +174,10 @@ export const Menu = (props: SVGProps) => {
     </svg>
   );
 };
-export const Function = (props: SVGProps) => {
+export const Function = ({
+  type,
+  ...props
+}: SVGProps & { type: "linear" | "dotted" | "dashed" }) => {
   return (
     <svg
       width="24"
@@ -185,14 +188,33 @@ export const Function = (props: SVGProps) => {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M1.25 19.5C1.25 19.5 6.75 9 8.75 9C10.75 9 12.25 14.5 14.25 15.5C16.25 16.5 22.75 4.5 22.75 4.5"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      {type === "linear" && (
+        <path
+          d="M1.25 19.5C1.25 19.5 6.75 9 8.75 9C10.75 9 12.25 14.5 14.25 15.5C16.25 16.5 22.75 4.5 22.75 4.5"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+      {type === "dotted" && (
+        <path
+          d="M1.25 19.5C1.25 19.5 6.75 9 8.75 9C10.75 9 12.25 14.5 14.25 15.5C16.25 16.5 22.75 4.5 22.75 4.5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="1 3"
+        />
+      )}
+      {type === "dashed" && (
+        <path
+          d="M1.25 19.5C1.25 19.5 6.75 9 8.75 9C10.75 9 12.25 14.5 14.25 15.5C16.25 16.5 22.75 4.5 22.75 4.5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="5 5"
+        />
+      )}
     </svg>
   );
 };
+
 export const FunctionLiteral = (props: SVGProps) => {
   return (
     <svg
@@ -299,6 +321,101 @@ export const Point = (props: SVGProps) => {
         d="M12 7C12.9797 6.99994 13.9378 7.28769 14.7553 7.8275C15.5729 8.36731 16.2138 9.1354 16.5986 10.0364C16.9833 10.9373 17.0949 11.9315 16.9195 12.8953C16.7441 13.8592 16.2893 14.7502 15.6118 15.4579C14.9343 16.1655 14.0638 16.6585 13.1085 16.8756C12.1532 17.0928 11.1552 17.0245 10.2383 16.6793C9.3215 16.334 8.52629 15.7271 7.95146 14.9338C7.37663 14.1405 7.04752 13.1958 7.005 12.217L7 12L7.005 11.783C7.06092 10.4958 7.61161 9.27978 8.54222 8.38866C9.47284 7.49754 10.7115 7.00007 12 7Z"
         fill="white"
       />
+    </svg>
+  );
+};
+
+export const Triangle = (props: SVGProps) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M10.285 3.85795C11.062 2.56395 12.938 2.56395 13.715 3.85795L22.183 17.971C22.983 19.304 22.023 21 20.468 21H3.53203C1.97803 21 1.01803 19.304 1.81703 17.971L10.285 3.85795Z" />
+    </svg>
+  );
+};
+export const Opacity = (props: SVGProps) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M12 21C9.78333 21 7.89567 20.2333 6.337 18.7C4.77833 17.1667 3.99933 15.3 4 13.1C4 12.0167 4.20833 11.0043 4.625 10.063C5.04167 9.12167 5.61667 8.284 6.35 7.55L12 2L17.65 7.55C18.3833 8.28333 18.9583 9.121 19.375 10.063C19.7917 11.005 20 12.0173 20 13.1C20 15.3 19.221 17.1667 17.663 18.7C16.105 20.2333 14.2173 21 12 21ZM6.05 14H17.9C18.1 12.8 17.9877 11.775 17.563 10.925C17.1383 10.075 16.7007 9.43333 16.25 9L12 4.8L7.75 9C7.3 9.43333 6.85833 10.075 6.425 10.925C5.99167 11.775 5.86667 12.8 6.05 14Z" />
+    </svg>
+  );
+};
+export const StrokeWidth = (props: SVGProps) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <g clipPath="url(#clip0_33_4)">
+        <path d="M24 24L-9.53674e-07 24L-4.29138e-07 18L24 18L24 24ZM24 15.6L-2.19323e-07 15.6L2.00306e-07 10.8L24 10.8L24 15.6ZM24 8.4L4.10121e-07 8.4L7.24843e-07 4.8L24 4.8L24 8.4ZM24 2.4L9.34658e-07 2.4L1.14447e-06 -6.67635e-07L24 1.43051e-06L24 2.4Z" />
+      </g>
+      <defs>
+        <clipPath id="clip0_33_4">
+          <rect
+            width="24"
+            height="24"
+            transform="translate(24 24) rotate(-180)"
+          />
+        </clipPath>
+      </defs>
+    </svg>
+  );
+};
+export const Line = ({
+  type,
+  ...props
+}: SVGProps & { type: "linear" | "dotted" | "dashed" }) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      {type === "linear" && (
+        <path
+          d="M1.3934 22.6067L22.6066 1.39349"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+      {type === "dotted" && (
+        <path
+          d="M1.3934 22.6067L22.6066 1.39349"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="1 3"
+        />
+      )}
+      {type === "dashed" && (
+        <path
+          d="M1.3934 22.6067L22.6066 1.39349"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="5 5"
+          strokeDashoffset="-2"
+        />
+      )}
     </svg>
   );
 };

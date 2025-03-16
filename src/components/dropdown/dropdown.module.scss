@@ -9,19 +9,27 @@
     top: calc(100% + 1rem);
     left: 50%;
     transform: translateX(-50%);
-    background-color: base.$secondary-container;
-    color: base.$on-secondary-container;
+    background-color: base.$surface;
+
     border-radius: base.$br-200;
     min-width: max-content;
     padding: 0.25rem 0;
     z-index: 100;
     box-shadow: base.$box-shadow;
+    border: 1px solid base.$border-low;
 
+    @include base.afterAbsolute("&") {
+      top: -1.0625rem;
+      left: 50%;
+      transform: translateX(-50%);
+      @include base.cssTriangle(1.0625rem, 1.0625rem, base.$border-low);
+    }
     @include base.beforeAbsolute("&") {
+      z-index: 10;
       top: -1rem;
       left: 50%;
       transform: translateX(-50%);
-      @include base.cssTriangle(1rem, 1rem, base.$secondary-container);
+      @include base.cssTriangle(1rem, 1rem, base.$surface);
     }
   }
 
