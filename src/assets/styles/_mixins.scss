@@ -42,6 +42,15 @@
   }
 }
 
+@mixin afterAbsolute($selector: "", $content: "") {
+  #{$selector}::after {
+    content: $content;
+    position: absolute;
+    inset: 0;
+    @content;
+  }
+}
+
 @mixin cssTriangle($bottom, $right, $color) {
   height: 0;
   width: 0;

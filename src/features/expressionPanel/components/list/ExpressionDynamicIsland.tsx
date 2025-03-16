@@ -31,6 +31,7 @@ import Dropdown, {
   UserContentProps,
 } from "../../../../components/dropdown/Dropdown";
 import { usePopulateRef } from "../../../../hooks/reactutils";
+import Switch from "../../../../components/switch/Switch";
 
 type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
@@ -169,7 +170,10 @@ ExpressionDynamicIsland.Function = ({
         </Dropdown.Button>
 
         <Dropdown.CustomMenu Menu={SettingsMenu}>
-          <div>Lines</div>
+          <div>
+            Lines
+            <Switch />
+          </div>
           <div>
             <div></div>
             <div></div>
