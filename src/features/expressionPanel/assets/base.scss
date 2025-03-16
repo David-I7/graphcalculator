@@ -200,14 +200,19 @@
   z-index: 30;
   top: 0;
   left: calc(100% + 1rem);
+  box-shadow: base.$box-shadow;
+  color: base.$on-secondary-container;
+  display: flex;
+  flex-direction: column;
 
-  @include base.beforeAbsolute("&") {
-    top: 0.5rem;
-    left: -0.9rem;
-    bottom: auto;
-    right: auto;
+  &-triangle {
+    position: absolute;
+    z-index: 31;
+    bottom: 0.625rem;
+    right: -1.25rem;
+    top: auto;
     transform: rotate(-90deg);
-    @include base.cssTriangle(1rem, 0.75rem, base.$secondary-container);
+    @include base.cssTriangle(0.75rem, 0.5rem, base.$secondary-container);
   }
 }
 
