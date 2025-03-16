@@ -40,3 +40,20 @@
 .textarea-container span {
   font-size: inherit;
 }
+
+.underline-input {
+  border-bottom: 1px solid base.$border-high;
+  outline: none;
+  height: 1.5rem;
+  width: 100%;
+  flex: 1;
+  @extend .font-body-sm;
+  transition: border-color base.$an-sp-default ease-out;
+
+  &:focus {
+    border-bottom: 2px solid base.$primary;
+  }
+  &:hover {
+    border-bottom: 2px solid base.$border-high;
+  }
+}

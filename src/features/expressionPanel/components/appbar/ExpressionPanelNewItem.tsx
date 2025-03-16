@@ -24,21 +24,19 @@ const ExpressionPanelNewItem = () => {
   const data = useMemo(() => [...NewItemDropdownMap.entries()], []);
 
   return (
-    <>
-      <DropdownButton>
-        <Dropdown.Button className="button--hovered bg-surface-container-low">
-          <Plus />
-        </Dropdown.Button>
+    <DropdownButton>
+      <Dropdown.Button className="button--hovered bg-surface-container-low">
+        <Plus />
+      </Dropdown.Button>
 
-        <Dropdown.Menu
-          onClick={(arg) => {
-            dispatch(createItem({ type: arg[0], loc: "start" }));
-          }}
-          data={data}
-          ListItem={DropdowmMenuItem}
-        />
-      </DropdownButton>
-    </>
+      <Dropdown.Menu
+        onClick={(arg) => {
+          dispatch(createItem({ type: arg[0], loc: "start" }));
+        }}
+        data={data}
+        ListItem={DropdowmMenuItem}
+      />
+    </DropdownButton>
   );
 };
 

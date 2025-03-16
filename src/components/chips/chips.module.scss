@@ -1,0 +1,8 @@
+@use "../../assets/styles/base" as base;
+
+.filter-chip {
+  @include base.gridCenter();
+  height: 2rem;
+  padding: 0.5rem;
+  border-radius: base.$br-200;
+}

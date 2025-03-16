@@ -1,0 +1,6 @@
+@use "../../assets/styles/base" as base;
+
+.hr {
+  color: base.$border-lowest;
+  border: 1px solid base.$border-lowest;
+}

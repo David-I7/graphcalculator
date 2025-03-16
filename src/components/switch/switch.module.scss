@@ -21,14 +21,14 @@
       height: 0.625rem;
       top: 50%;
       transform: translateY(-50%);
-      background-color: base.$surface-container-low;
+      background-color: base.$surface-container;
     }
 
     @include base.afterAbsolute("&") {
       width: 1.125rem;
       aspect-ratio: 1;
       border-radius: base.$br-round;
-      background-color: base.$surface-container;
+      background-color: base.$surface-container-low;
       box-shadow: base.$box-shadow;
       transition: transform base.$an-sp-fast ease-out,
         background-color base.$an-sp-fast ease-out;
@@ -51,7 +51,7 @@
         background-color: base.$primary;
       }
       &::before {
-        background-color: base.$primary-container;
+        background-color: color-mix(in srgb, base.$primary 30%, white 70%);
       }
     }
   }

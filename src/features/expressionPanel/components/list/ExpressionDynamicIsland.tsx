@@ -5,12 +5,15 @@ import {
   Warning,
   VariableAssignment,
   Point,
+  Triangle,
+  Opacity,
+  StrokeWidth,
+  Line,
 } from "../../../../components/svgs";
 import { useAppDispatch } from "../../../../state/hooks";
 import { toggleExpressionVisibility } from "../../../../state/graph/graph";
 import {
   Expression,
-  isExpression,
   isFunction,
   isPoint,
   isVariable,
@@ -18,20 +21,16 @@ import {
   ItemType,
 } from "../../../../state/graph/types";
 import { ApplicationError } from "../../../../state/error/error";
-import {
-  JSX,
-  ReactNode,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import { useClickOutside } from "../../../../hooks/dom";
 import Dropdown, {
   UserContentProps,
 } from "../../../../components/dropdown/Dropdown";
 import { usePopulateRef } from "../../../../hooks/reactutils";
 import Switch from "../../../../components/switch/Switch";
+import UnderlineInput from "../../../../components/input/UnderlineInput";
+import Hr from "../../../../components/hr/Hr";
+import FilterChip from "../../../../components/chips/FilterChip";
 
 type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
@@ -120,33 +119,6 @@ ExpressionDynamicIsland.Function = ({
 
   return (
     <div className="dynamic-island__type">
-      {/* <button
-        onClick={(e) => {
-          dispatch(
-            toggleExpressionVisibility({
-              //@ts-ignore
-              hidden: !item.data.settings.hidden,
-              id: item.id,
-              idx: index,
-            })
-          );
-        }}
-        aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
-          item.type
-        } ${index + 1}`}
-        style={{
-          backgroundColor: item.data.settings.hidden
-            ? "transparent"
-            : item.data.settings.color,
-        }}
-        className="dynamic-island-type-function"
-      >
-        {item.data.settings.hidden ? (
-          <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
-        ) : (
-          <Function width={28} height={28} style={{ cursor: "pointer" }} />
-        )}
-      </button> */}
       <Dropdown>
         <Dropdown.Button
           aria-label={`${item.data.settings.hidden ? "Show" : "Hide"} ${
@@ -165,20 +137,40 @@ ExpressionDynamicIsland.Function = ({
           {item.data.settings.hidden ? (
             <Hidden style={{ cursor: "pointer" }} width={28} height={28} />
           ) : (
-            <Function width={28} height={28} style={{ cursor: "pointer" }} />
+            <Function
+              type={item.data.settings.lineType}
+              width={28}
+              height={28}
+              style={{ cursor: "pointer" }}
+            />
           )}
         </Dropdown.Button>
 
         <Dropdown.CustomMenu Menu={SettingsMenu}>
-          <div>
+          <div className="expression-settings-header">
             Lines
             <Switch />
           </div>
-          <div>
-            <div></div>
-            <div></div>
+          <div className="expression-settings-body">
+            <div className="expression-settings-body-left">
+              <div
+                style={{ display: "flex", gap: "2px", alignItems: "center" }}
+              >
+                <Opacity width={14} height={14} />
+                <UnderlineInput />
+              </div>
+              <div
+                style={{ display: "flex", gap: "2px", alignItems: "center" }}
+              >
+                <StrokeWidth width={14} height={14} />
+                <UnderlineInput />
+              </div>
+            </div>
+            <div className="expression-settings-body-right">
+              <FunctionChips />
+            </div>
           </div>
-          <hr></hr>
+          <Hr style={{ marginBlock: "1rem" }} />
           <div></div>
         </Dropdown.CustomMenu>
       </Dropdown>
@@ -336,7 +328,20 @@ function SettingsMenu({
       >
         {children}
       </div>
-      <div className="expression-settings-triangle"></div>
+      <div className="expression-settings-triangle-mask"></div>
+      <Triangle
+        width={14}
+        height={14}
+        className="expression-settings-triangle"
+      ></Triangle>
     </>
+  );
+}
+
+function FunctionChips() {
+  return (
+    <FilterChip isSelected={false}>
+      <Line type="dotted" />
+    </FilterChip>
   );
 }
