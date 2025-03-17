@@ -701,7 +701,9 @@ export class DrawFunctionCommand implements GraphCommand {
 
       this.graph.ctx.strokeStyle = this.settings.color;
       this.graph.ctx.fillStyle = this.settings.color;
-      this.graph.ctx.lineWidth = this.settings.strokeSize * this.graph.dpr;
+      this.graph.ctx.lineWidth =
+        (this.settings.strokeSize || 1e-5) * this.graph.dpr;
+      // this.graph.ctx.globalAlpha = this.settings.opacity;
 
       if (this.data.f.param === "y") {
         this.drawFunctionOfY();

@@ -1,3 +1,4 @@
+import { PREDEFINED_COLORS } from "../../data/css/variables";
 import { SerializedAdjList } from "../../helpers/dts";
 
 // API data
@@ -13,13 +14,13 @@ export type GraphData = {
 
 export type ExpressionSettings = {
   point: {
-    color: string;
+    color: (typeof PREDEFINED_COLORS)[number];
     hidden: boolean;
     strokeSize: number;
     opacity: number;
   };
   function: {
-    color: string;
+    color: (typeof PREDEFINED_COLORS)[number];
     hidden: boolean;
     strokeSize: number;
     lineType: "dotted" | "dashed" | "linear";

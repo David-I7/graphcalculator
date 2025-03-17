@@ -11,8 +11,8 @@ const FilterChip = ({ children, isSelected, ...btnProps }: FilterChipProps) => {
     let mergedClassname = "";
     mergedClassname = btnProps.className ? btnProps.className : "";
     mergedClassname = isSelected
-      ? mergedClassname + styles.filterChipSelected
-      : mergedClassname + styles.filterChip;
+      ? mergedClassname + " " + styles.filterChipSelected
+      : mergedClassname + " " + styles.filterChip;
 
     return mergedClassname;
   };

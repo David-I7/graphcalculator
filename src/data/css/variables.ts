@@ -1,8 +1,4 @@
 export const CSS_VARIABLES = {
-  // COLOR BASE
-  baseLightness: "50%",
-  baseSaturation: "50%",
-
   // TEXT || BUTTONS || ICONS
   primary: "#3d5cc2",
   secondary: "#4d4d4d",
@@ -18,6 +14,7 @@ export const CSS_VARIABLES = {
 
   // CONTAINERS (lower emphasis than their non-container values)
   primaryContainer: "#99aff7",
+  primaryContainerVarient: "#ccd7fb",
   secondaryContainer: "#a8a8a8",
   onPrimaryContainer: "#0f0f0f",
   onSecondaryContainer: "#0f0f0f",
@@ -52,3 +49,12 @@ export const CSS_VARIABLES = {
   animationSpeedSlow: 350,
   animationSpeedSlowest: 500,
 };
+
+export const PREDEFINED_COLORS = [
+  `#c74440`, // red
+  `#fa7e19`, // orange
+  `#e5d438`, //yellow
+  `hsl(144,50%,50%)`, //green
+  `hsl(257,60%,65%)`, //purple
+  `#000`, //black
+] as const;
