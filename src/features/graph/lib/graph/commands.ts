@@ -694,7 +694,9 @@ export class DrawFunctionCommand implements GraphCommand {
   }
 
   draw(): void {
-    if (this.settings.hidden) return;
+    if (this.settings.hidden) {
+      if (this.commandState.status !== "idle") this.setStatus("idle");
+    }
 
     try {
       this.graph.ctx.save();
@@ -703,19 +705,26 @@ export class DrawFunctionCommand implements GraphCommand {
       this.graph.ctx.fillStyle = this.settings.color;
       this.graph.ctx.lineWidth =
         (this.settings.strokeSize || 1e-5) * this.graph.dpr;
-      // this.graph.ctx.globalAlpha = this.settings.opacity;
+      this.graph.ctx.lineCap =
+        this.settings.lineType === "linear" ? "butt" : "round";
 
       if (this.data.f.param === "y") {
-        this.drawFunctionOfY();
         if (this.commandState.status !== "idle") {
+          this.drawFunctionOfY();
           this.calculateCriticalPointsY();
           this.pointController.draw();
+        } else {
+          this.graph.ctx.globalAlpha = this.settings.opacity;
+          this.drawFunctionOfY();
         }
       } else {
-        this.drawFunctionOfX();
         if (this.commandState.status !== "idle") {
+          this.drawFunctionOfX();
           this.calculateCriticalPointsX();
           this.pointController.draw();
+        } else {
+          this.graph.ctx.globalAlpha = this.settings.opacity;
+          this.drawFunctionOfX();
         }
       }
     } catch (err) {
@@ -742,22 +751,59 @@ export class DrawFunctionCommand implements GraphCommand {
     let nextY: number | undefined;
     const nextStep = 0.01 * this.graph.scales.scaler;
 
-    for (let y = minY; y < maxY; y += nextStep) {
+    if (this.settings.lineType === "linear") {
       this.graph.ctx.beginPath();
-      const curY = nextY ?? y * normFactor;
-      const curX = nextX ?? f(-y) * normFactor;
-      if (!Number.isFinite(curX)) continue;
+      for (let y = minY; y < maxY; y += nextStep) {
+        const curY = nextY ?? y * normFactor;
+        const curX = nextX ?? f(-y) * normFactor;
+        if (!Number.isFinite(curX)) continue;
 
-      nextY = (y + nextStep) * normFactor;
-      nextX = f(-y + nextStep) * normFactor;
-      if (!Number.isFinite(nextX)) continue;
+        nextY = (y + nextStep) * normFactor;
+        nextX = f(-y + nextStep) * normFactor;
+        if (!Number.isFinite(nextX)) continue;
 
-      // discontinuity
-      if (Math.abs(nextX - curX) > this.graph.canvas.width) continue;
+        // discontinuity
+        if (Math.abs(nextX - curX) > this.graph.canvas.width) continue;
 
-      this.graph.ctx.moveTo(curX, curY);
-      this.graph.ctx.lineTo(nextX, nextY);
+        this.graph.ctx.moveTo(curX, curY);
+        this.graph.ctx.lineTo(nextX, nextY);
+      }
       this.graph.ctx.stroke();
+    } else {
+      let c = 0;
+      for (let y = minY; y < maxY; y += nextStep) {
+        this.graph.ctx.beginPath();
+        const curY = nextY ?? y * normFactor;
+        const curX = nextX ?? f(-y) * normFactor;
+        if (!Number.isFinite(curX)) continue;
+
+        nextY = (y + nextStep) * normFactor;
+        nextX = f(-y + nextStep) * normFactor;
+        if (!Number.isFinite(nextX)) continue;
+
+        // discontinuity
+        if (Math.abs(nextX - curX) > this.graph.canvas.width) continue;
+
+        this.graph.ctx.moveTo(curX, curY);
+        this.graph.ctx.lineTo(nextX, nextY);
+        this.graph.ctx.stroke();
+
+        if (this.settings.lineType === "dotted") {
+          if (c % Math.floor(this.settings.strokeSize) === 0) {
+            nextX = undefined;
+            nextY = undefined;
+            y += nextStep * 4 * this.settings.strokeSize;
+          }
+        } else {
+          if (c % Math.floor(25 * this.settings.strokeSize) === 0) {
+            nextX = undefined;
+            nextY = undefined;
+            y += nextStep * 10 * this.settings.strokeSize;
+          }
+        }
+
+        c++;
+      }
     }
   }
 
@@ -779,22 +825,60 @@ export class DrawFunctionCommand implements GraphCommand {
     let nextY: number | undefined;
     const nextStep: number = 0.01 * this.graph.scales.scaler;
 
-    for (let i = minX; i < maxX; i += nextStep) {
+    if (this.settings.lineType === "linear") {
       this.graph.ctx.beginPath();
-      const curX = nextX ?? i * normFactor;
-      const curY = nextY ?? -(f(i + nextStep) * normFactor);
-      if (!Number.isFinite(curY)) continue;
+      for (let i = minX; i < maxX; i += nextStep) {
+        const curX = nextX ?? i * normFactor;
+        const curY = nextY ?? -(f(i + nextStep) * normFactor);
+        if (!Number.isFinite(curY)) continue;
 
-      nextX = (i + nextStep) * normFactor;
-      nextY = -(f(i + nextStep) * normFactor);
-      if (!Number.isFinite(nextY)) continue;
+        nextX = (i + nextStep) * normFactor;
+        nextY = -(f(i + nextStep) * normFactor);
+        if (!Number.isFinite(nextY)) continue;
 
-      // discontinuity
-      if (Math.abs(nextY - curY) > this.graph.canvas.height) continue;
+        // discontinuity
+        if (Math.abs(nextY - curY) > this.graph.canvas.height) continue;
 
-      this.graph.ctx.moveTo(curX, curY);
-      this.graph.ctx.lineTo(nextX, nextY);
+        this.graph.ctx.moveTo(curX, curY);
+        this.graph.ctx.lineTo(nextX, nextY);
+      }
       this.graph.ctx.stroke();
+    } else {
+      let c = 0;
+
+      for (let i = minX; i < maxX; i += nextStep) {
+        this.graph.ctx.beginPath();
+        const curX = nextX ?? i * normFactor;
+        const curY = nextY ?? -(f(i + nextStep) * normFactor);
+        if (!Number.isFinite(curY)) continue;
+
+        nextX = (i + nextStep) * normFactor;
+        nextY = -(f(i + nextStep) * normFactor);
+        if (!Number.isFinite(nextY)) continue;
+
+        // discontinuity
+        if (Math.abs(nextY - curY) > this.graph.canvas.height) continue;
+
+        this.graph.ctx.moveTo(curX, curY);
+        this.graph.ctx.lineTo(nextX, nextY);
+        this.graph.ctx.stroke();
+
+        if (this.settings.lineType === "dotted") {
+          if (c % Math.floor(this.settings.strokeSize) === 0) {
+            nextX = undefined;
+            nextY = undefined;
+            i += nextStep * 4 * this.settings.strokeSize;
+          }
+        } else {
+          if (c % Math.floor(25 * this.settings.strokeSize) === 0) {
+            nextX = undefined;
+            nextY = undefined;
+            i += nextStep * 10 * this.settings.strokeSize;
+          }
+        }
+
+        c++;
+      }
     }
   }
 
