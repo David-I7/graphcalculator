@@ -59,3 +59,13 @@
   border-right: $right solid transparent;
   border-bottom: $bottom solid $color;
 }
+
+@mixin checkmark($color, $thickness: 4px) {
+  display: inline-block;
+  transform: rotate(45deg);
+  height: 16px;
+  width: 8px;
+  border-bottom: $thickness solid $color;
+  border-right: $thickness solid $color;
+  border-radius: 1px;
+}

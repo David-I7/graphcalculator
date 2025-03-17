@@ -5,15 +5,16 @@ import {
   Warning,
   VariableAssignment,
   Point,
-  Triangle,
   Opacity,
   StrokeWidth,
-  Line,
 } from "../../../../components/svgs";
 import { useAppDispatch } from "../../../../state/hooks";
-import { toggleExpressionVisibility } from "../../../../state/graph/graph";
 import {
-  Expression,
+  changeOpacity,
+  changeStrokeSize,
+  toggleVisibility,
+} from "../../../../state/graph/graph";
+import {
   isFunction,
   isPoint,
   isVariable,
@@ -21,16 +22,17 @@ import {
   ItemType,
 } from "../../../../state/graph/types";
 import { ApplicationError } from "../../../../state/error/error";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useClickOutside } from "../../../../hooks/dom";
-import Dropdown, {
-  UserContentProps,
-} from "../../../../components/dropdown/Dropdown";
-import { usePopulateRef } from "../../../../hooks/reactutils";
+import Dropdown from "../../../../components/dropdown/Dropdown";
 import Switch from "../../../../components/switch/Switch";
 import UnderlineInput from "../../../../components/input/UnderlineInput";
 import Hr from "../../../../components/hr/Hr";
-import FilterChip from "../../../../components/chips/FilterChip";
+import {
+  ColorChips,
+  ExpressionSettingsMenu,
+  FunctionChips,
+} from "./ExpressionSettings";
 
 type ExpressionDynamicIslandProps<T extends ItemType = ItemType> = {
   index: number;
@@ -146,32 +148,90 @@ ExpressionDynamicIsland.Function = ({
           )}
         </Dropdown.Button>
 
-        <Dropdown.CustomMenu Menu={SettingsMenu}>
+        <Dropdown.CustomMenu Menu={ExpressionSettingsMenu}>
           <div className="expression-settings-header">
             Lines
-            <Switch />
+            <Switch
+              onChange={(e) => {
+                dispatch(
+                  toggleVisibility({
+                    id: item.id,
+                    idx: index,
+                  })
+                );
+              }}
+              checked={!item.data.settings.hidden}
+            />
           </div>
           <div className="expression-settings-body">
             <div className="expression-settings-body-left">
               <div
-                style={{ display: "flex", gap: "2px", alignItems: "center" }}
+                style={{
+                  display: "flex",
+                  gap: "0.25rem",
+                  alignItems: "center",
+                }}
               >
                 <Opacity width={14} height={14} />
-                <UnderlineInput />
+                <UnderlineInput
+                  min={0}
+                  max={1}
+                  defaultValue={item.data.settings.opacity}
+                  onChange={(e) => {
+                    dispatch(
+                      changeOpacity({
+                        id: item.id,
+                        idx: index,
+                        opacity: isNaN(Number(e.target.value))
+                          ? 1
+                          : Number(e.target.value),
+                      })
+                    );
+                  }}
+                />
               </div>
               <div
-                style={{ display: "flex", gap: "2px", alignItems: "center" }}
+                style={{
+                  display: "flex",
+                  gap: "0.25rem",
+                  alignItems: "center",
+                }}
               >
                 <StrokeWidth width={14} height={14} />
-                <UnderlineInput />
+                <UnderlineInput
+                  min={0}
+                  max={10}
+                  defaultValue={item.data.settings.strokeSize}
+                  onChange={(e) => {
+                    dispatch(
+                      changeStrokeSize({
+                        id: item.id,
+                        idx: index,
+                        strokeSize: isNaN(Number(e.target.value))
+                          ? 3
+                          : Number(e.target.value),
+                      })
+                    );
+                  }}
+                />
               </div>
             </div>
             <div className="expression-settings-body-right">
-              <FunctionChips />
+              <FunctionChips
+                idx={index}
+                id={item.id}
+                selected={item.data.settings.lineType}
+              />
             </div>
           </div>
           <Hr style={{ marginBlock: "1rem" }} />
-          <div></div>
+          <div className="expression-settings-footer">
+            <ColorChips
+              selected={item.data.settings.color}
+              id={item.id}
+              idx={index}
+            />
+          </div>
         </Dropdown.CustomMenu>
       </Dropdown>
     </div>
@@ -189,8 +249,7 @@ ExpressionDynamicIsland.Point = ({
       <button
         onClick={(e) => {
           dispatch(
-            toggleExpressionVisibility({
-              hidden: !(item.data as Expression<"point">).settings.hidden,
+            toggleVisibility({
               id: item.id,
               idx: index,
             })
@@ -269,79 +328,3 @@ ExpressionDynamicIsland.Error = ({
     </div>
   );
 };
-
-function SettingsMenu({
-  setIsOpen,
-  ariaControlsId,
-  isOpen,
-  children,
-}: UserContentProps) {
-  const menuRef = useRef<HTMLDivElement>(null);
-  const expressionListRef = useRef<HTMLDivElement>(null);
-
-  usePopulateRef(expressionListRef, {
-    cb() {
-      return document.querySelector(
-        ".expression-list-container"
-      ) as HTMLDivElement;
-    },
-  });
-
-  useEffect(() => {
-    if (!expressionListRef.current || !menuRef.current) return;
-
-    if (
-      expressionListRef.current.scrollHeight ===
-      expressionListRef.current.offsetHeight
-    )
-      return;
-
-    const expressionListRefCurrent = expressionListRef.current;
-
-    const repositionMenu = () => {
-      if (!expressionListRefCurrent || !menuRef.current) return;
-
-      const menuRect = menuRef.current.getBoundingClientRect();
-      const padding = 12;
-      const overflow =
-        expressionListRefCurrent.offsetTop +
-        expressionListRefCurrent.offsetHeight -
-        menuRect.bottom;
-
-      if (overflow < 0) {
-        menuRef.current.style.transform = `translateY(max(${
-          overflow - padding
-        }px,calc(-100% + 2rem)))`;
-      }
-    };
-
-    repositionMenu();
-  }, [isOpen]);
-
-  return (
-    <>
-      <div
-        ref={menuRef}
-        className="expression-settings"
-        id={ariaControlsId}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-      <div className="expression-settings-triangle-mask"></div>
-      <Triangle
-        width={14}
-        height={14}
-        className="expression-settings-triangle"
-      ></Triangle>
-    </>
-  );
-}
-
-function FunctionChips() {
-  return (
-    <FilterChip isSelected={false}>
-      <Line type="dotted" />
-    </FilterChip>
-  );
-}

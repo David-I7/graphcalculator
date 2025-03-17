@@ -195,10 +195,9 @@
 
 .expression-settings {
   position: absolute;
-  width: 12rem;
+  width: 14rem;
   background-color: base.$surface;
   border-radius: base.$br-200;
-  height: 200px;
   z-index: 30;
   top: 0;
   left: calc(100% + 0.75rem);
@@ -242,6 +241,7 @@
     color: base.$on-surface-body-low;
     display: flex;
     padding: 0 0.5rem;
+    gap: 0.5rem;
 
     &-left {
       display: grid;
@@ -249,7 +249,50 @@
       width: 30%;
     }
     &-right {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       width: 70%;
+
+      & > button:nth-of-type(3n + 1) {
+        border-top-left-radius: base.$br-100;
+        border-bottom-left-radius: base.$br-100;
+      }
+      & > button:nth-of-type(3n + 3) {
+        border-top-right-radius: base.$br-100;
+        border-bottom-right-radius: base.$br-100;
+      }
+      & > button {
+        border-radius: 0;
+      }
+      & > button:not(.js-selected-chip) {
+        background-color: base.$surface;
+
+        &:hover {
+          @extend .button--hovered;
+        }
+      }
+      & > button:not(:last-of-type, .js-selected-chip) {
+        border-right: 0;
+      }
+      & > button.js-selected-chip + * {
+        border-left: 0;
+      }
+    }
+  }
+
+  &-footer {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0 0.5rem 0.5rem;
+
+    & > button {
+      flex: 1;
+      border: none;
+
+      &.js-selected-chip div {
+        @include base.checkmark(base.$inverse-on-surface-heading);
+      }
     }
   }
 }

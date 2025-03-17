@@ -4,5 +4,13 @@
   @include base.gridCenter();
   height: 2rem;
   padding: 0.5rem;
-  border-radius: base.$br-200;
+  border-radius: base.$br-100;
+  border: 1px solid base.$border-low;
+}
+
+.filter-chip-selected {
+  @extend .filter-chip;
+  border-color: base.$primary;
+  color: base.$primary;
+  background-color: base.$primary-container-varient;
 }

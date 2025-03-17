@@ -3,6 +3,7 @@ import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
+  ExpressionSettings,
   ExpressionType,
   GraphData,
   isExpression,
@@ -21,6 +22,7 @@ import {
   updateScopeSync,
 } from "./controllers";
 import { restrictedVariables } from "../../features/graph/data/math";
+import { PREDEFINED_COLORS } from "../../data/css/variables";
 
 interface GraphState {
   currentGraph: ClientGraphData;
@@ -157,11 +159,9 @@ const graphSlice = createSlice({
     }),
 
     // EXPRESSION CASES
-    toggleExpressionVisibility: create.reducer(
-      (
-        state,
-        action: PayloadAction<{ hidden: boolean; id: number; idx: number }>
-      ) => {
+    //SETTINGS
+    toggleVisibility: create.reducer(
+      (state, action: PayloadAction<{ id: number; idx: number }>) => {
         const item = state.currentGraph.items.data[action.payload.idx];
 
         if (item.id !== action.payload.id) return;
@@ -174,6 +174,97 @@ const graphSlice = createSlice({
         }
       }
     ),
+    changeColor: create.reducer(
+      (
+        state,
+        action: PayloadAction<{
+          color: (typeof PREDEFINED_COLORS)[number];
+          id: number;
+          idx: number;
+        }>
+      ) => {
+        const item = state.currentGraph.items.data[action.payload.idx];
+
+        if (item.id !== action.payload.id) return;
+        if (item.type !== "expression") return;
+
+        const expr = item.data as ItemData["expression"];
+
+        if (expr.type === "function" || expr.type === "point") {
+          expr.settings.color = action.payload.color;
+        }
+      }
+    ),
+    changeOpacity: create.reducer(
+      (
+        state,
+        action: PayloadAction<{
+          opacity: number;
+          id: number;
+          idx: number;
+        }>
+      ) => {
+        const item = state.currentGraph.items.data[action.payload.idx];
+
+        if (item.id !== action.payload.id) return;
+        if (item.type !== "expression") return;
+
+        const expr = item.data as ItemData["expression"];
+
+        if (expr.type === "function" || expr.type === "point") {
+          const sign = Math.sign(action.payload.opacity);
+          const clamped = Math.min(Math.abs(action.payload.opacity), 1);
+          expr.settings.opacity = Math.max(clamped * sign, 0);
+        }
+      }
+    ),
+    changeStrokeSize: create.reducer(
+      (
+        state,
+        action: PayloadAction<{
+          strokeSize: number;
+          id: number;
+          idx: number;
+        }>
+      ) => {
+        const item = state.currentGraph.items.data[action.payload.idx];
+
+        if (item.id !== action.payload.id) return;
+        if (item.type !== "expression") return;
+
+        const expr = item.data as ItemData["expression"];
+
+        if (expr.type === "function" || expr.type === "point") {
+          const sign = Math.sign(action.payload.strokeSize);
+          const clamped = Math.min(Math.abs(action.payload.strokeSize), 10);
+          expr.settings.strokeSize = Math.max(clamped * sign, 0);
+        }
+      }
+    ),
+    changeLineType: create.reducer(
+      (
+        state,
+        action: PayloadAction<{
+          lineType: ExpressionSettings["function"]["lineType"];
+          id: number;
+          idx: number;
+        }>
+      ) => {
+        const item = state.currentGraph.items.data[action.payload.idx];
+
+        if (item.id !== action.payload.id) return;
+        if (item.type !== "expression") return;
+
+        const expr = item.data as ItemData["expression"];
+
+        if (expr.type === "function") {
+          if (expr.settings.lineType === action.payload.lineType) return;
+          expr.settings.lineType = action.payload.lineType;
+        }
+      }
+    ),
+
+    //CONTENT
     removeParsedContent: create.reducer(
       (
         state,
@@ -347,7 +438,11 @@ export const {
   setFocusedItem,
 
   //expression
-  toggleExpressionVisibility,
+  changeLineType,
+  changeColor,
+  changeOpacity,
+  changeStrokeSize,
+  toggleVisibility,
   removeParsedContent,
   updateFunctionExpr,
   updatePointExpr,

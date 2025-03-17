@@ -6,7 +6,7 @@ import {
   MathNode,
   ObjectNode,
 } from "mathjs";
-import { CSS_VARIABLES } from "../../data/css/variables";
+import { CSS_VARIABLES, PREDEFINED_COLORS } from "../../data/css/variables";
 import { v4 as uuid } from "uuid";
 import ExpressionTransformer from "../../features/graph/lib/mathjs/transformer";
 import { AdjacencyList, SerializedAdjList } from "../../helpers/dts";
@@ -129,9 +129,10 @@ export function createSettings<T extends keyof ExpressionSettings>(
 ): ExpressionSettings[T] {
   if (type === "function") {
     return {
-      color: `hsl(${Math.floor(Math.random() * 360)},${
-        CSS_VARIABLES.baseSaturation
-      },${CSS_VARIABLES.baseLightness})`,
+      color:
+        PREDEFINED_COLORS[
+          Math.floor(Math.random() * (PREDEFINED_COLORS.length - 0.1))
+        ],
       hidden: false,
       opacity: 1,
       strokeSize: 3,
@@ -139,9 +140,10 @@ export function createSettings<T extends keyof ExpressionSettings>(
     } as ExpressionSettings[T];
   } else if (type === "point") {
     return {
-      color: `hsl(${Math.floor(Math.random() * 360)},${
-        CSS_VARIABLES.baseSaturation
-      },${CSS_VARIABLES.baseLightness})`,
+      color:
+        PREDEFINED_COLORS[
+          Math.floor(Math.random() * (PREDEFINED_COLORS.length - 0.1))
+        ],
       hidden: false,
       strokeSize: 4,
       opacity: 1,

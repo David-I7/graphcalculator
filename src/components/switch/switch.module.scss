@@ -51,7 +51,7 @@
         background-color: base.$primary;
       }
       &::before {
-        background-color: color-mix(in srgb, base.$primary 30%, white 70%);
+        background-color: base.$primary-container-varient;
       }
     }
   }
