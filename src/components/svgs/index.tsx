@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { PointType } from "../../state/graph/types";
 
 export type SVGProps = React.SVGAttributes<SVGSVGElement>;
 
@@ -307,20 +308,78 @@ export const VariableAssignment = (props: SVGProps) => {
     </svg>
   );
 };
-export const Point = (props: SVGProps) => {
+export const Point = ({
+  pointType,
+  ...props
+}: SVGProps & { pointType: PointType }) => {
   return (
     <svg
       width="24"
       height="24"
       viewBox="0 0 24 24"
       fill="currentColor"
+      stroke="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M12 7C12.9797 6.99994 13.9378 7.28769 14.7553 7.8275C15.5729 8.36731 16.2138 9.1354 16.5986 10.0364C16.9833 10.9373 17.0949 11.9315 16.9195 12.8953C16.7441 13.8592 16.2893 14.7502 15.6118 15.4579C14.9343 16.1655 14.0638 16.6585 13.1085 16.8756C12.1532 17.0928 11.1552 17.0245 10.2383 16.6793C9.3215 16.334 8.52629 15.7271 7.95146 14.9338C7.37663 14.1405 7.04752 13.1958 7.005 12.217L7 12L7.005 11.783C7.06092 10.4958 7.61161 9.27978 8.54222 8.38866C9.47284 7.49754 10.7115 7.00007 12 7Z"
-        fill="white"
-      />
+      {pointType === "circle" && <circle r={5} cx={12} cy={12} />}
+      {pointType === "circleStroke" && (
+        <circle r={5} cx={12} cy={12} fill="none" strokeWidth={3} />
+      )}
+      {pointType === "star" && (
+        <polygon points="12,4 14.5,10 20,10 15.5,13.5 17,19 12,16 7,19 8.5,13.5 4,10 9.5,10" />
+      )}
+      {pointType === "diamond" && (
+        <rect
+          width={10}
+          height={10}
+          x={7}
+          y={7}
+          rx={1}
+          transform="rotate(-45)"
+          transform-origin="center"
+        />
+      )}
+      {pointType === "+" && (
+        <>
+          <line
+            x1={12}
+            y1={7}
+            x2={12}
+            y2={17}
+            strokeLinecap="round"
+            strokeWidth={3}
+          />
+          <line
+            x1={7}
+            y1={12}
+            x2={17}
+            y2={12}
+            strokeLinecap="round"
+            strokeWidth={3}
+          />
+        </>
+      )}
+      {pointType === "x" && (
+        <>
+          <line
+            x1={7}
+            y1={7}
+            x2={17}
+            y2={17}
+            strokeLinecap="round"
+            strokeWidth={3}
+          />
+          <line
+            x1={7}
+            y1={17}
+            x2={17}
+            y2={7}
+            strokeLinecap="round"
+            strokeWidth={3}
+          />
+        </>
+      )}
     </svg>
   );
 };

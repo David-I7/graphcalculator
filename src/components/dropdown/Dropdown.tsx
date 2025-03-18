@@ -5,6 +5,7 @@ import styles from "./dropdown.module.scss";
 import React, {
   createContext,
   ReactNode,
+  RefObject,
   SetStateAction,
   useCallback,
   useContext,
@@ -40,6 +41,7 @@ type DropdownProps = {
   children: ReactNode;
   style?: React.CSSProperties;
   className?: string;
+  ref?: RefObject<HTMLDivElement | null>;
 };
 
 type ButtonProps = Omit<
@@ -47,14 +49,14 @@ type ButtonProps = Omit<
   "onClick" | "aria-controls" | "aria-expanded"
 > & { children: ReactNode; ref?: React.ForwardedRef<HTMLButtonElement> };
 
-const Dropdown = ({ children, style, className }: DropdownProps) => {
+const Dropdown = ({ children, style, className, ref }: DropdownProps) => {
   const mergedClassname = React.useMemo(() => {
     return className ? `${className} ${styles.dropdown}` : styles.dropdown;
   }, [className]);
 
   return (
     <DropdownContext.Provider value={useInitDropdownContext()}>
-      <div className={mergedClassname} style={style}>
+      <div ref={ref} className={mergedClassname} style={style}>
         {children}
       </div>
     </DropdownContext.Provider>

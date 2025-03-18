@@ -18,6 +18,7 @@ export type ExpressionSettings = {
     hidden: boolean;
     strokeSize: number;
     opacity: number;
+    pointType: PointType;
   };
   function: {
     color: (typeof PREDEFINED_COLORS)[number];
@@ -27,6 +28,14 @@ export type ExpressionSettings = {
     opacity: number;
   };
 };
+
+export type PointType =
+  | "circle"
+  | "circleStroke"
+  | "diamond"
+  | "star"
+  | "x"
+  | "+";
 
 export type Item<T extends keyof ItemData = ItemType> = {
   id: number;
