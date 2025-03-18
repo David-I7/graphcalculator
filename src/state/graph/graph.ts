@@ -9,6 +9,7 @@ import {
   isExpression,
   ItemData,
   ItemType,
+  PointType,
 } from "./types";
 import {
   addDependencies,
@@ -263,6 +264,28 @@ const graphSlice = createSlice({
         }
       }
     ),
+    changePointType: create.reducer(
+      (
+        state,
+        action: PayloadAction<{
+          pointType: PointType;
+          id: number;
+          idx: number;
+        }>
+      ) => {
+        const item = state.currentGraph.items.data[action.payload.idx];
+
+        if (item.id !== action.payload.id) return;
+        if (item.type !== "expression") return;
+
+        const expr = item.data as ItemData["expression"];
+
+        if (expr.type === "point") {
+          if (expr.settings.pointType === action.payload.pointType) return;
+          expr.settings.pointType = action.payload.pointType;
+        }
+      }
+    ),
 
     //CONTENT
     removeParsedContent: create.reducer(
@@ -439,6 +462,7 @@ export const {
 
   //expression
   changeLineType,
+  changePointType,
   changeColor,
   changeOpacity,
   changeStrokeSize,

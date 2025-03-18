@@ -696,6 +696,7 @@ export class DrawFunctionCommand implements GraphCommand {
   draw(): void {
     if (this.settings.hidden) {
       if (this.commandState.status !== "idle") this.setStatus("idle");
+      return;
     }
 
     try {

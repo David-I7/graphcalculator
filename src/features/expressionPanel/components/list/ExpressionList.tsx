@@ -174,12 +174,7 @@ const ExpressionListItem = React.memo(
         expr-id={item.id}
         item-idx={idx}
       >
-        <ExpressionDynamicIsland
-          error={error}
-          dispatch={dispatch}
-          item={item}
-          index={idx}
-        />
+        <ExpressionDynamicIsland error={error} item={item} index={idx} />
 
         <ExpressionTextArea
           item={item}

@@ -147,6 +147,7 @@ export function createSettings<T extends keyof ExpressionSettings>(
       hidden: false,
       strokeSize: 4,
       opacity: 1,
+      pointType: "circle",
     } as ExpressionSettings[T];
   }
 
