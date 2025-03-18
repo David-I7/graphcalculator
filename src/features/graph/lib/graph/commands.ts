@@ -17,7 +17,11 @@ import {
   roundValue,
   toScientificNotation,
 } from "./utils";
-import { Expression, ExpressionSettings } from "../../../../state/graph/types";
+import {
+  Expression,
+  ExpressionSettings,
+  PointType,
+} from "../../../../state/graph/types";
 
 export class CommandController implements GraphCommandController {
   public commands: GraphCommand[] = [];
@@ -1876,24 +1880,16 @@ export class DrawPointCommand implements GraphCommand {
   }
 
   draw(): void {
-    if (this.settings.hidden) return;
+    if (this.settings.hidden) {
+      if (this.commandState.status !== "idle") this.setStatus("idle");
+      return;
+    }
 
     this.graph.ctx.save();
-    this.graph.ctx.fillStyle = this.settings.color;
 
     const normFactor = this.graph.scales.scaledStep / this.graph.scales.scaler;
     const xCoord = this.data.x * normFactor;
     const yCoord = -this.data.y * normFactor;
-
-    this.graph.ctx.beginPath();
-    this.graph.ctx.arc(
-      this.data.x * normFactor,
-      -this.data.y * normFactor,
-      this.settings.strokeSize * this.graph.dpr,
-      0,
-      Math.PI * 2
-    );
-    this.graph.ctx.fill();
 
     if (this.isHighlighted) {
       this.tooltip.drawTooltip(
@@ -1905,7 +1901,48 @@ export class DrawPointCommand implements GraphCommand {
       );
     }
 
+    this.graph.ctx.fillStyle = this.settings.color;
+    this.graph.ctx.strokeStyle = this.settings.color;
+    this.graph.ctx.globalAlpha = this.settings.opacity;
+    this.graph.ctx.lineWidth = this.settings.strokeSize * this.graph.dpr * 0.25;
+
+    this.graph.ctx.beginPath();
+    this.drawPoint(normFactor);
+
     this.graph.ctx.restore();
+  }
+
+  drawPoint(normFactor: number) {
+    const x = this.data.x * normFactor;
+    const y = -this.data.y * normFactor;
+
+    switch (this.settings.pointType) {
+      case "circle":
+        this.graph.ctx.arc(
+          x,
+          y,
+          this.settings.strokeSize * this.graph.dpr,
+          0,
+          Math.PI * 2
+        );
+        this.graph.ctx.fill();
+        break;
+      case "circleStroke":
+        this.graph.ctx.arc(
+          x,
+          y,
+          this.settings.strokeSize * this.graph.dpr * 0.75,
+          0,
+          Math.PI * 2
+        );
+        this.graph.ctx.stroke();
+        break;
+      case "diamond": {
+        const width = this.settings.strokeSize * this.graph.dpr;
+        this.graph.ctx.fillRect(x - width, y - width, width * 2, width * 2);
+        break;
+      }
+    }
   }
 
   destroy(): void {
