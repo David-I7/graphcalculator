@@ -70,10 +70,12 @@ GraphMenu.Toggle = function () {
     if (isAnimating.current) return;
     isAnimating.current = true;
 
-    expressionPanelRef.current!.animate(
-      AnimateSlideX("17.625rem", "0"),
-      animationOptions.current
-    );
+    if (expressionPanelRef.current?.style.transform) {
+      expressionPanelRef.current!.animate(
+        AnimateSlideX("17.625rem", "0"),
+        animationOptions.current
+      );
+    }
     menuRef.current!.animate(
       AnimateSlideX("0", "-100%"),
       animationOptions.current
