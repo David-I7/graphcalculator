@@ -11,6 +11,7 @@ import Dropdown, {
 } from "../../../../components/dropdown/Dropdown";
 import { createItem } from "../../../../state/graph/graph";
 import { ItemType } from "../../../../state/graph/types";
+import Tooltip from "../../../../components/tooltip/Tooltip";
 
 type NewItemPair = [ItemType, (props: SVGProps) => ReactNode];
 
@@ -24,19 +25,28 @@ const ExpressionPanelNewItem = () => {
   const data = useMemo(() => [...NewItemDropdownMap.entries()], []);
 
   return (
-    <DropdownButton>
-      <Dropdown.Button className="button--hovered bg-surface-container-low">
-        <Plus />
-      </Dropdown.Button>
+    <Tooltip
+      message="New Item"
+      content={(id) => (
+        <DropdownButton>
+          <Dropdown.Button
+            aria-label="New Item"
+            aria-describedby={id}
+            className="button--hovered bg-surface-container-low"
+          >
+            <Plus />
+          </Dropdown.Button>
 
-      <Dropdown.Menu
-        onClick={(arg) => {
-          dispatch(createItem({ type: arg[0], loc: "start" }));
-        }}
-        data={data}
-        ListItem={DropdowmMenuItem}
-      />
-    </DropdownButton>
+          <Dropdown.Menu
+            onClick={(arg) => {
+              dispatch(createItem({ type: arg[0], loc: "start" }));
+            }}
+            data={data}
+            ListItem={DropdowmMenuItem}
+          />
+        </DropdownButton>
+      )}
+    />
   );
 };
 
