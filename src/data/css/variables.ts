@@ -47,7 +47,7 @@ export const CSS_VARIABLES = {
   animationSpeedFast: 150,
   animationSpeedDefault: 250,
   animationSpeedSlow: 350,
-  animationSpeedSlowest: 500,
+  animationSpeedSlowest: 750,
 };
 
 export const PREDEFINED_COLORS = [

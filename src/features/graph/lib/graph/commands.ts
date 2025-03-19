@@ -1929,11 +1929,11 @@ export class DrawPointCommand implements GraphCommand {
         break;
       case "circleStroke":
         this.graph.ctx.lineWidth =
-          this.settings.strokeSize * this.graph.dpr * 0.35;
+          this.settings.strokeSize * this.graph.dpr * 0.4;
         this.graph.ctx.arc(
           x,
           y,
-          this.settings.strokeSize * this.graph.dpr * 0.65,
+          this.settings.strokeSize * this.graph.dpr,
           0,
           Math.PI * 2
         );

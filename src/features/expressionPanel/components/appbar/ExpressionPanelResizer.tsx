@@ -16,6 +16,7 @@ import {
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { useAppSelector } from "../../../../state/hooks";
 import { usePopulateRef } from "../../../../hooks/reactutils";
+import Tooltip from "../../../../components/tooltip/Tooltip";
 
 const MIN_SIZE = 280;
 const MAX_SIZE_OFFSET = 280;
@@ -123,64 +124,80 @@ const ExpressionPanelResizer = () => {
   return (
     <>
       <>
-        <ButtonTarget
-          onClick={(e) => {
-            if (isMobile) {
-              expressionPanelRef.current!.animate(
-                AnimateSlideY(),
-                animationOptions.current
-              );
-              graphContainerRef.current!.style.height = "100%";
-            } else {
-              expressionPanelRef.current!.animate(
-                AnimateSlideX(),
-                animationOptions.current
-              );
-              graphContainerRef.current!.style.width = "100%";
-            }
-            setTimeout(() => {
-              setIsOpen(!isOpen);
-            }, CSS_VARIABLES.animationSpeedDefault);
+        <Tooltip
+          message="Hide Expression List"
+          content={(id) => {
+            return (
+              <ButtonTarget
+                aria-describedby={id}
+                onClick={(e) => {
+                  if (isMobile) {
+                    expressionPanelRef.current!.animate(
+                      AnimateSlideY(),
+                      animationOptions.current
+                    );
+                    graphContainerRef.current!.style.height = "100%";
+                  } else {
+                    expressionPanelRef.current!.animate(
+                      AnimateSlideX(),
+                      animationOptions.current
+                    );
+                    graphContainerRef.current!.style.width = "100%";
+                  }
+                  setTimeout(() => {
+                    setIsOpen(!isOpen);
+                  }, CSS_VARIABLES.animationSpeedDefault);
+                }}
+                className="button--hovered bg-surface-container-low"
+              >
+                {isMobile ? <ArrowDown /> : <ArrowLeft />}
+              </ButtonTarget>
+            );
           }}
-          className="button--hovered bg-surface-container-low"
-        >
-          {isMobile ? <ArrowDown /> : <ArrowLeft />}
-        </ButtonTarget>
+        />
         <div ref={resizerRef} className="expression-panel__resizer"></div>
       </>
 
       {!isOpen &&
         createPortal(
-          <ButtonTarget
-            onClick={(e) => {
-              if (isMobile) {
-                expressionPanelRef.current!.animate(
-                  AnimateSlideY("100%", "0"),
-                  animationOptions.current
-                );
-                graphContainerRef.current!.style.height = "50%";
-              } else {
-                expressionPanelRef.current!.animate(
-                  AnimateSlideX("-100%", "0"),
-                  animationOptions.current
-                );
-                graphContainerRef.current!.style.width = `calc(100% - ${
-                  expressionPanelRef.current!.offsetWidth
-                }px)`;
-              }
-              setTimeout(() => {
-                setIsOpen(!isOpen);
-              }, CSS_VARIABLES.animationSpeedDefault);
-            }}
+          <Tooltip
             style={
               isMobile
                 ? { position: "fixed", bottom: "1rem", right: "1rem" }
                 : { position: "fixed", top: "1rem", left: "1rem" }
             }
-            className="button--hovered bg-surface-container-low"
-          >
-            {isMobile ? <ArrowUp /> : <ArrowRight />}
-          </ButtonTarget>,
+            message="Show List"
+            content={(id) => {
+              return (
+                <ButtonTarget
+                  aria-describedby={id}
+                  onClick={(e) => {
+                    if (isMobile) {
+                      expressionPanelRef.current!.animate(
+                        AnimateSlideY("100%", "0"),
+                        animationOptions.current
+                      );
+                      graphContainerRef.current!.style.height = "50%";
+                    } else {
+                      expressionPanelRef.current!.animate(
+                        AnimateSlideX("-100%", "0"),
+                        animationOptions.current
+                      );
+                      graphContainerRef.current!.style.width = `calc(100% - ${
+                        expressionPanelRef.current!.offsetWidth
+                      }px)`;
+                    }
+                    setTimeout(() => {
+                      setIsOpen(!isOpen);
+                    }, CSS_VARIABLES.animationSpeedDefault);
+                  }}
+                  className="button--hovered bg-surface-container-low"
+                >
+                  {isMobile ? <ArrowUp /> : <ArrowRight />}
+                </ButtonTarget>
+              );
+            }}
+          />,
           document.getElementById("root")!
         )}
     </>
