@@ -22,6 +22,7 @@
 
   &-triangle {
     position: absolute;
+    opacity: 0;
     transition: opacity base.$an-sp-default ease-out;
     width: 0;
     height: 0;

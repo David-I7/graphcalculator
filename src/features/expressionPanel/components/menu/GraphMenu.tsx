@@ -18,6 +18,7 @@ import Scrim from "../../../../components/scrim/Scrim";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { useAppSelector } from "../../../../state/hooks";
 import { createPortal } from "react-dom";
+import Tooltip from "../../../../components/tooltip/Tooltip";
 
 type GraphMenuContext = {
   ariaControlsId: string;
@@ -89,67 +90,79 @@ GraphMenu.Toggle = function () {
   return (
     <>
       {!isMobile && (
-        <ButtonTarget
-          aria-label="Open main menu"
-          aria-expanded={isOpen}
-          aria-controls={ariaControlsId}
-          className="button--hovered bg-surface-container-low"
-          onClick={(e) => {
-            if (isAnimating.current) return;
+        <Tooltip
+          message="Open Graph"
+          content={(id) => (
+            <ButtonTarget
+              aria-describedby={id}
+              aria-label="Open Graph"
+              aria-expanded={isOpen}
+              aria-controls={ariaControlsId}
+              className="button--hovered bg-surface-container-low"
+              onClick={(e) => {
+                if (isAnimating.current) return;
 
-            isAnimating.current = true;
-            expressionPanelRef.current!.animate(
-              AnimateSlideX("0px", "17.625rem"),
-              animationOptions.current
-            );
-            menuRef.current!.animate(
-              AnimateSlideX("-100%", "0"),
-              animationOptions.current
-            );
+                isAnimating.current = true;
+                expressionPanelRef.current!.animate(
+                  AnimateSlideX("0px", "17.625rem"),
+                  animationOptions.current
+                );
+                menuRef.current!.animate(
+                  AnimateSlideX("-100%", "0"),
+                  animationOptions.current
+                );
 
-            setIsOpen(!isOpen);
-            setTimeout(() => {
-              isAnimating.current = false;
-            }, CSS_VARIABLES.animationSpeedDefault);
-          }}
-        >
-          <Menu />
-        </ButtonTarget>
+                setIsOpen(!isOpen);
+                setTimeout(() => {
+                  isAnimating.current = false;
+                }, CSS_VARIABLES.animationSpeedDefault);
+              }}
+            >
+              <Menu />
+            </ButtonTarget>
+          )}
+        />
       )}
       {isMobile &&
         createPortal(
-          <ButtonTarget
+          <Tooltip
             style={{
               position: "fixed",
               top: "1rem",
               left: "1rem",
               zIndex: "19",
             }}
-            aria-label="Open main menu"
-            aria-expanded={isOpen}
-            aria-controls={ariaControlsId}
-            className="button--hovered bg-surface-container-low"
-            onClick={(e) => {
-              if (isAnimating.current) return;
+            message="Open Graph"
+            content={(id) => (
+              <ButtonTarget
+                aria-describedby={id}
+                aria-label="Open main menu"
+                aria-expanded={isOpen}
+                aria-controls={ariaControlsId}
+                className="button--hovered bg-surface-container-low"
+                onClick={(e) => {
+                  if (isAnimating.current) return;
 
-              isAnimating.current = true;
-              expressionPanelRef.current!.animate(
-                AnimateSlideX("0px", "17.625rem"),
-                animationOptions.current
-              );
-              menuRef.current!.animate(
-                AnimateSlideX("-100%", "0"),
-                animationOptions.current
-              );
+                  isAnimating.current = true;
+                  expressionPanelRef.current!.animate(
+                    AnimateSlideX("0px", "17.625rem"),
+                    animationOptions.current
+                  );
+                  menuRef.current!.animate(
+                    AnimateSlideX("-100%", "0"),
+                    animationOptions.current
+                  );
 
-              setIsOpen(!isOpen);
-              setTimeout(() => {
-                isAnimating.current = false;
-              }, CSS_VARIABLES.animationSpeedDefault);
-            }}
-          >
-            <Menu />
-          </ButtonTarget>,
+                  setIsOpen(!isOpen);
+                  setTimeout(() => {
+                    isAnimating.current = false;
+                  }, CSS_VARIABLES.animationSpeedDefault);
+                }}
+              >
+                <Menu />
+              </ButtonTarget>
+            )}
+          />,
           rootRef.current || document.getElementById("root")!
         )}
       {isOpen && (
