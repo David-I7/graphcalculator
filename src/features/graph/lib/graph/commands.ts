@@ -11,6 +11,7 @@ import {
   bisection,
   clampNumber,
   drawRoundedRect,
+  drawStar,
   newtonsMethod,
   pointsIntersect,
   roundToNeareastMultiple,
@@ -1904,7 +1905,6 @@ export class DrawPointCommand implements GraphCommand {
     this.graph.ctx.fillStyle = this.settings.color;
     this.graph.ctx.strokeStyle = this.settings.color;
     this.graph.ctx.globalAlpha = this.settings.opacity;
-    this.graph.ctx.lineWidth = this.settings.strokeSize * this.graph.dpr * 0.25;
 
     this.graph.ctx.beginPath();
     this.drawPoint(normFactor);
@@ -1928,10 +1928,12 @@ export class DrawPointCommand implements GraphCommand {
         this.graph.ctx.fill();
         break;
       case "circleStroke":
+        this.graph.ctx.lineWidth =
+          this.settings.strokeSize * this.graph.dpr * 0.35;
         this.graph.ctx.arc(
           x,
           y,
-          this.settings.strokeSize * this.graph.dpr * 0.75,
+          this.settings.strokeSize * this.graph.dpr * 0.65,
           0,
           Math.PI * 2
         );
@@ -1939,7 +1941,53 @@ export class DrawPointCommand implements GraphCommand {
         break;
       case "diamond": {
         const width = this.settings.strokeSize * this.graph.dpr;
-        this.graph.ctx.fillRect(x - width, y - width, width * 2, width * 2);
+        this.graph.ctx.translate(x, y);
+        this.graph.ctx.rotate(0.25 * Math.PI);
+        this.graph.ctx.fillRect(0 - width, 0 - width, width * 2, width * 2);
+        break;
+      }
+      case "star": {
+        drawStar(
+          this.graph.ctx,
+          x,
+          y,
+          5,
+          (this.settings.strokeSize + 2) * this.graph.dpr,
+          ((this.settings.strokeSize + 2) / 2) * this.graph.dpr
+        );
+        this.graph.ctx.fill();
+        break;
+      }
+      case "x": {
+        const width = this.settings.strokeSize * this.graph.dpr;
+        this.graph.ctx.lineCap = "round";
+        this.graph.ctx.lineWidth =
+          this.settings.strokeSize * this.graph.dpr * 0.5;
+
+        this.graph.ctx.moveTo(x - width, y - width);
+        this.graph.ctx.lineTo(x + width, y + width);
+        this.graph.ctx.stroke();
+
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(x - width, y + width);
+        this.graph.ctx.lineTo(x + width, y - width);
+        this.graph.ctx.stroke();
+        break;
+      }
+      case "+": {
+        const width = this.settings.strokeSize * this.graph.dpr;
+        this.graph.ctx.lineCap = "round";
+        this.graph.ctx.lineWidth =
+          this.settings.strokeSize * this.graph.dpr * 0.5;
+
+        this.graph.ctx.moveTo(x, y - width);
+        this.graph.ctx.lineTo(x, y + width);
+        this.graph.ctx.stroke();
+
+        this.graph.ctx.beginPath();
+        this.graph.ctx.moveTo(x - width, y);
+        this.graph.ctx.lineTo(x + width, y);
+        this.graph.ctx.stroke();
         break;
       }
     }

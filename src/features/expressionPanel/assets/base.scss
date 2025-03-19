@@ -277,6 +277,18 @@
           @extend .button--hovered;
         }
       }
+      & > button:not(:nth-child(3n + 3), .js-selected-chip) {
+        border-right: 0;
+      }
+      & > button:not(:nth-child(n + 4)) {
+        border-bottom: 0;
+      }
+      & > button.js-selected-chip + *:not(:nth-of-type(4)) {
+        border-left: 0;
+      }
+      & > button.js-selected-chip + * + * + * {
+        border-top: 1px solid base.$primary;
+      }
     }
     &-right-fn {
       display: flex;
