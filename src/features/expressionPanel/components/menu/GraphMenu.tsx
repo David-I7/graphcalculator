@@ -65,17 +65,11 @@ GraphMenu.Toggle = function () {
   );
   const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
   const isAnimating = useRef<boolean>(false);
-  const expressionPanelRef = useRef<HTMLDivElement>(null);
+
   const onClose = () => {
     if (isAnimating.current) return;
     isAnimating.current = true;
 
-    if (expressionPanelRef.current?.style.transform) {
-      expressionPanelRef.current!.animate(
-        AnimateSlideX("17.625rem", "0"),
-        animationOptions.current
-      );
-    }
     menuRef.current!.animate(
       AnimateSlideX("0", "-100%"),
       animationOptions.current
@@ -86,8 +80,6 @@ GraphMenu.Toggle = function () {
       isAnimating.current = false;
     }, CSS_VARIABLES.animationSpeedDefault);
   };
-
-  usePopulateRef(expressionPanelRef, { selector: ".expression-panel" });
 
   return (
     <>
@@ -105,10 +97,7 @@ GraphMenu.Toggle = function () {
                 if (isAnimating.current) return;
 
                 isAnimating.current = true;
-                expressionPanelRef.current!.animate(
-                  AnimateSlideX("0px", "17.625rem"),
-                  animationOptions.current
-                );
+
                 menuRef.current!.animate(
                   AnimateSlideX("-100%", "0"),
                   animationOptions.current
@@ -130,8 +119,8 @@ GraphMenu.Toggle = function () {
           <Tooltip
             style={{
               position: "fixed",
-              top: "1rem",
-              left: "1rem",
+              top: "0.5rem",
+              left: "0.5rem",
               zIndex: "19",
             }}
             message="Open Graph"
@@ -146,10 +135,7 @@ GraphMenu.Toggle = function () {
                   if (isAnimating.current) return;
 
                   isAnimating.current = true;
-                  expressionPanelRef.current!.animate(
-                    AnimateSlideX("0px", "17.625rem"),
-                    animationOptions.current
-                  );
+
                   menuRef.current!.animate(
                     AnimateSlideX("-100%", "0"),
                     animationOptions.current

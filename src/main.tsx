@@ -11,7 +11,7 @@ import { GraphContextProvider } from "./features/graph/Graph";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary onReset={() => {}} FallbackComponent={ErrorFallback}>
       <GraphContextProvider>
         <Provider store={store}>
           <Globalstate />

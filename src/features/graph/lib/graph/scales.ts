@@ -2,7 +2,6 @@ import { isTouchEnabled } from "../../../../helpers/dom";
 import { throttle } from "../../../../helpers/performance";
 import { ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
-import { clampNumber, roundToNeareastMultiple } from "./utils";
 
 export class Scales {
   protected destroyController: AbortController = new AbortController();
@@ -43,6 +42,13 @@ export class Scales {
 
   getRawScaler(): string {
     return this.scalesArray[this.scalesIndex];
+  }
+
+  reset() {
+    this.zoom = 1;
+    this.scalesIndex = (this.scalesArray.length - 3) / 2;
+    this._scaledStep = this.step;
+    this.updateScales();
   }
 
   private updateScales() {
@@ -190,10 +196,11 @@ export class Scales {
     }
   }
 
-  protected processScaleEvent(
+  processScaleEvent(
     dOriginX: number,
     dOriginY: number,
-    zoomDirection: "IN" | "OUT"
+    zoomDirection: "IN" | "OUT",
+    zoomAmplifier: number = 1
   ) {
     if (
       (dOriginY < -this.graph.MAX_TRANSLATE ||
@@ -209,7 +216,11 @@ export class Scales {
     const graphY =
       (dOriginY / this.graph.scales.scaledStep) * this.graph.scales.scaler;
 
-    this.handleScale(zoomDirection);
+    this.handleScale(
+      zoomDirection,
+      this.ZOOM_OUT_FACTOR / zoomAmplifier,
+      this.ZOOM_IN_FACTOR * zoomAmplifier
+    );
 
     const newdOriginX = this.distanceFromOrigin(graphX);
     const newdOriginY = this.distanceFromOrigin(graphY);
@@ -272,10 +283,13 @@ export class Scales {
     return zoomDirection;
   }
 
-  protected handleScale(zoomDirection: "OUT" | "IN") {
+  protected handleScale(
+    zoomDirection: "OUT" | "IN",
+    ZOOM_OUT_FACTOR: number,
+    ZOOM_IN_FACTOR: number
+  ) {
     const newZoom =
-      this.zoom *
-      (zoomDirection === "OUT" ? this.ZOOM_OUT_FACTOR : this.ZOOM_IN_FACTOR);
+      this.zoom * (zoomDirection === "OUT" ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR);
     if (
       this.scalesIndex === 0 &&
       newZoom > this.MAX_ZOOM &&
