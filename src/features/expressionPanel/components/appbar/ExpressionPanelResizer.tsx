@@ -163,8 +163,8 @@ const ExpressionPanelResizer = () => {
           <Tooltip
             style={
               isMobile
-                ? { position: "fixed", bottom: "1rem", right: "1rem" }
-                : { position: "fixed", top: "1rem", left: "1rem" }
+                ? { position: "fixed", bottom: "0.5rem", right: "0.5rem" }
+                : { position: "fixed", top: "0.5rem", left: "0.5rem" }
             }
             message="Show List"
             content={(id) => {

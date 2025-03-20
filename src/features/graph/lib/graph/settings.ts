@@ -169,11 +169,12 @@ export class GraphSettings {
     this.clientBottom = this.canvasCenterY - offsetY;
   }
 
-  private reset() {
+  reset() {
     // reset canvas settings
 
     this.canvasCenterX = Math.round(this.graph.canvas.width / 2);
     this.canvasCenterY = Math.round(this.graph.canvas.height / 2);
+    this.graph.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.graph.ctx.translate(this.canvasCenterX, this.canvasCenterY);
 
     this.offsetX = 0;

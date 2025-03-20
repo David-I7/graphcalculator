@@ -8,6 +8,7 @@ import {
 } from "react";
 import { Graph as LibGraph } from "./lib/graph/graph";
 import { setup } from "./lib";
+import GraphScaler from "./components/GraphScaler";
 
 type GraphContextState = LibGraph;
 
@@ -47,6 +48,7 @@ const Graph = () => {
   return (
     <div className="graph-container">
       <canvas id="graph-calculator"></canvas>
+      <GraphScaler />
     </div>
   );
 };

@@ -14,6 +14,25 @@
   touch-action: none;
 }
 
+.graph-scaler {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: grid;
+  gap: 0.5rem;
+
+  &-top {
+    & button.graph-scaler-top-zoom-in {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    & button.graph-scaler-top-zoom-out {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+  }
+}
+
 @media screen and (max-width: 500px) {
   .graph-container {
     width: 100%;

@@ -116,4 +116,9 @@ export class Graph implements MessageBus {
     this.scales.destroy();
     Object.entries(this.events).forEach((entry) => entry[1].destroy());
   }
+
+  reset() {
+    this.settings.reset();
+    this.scales.reset();
+  }
 }
