@@ -44,21 +44,26 @@ const Tooltip = ({ style, content, message, fixedPosition }: TooltipProps) => {
   return (
     <div
       style={style}
-      onFocus={(e) => {
-        setIsOpen(true);
-      }}
-      onBlur={(e) => {
-        setIsOpen(false);
-      }}
-      onMouseEnter={() => {
-        if (timeoutId.current) clearTimeout(timeoutId.current);
+      // onFocus={(e) => {
+      //   setIsOpen(true);
+      // }}
+      // onBlurCapture={(e) => {
+      //   console.log(e);
+      //   setIsOpen(false);
+      // }}
+      onMouseEnter={(e) => {
+        if (timeoutId.current) return;
         timeoutId.current = setTimeout(() => {
           setIsOpen(true);
         }, CSS_VARIABLES.animationSpeedSlowest);
       }}
       onMouseLeave={(e) => {
-        if (timeoutId.current) clearTimeout(timeoutId.current);
-        setIsOpen(false);
+        if (!timeoutId.current) return;
+        clearTimeout(timeoutId.current);
+        timeoutId.current = null;
+        if (isOpen) {
+          setIsOpen(false);
+        }
       }}
       className={styles.tooltipContainer}
     >

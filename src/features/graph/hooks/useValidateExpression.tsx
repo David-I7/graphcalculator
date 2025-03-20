@@ -32,14 +32,8 @@ const useValidateExpression = ({
   if (!isExpression(item)) return null;
 
   const [error, setError] = useState<ApplicationError | null>(null);
-  const initialRender = useRef<boolean>(true);
 
   useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
-
     if (!item.data.content.length) {
       if (error) {
         setError(null);
