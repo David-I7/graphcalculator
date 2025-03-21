@@ -343,6 +343,13 @@ const graphSlice = createSlice({
         const scope = state.currentGraph.items.scope;
         const depGraph = state.currentGraph.items.dependencyGraph;
 
+        if (expr.type !== "function") {
+          //@ts-ignore
+          expr.settings = createSettings("function");
+        }
+        expr.type = "function";
+        expr.parsedContent = action.payload.parsedContent;
+
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] = {
             type: "function",
@@ -363,13 +370,6 @@ const graphSlice = createSlice({
             scope
           );
         }
-
-        if (expr.type !== "function") {
-          //@ts-ignore
-          expr.settings = createSettings("function");
-        }
-        expr.type = "function";
-        expr.parsedContent = action.payload.parsedContent;
       }
     ),
     updatePointExpr: create.reducer(
@@ -413,6 +413,13 @@ const graphSlice = createSlice({
         const scope = state.currentGraph.items.scope;
         const depGraph = state.currentGraph.items.dependencyGraph;
 
+        if (expr.type !== "variable") {
+          //@ts-ignore
+          delete ["settings"];
+        }
+        expr.parsedContent = action.payload.parsedContent;
+        expr.type = "variable";
+
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] = {
             type: "variable",
@@ -434,13 +441,6 @@ const graphSlice = createSlice({
             scope
           );
         }
-
-        if (expr.type !== "variable") {
-          //@ts-ignore
-          delete ["settings"];
-        }
-        expr.parsedContent = action.payload.parsedContent;
-        expr.type = "variable";
       }
     ),
   }),

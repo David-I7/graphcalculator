@@ -2,6 +2,7 @@ import {
   createContext,
   ReactNode,
   useContext,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -65,6 +66,9 @@ GraphMenu.Toggle = function () {
   );
   const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
   const isAnimating = useRef<boolean>(false);
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  usePopulateRef(mainRef, { cb: () => document.querySelector("main")! });
 
   const onClose = () => {
     if (isAnimating.current) return;
@@ -80,6 +84,44 @@ GraphMenu.Toggle = function () {
       isAnimating.current = false;
     }, CSS_VARIABLES.animationSpeedDefault);
   };
+  const onOpen = () => {
+    if (isAnimating.current) return;
+
+    isAnimating.current = true;
+
+    menuRef.current!.animate(
+      AnimateSlideX("-100%", "0"),
+      animationOptions.current
+    );
+
+    setIsOpen(!isOpen);
+    setTimeout(() => {
+      isAnimating.current = false;
+    }, CSS_VARIABLES.animationSpeedDefault);
+  };
+
+  useEffect(() => {
+    if (!mainRef.current) return;
+    let abortController: AbortController | undefined;
+
+    if (isOpen) {
+      mainRef.current.inert = true;
+      abortController = new AbortController();
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key === "Escape") onClose();
+        },
+        { signal: abortController.signal }
+      );
+    } else {
+      mainRef.current.inert = false;
+    }
+
+    return () => {
+      abortController?.abort();
+    };
+  }, [isOpen]);
 
   return (
     <>
@@ -93,21 +135,7 @@ GraphMenu.Toggle = function () {
               aria-expanded={isOpen}
               aria-controls={ariaControlsId}
               className="button--hovered bg-surface-container-low"
-              onClick={(e) => {
-                if (isAnimating.current) return;
-
-                isAnimating.current = true;
-
-                menuRef.current!.animate(
-                  AnimateSlideX("-100%", "0"),
-                  animationOptions.current
-                );
-
-                setIsOpen(!isOpen);
-                setTimeout(() => {
-                  isAnimating.current = false;
-                }, CSS_VARIABLES.animationSpeedDefault);
-              }}
+              onClick={onOpen}
             >
               <Menu />
             </ButtonTarget>
@@ -126,26 +154,13 @@ GraphMenu.Toggle = function () {
             message="Open Graph"
             content={(id) => (
               <ButtonTarget
+                inert={isOpen}
                 aria-describedby={id}
                 aria-label="Open main menu"
                 aria-expanded={isOpen}
                 aria-controls={ariaControlsId}
                 className="button--hovered bg-surface-container-low"
-                onClick={(e) => {
-                  if (isAnimating.current) return;
-
-                  isAnimating.current = true;
-
-                  menuRef.current!.animate(
-                    AnimateSlideX("-100%", "0"),
-                    animationOptions.current
-                  );
-
-                  setIsOpen(!isOpen);
-                  setTimeout(() => {
-                    isAnimating.current = false;
-                  }, CSS_VARIABLES.animationSpeedDefault);
-                }}
+                onClick={onOpen}
               >
                 <Menu />
               </ButtonTarget>
@@ -178,6 +193,7 @@ GraphMenu.Menu = () => {
 
   return createPortal(
     <div
+      inert={!isOpen}
       aria-hidden={!isOpen}
       ref={menuRef}
       id={ariaControlsId}

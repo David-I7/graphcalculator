@@ -1,5 +1,3 @@
-import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
-import { Edit } from "../../../../components/svgs";
 import ExpressionPanelResizer from "./ExpressionPanelResizer";
 import GraphMenu from "../menu/GraphMenu";
 import { ResizableInput } from "../../../../components/input/ResizableInput";
@@ -26,9 +24,6 @@ const ExpressionTopBar = () => {
       </div>
       <div className="expression-panel-top-bar__right">
         <ExpressionPanelNewItem />
-        <ButtonTarget className="button--hovered bg-surface-container-low">
-          <Edit />
-        </ButtonTarget>
         <ExpressionPanelResizer />
       </div>
     </header>

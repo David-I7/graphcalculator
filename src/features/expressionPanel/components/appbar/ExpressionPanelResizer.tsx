@@ -39,6 +39,9 @@ const ExpressionPanelResizer = () => {
 
     const resizerController = new AbortController();
     let windowController: AbortController;
+    expressionPanelRef.current.inert = !isOpen;
+
+    !isOpen && expressionPanelRef.current.blur();
 
     isOpen &&
       !isMobile &&
