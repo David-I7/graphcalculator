@@ -27,6 +27,8 @@ import {
   pointParser,
   variableParser,
 } from "../../features/graph/lib/mathjs/parse";
+import { getAllSymbols } from "../../features/graph/lib/mathjs/utils";
+import { restrictedVariables } from "../../features/graph/data/math";
 
 export function createNewGraph(): ClientGraphData {
   const createdAt = new Date().toJSON();
@@ -236,7 +238,7 @@ export function updateScopeSync(
   if (!topologyOrder) throw new Error("Cycle has been detected");
 
   const updatedIdx = topologyOrder.findIndex((v) => v === updated);
-  if (updatedIdx === -1 || updatedIdx === topologyOrder.length - 1) return;
+  if (updatedIdx === -1) return;
 
   topologyOrder = topologyOrder.slice(updatedIdx + 1);
 
@@ -249,7 +251,7 @@ export function updateScopeSync(
       "name" in item.data.parsedContent
     ) {
       varToItem[item.data.parsedContent.name] = item.data;
-    } else if (isExpression(item) && item.data.parsedContent) {
+    } else if (isExpression(item)) {
       nonScopedExpr.push(item.data);
     }
   });
@@ -319,43 +321,137 @@ export function updateScopeSync(
     }
     return false;
   };
+  const parseExpression = (expr: Expression) => {
+    // content that was not parsed due to error
+    const res = ExpressionTransformer.transform(expr, scope);
+
+    if (res.node)
+      if (res.node instanceof FunctionAssignmentNode) {
+        const parsedContent = functionParser.parse(res.node, scope);
+        if (!restrictedVariables.has(parsedContent.name)) {
+          scope[parsedContent.name] = {
+            type: "function",
+            node: parsedContent.node,
+            deps: parsedContent.scopeDeps,
+          };
+
+          addDependencies(
+            parsedContent.name,
+            parsedContent.scopeDeps,
+            depGraph
+          );
+        }
+
+        if (expr.type !== "function") {
+          //@ts-ignore
+          expr.settings = createSettings("function");
+        }
+
+        expr.type = "function";
+        expr.parsedContent = parsedContent;
+      } else if (res.node instanceof AssignmentNode) {
+        const parsedContent = variableParser.parse(res.node, scope);
+        if (!restrictedVariables.has(parsedContent.name)) {
+          scope[parsedContent.name] = {
+            type: "variable",
+            node: parsedContent.node,
+            deps: parsedContent.scopeDeps,
+            value: parsedContent.value,
+          };
+
+          addDependencies(
+            parsedContent.name,
+            parsedContent.scopeDeps,
+            depGraph
+          );
+        }
+
+        if (expr.type !== "variable") {
+          //@ts-ignore
+          delete expr.settings;
+        }
+
+        expr.type = "variable";
+        expr.parsedContent = parsedContent;
+      } else if (res.node instanceof ObjectNode) {
+        const parsedContent = pointParser.parse(res.node, scope);
+
+        if (expr.type !== "point") {
+          //@ts-ignore
+          expr.settings = createSettings("point");
+        }
+
+        expr.type = "point";
+        expr.parsedContent = parsedContent;
+      }
+
+    return res;
+  };
+
+  const nonUpdated: Expression[] = [];
   nonScopedExpr.forEach((expr) => {
-    if (!isDependent(expr.parsedContent!.scopeDeps, updatedExpr)) return;
+    if (
+      expr.parsedContent?.scopeDeps &&
+      !isDependent(expr.parsedContent.scopeDeps, updatedExpr)
+    )
+      return;
 
-    switch (expr.type) {
-      case "variable": {
-        // should never happen
-        throw new Error("All varaibles should be inside scope");
-      }
-      case "function": {
-        // anon functions like y=x or f(x)
-        const res = ExpressionTransformer.transform(expr, scope);
-        if (res.err) {
-          expr.parsedContent = undefined;
+    if (expr.parsedContent?.scopeDeps) {
+      switch (expr.type) {
+        case "variable": {
+          // should never happen
+          throw new Error("All variables should be inside scope");
+        }
+        case "function": {
+          // anon functions like y=x or f(x)
+          const res = ExpressionTransformer.transform(expr, scope);
+          if (res.err) {
+            expr.parsedContent = undefined;
+            return;
+          }
+
+          expr.parsedContent = functionParser.parse(
+            res.node as FunctionAssignmentNode,
+            scope
+          );
           return;
         }
+        case "point": {
+          const res = ExpressionTransformer.transform(expr, scope);
+          if (res.err) {
+            expr.parsedContent = undefined;
+            return;
+          }
 
-        expr.parsedContent = functionParser.parse(
-          res.node as FunctionAssignmentNode,
-          scope
-        );
-        return;
-      }
-      case "point": {
-        const res = ExpressionTransformer.transform(expr, scope);
-        if (res.err) {
-          expr.parsedContent = undefined;
+          expr.parsedContent = pointParser.parse(
+            res.node as ObjectNode<{ x: MathNode; y: MathNode }>,
+            scope
+          );
           return;
         }
-
-        expr.parsedContent = pointParser.parse(
-          res.node as ObjectNode<{ x: MathNode; y: MathNode }>,
-          scope
-        );
-        return;
       }
+    } else {
+      // content that was not parsed due to error
+
+      const res = parseExpression(expr);
+      if (res.err) nonUpdated.push(expr);
     }
   });
+
+  let hasChanged = false;
+  for (let i = 0; i < nonUpdated.length; i++) {
+    const res = parseExpression(nonUpdated[i]);
+    if (!res.err) {
+      nonUpdated.splice(i, 1);
+      hasChanged = true;
+      i -= 1;
+    }
+
+    if (i === nonUpdated.length - 1 && hasChanged) {
+      i = -1;
+      hasChanged = false;
+    }
+  }
 }
 
 export function deleteScopeSync(
