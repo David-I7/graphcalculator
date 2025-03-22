@@ -49,13 +49,6 @@ export class Scales {
     return this.scalesArray[this.scalesIndex];
   }
 
-  reset() {
-    this.zoom = 1;
-    this.scalesIndex = (this.scalesArray.length - 3) / 2;
-    this._scaledStep = this.step;
-    this.updateScales();
-  }
-
   private updateScales() {
     this._scaler = parseFloat(this.scalesArray[this.scalesIndex]);
     this._majorGridLine = this.scalesArray[this.scalesIndex][0] === "5" ? 4 : 5;
@@ -68,11 +61,23 @@ export class Scales {
     return this._scaledStep;
   }
 
+  reset() {
+    this.zoom = 1;
+    this.scalesIndex = (this.scalesArray.length - 3) / 2;
+    this._scaledStep = this.step;
+    this.updateScales();
+  }
   getState(): ScalesState {
     return {
       scalesIndex: this.scalesIndex,
       zoom: this.zoom,
     };
+  }
+  restoreState(snapshot: ScalesState) {
+    this.zoom = snapshot.zoom;
+    this.scalesIndex = snapshot.scalesIndex;
+    this._scaledStep = this.step * this.zoom;
+    this.updateScales();
   }
 
   calculateGraphCoordinates(offsetX: number, offsetY: number) {

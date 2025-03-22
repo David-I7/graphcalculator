@@ -18,7 +18,7 @@ import { useAppSelector } from "../../../../state/hooks";
 import { usePopulateRef } from "../../../../hooks/reactutils";
 import Tooltip from "../../../../components/tooltip/Tooltip";
 
-const MIN_SIZE = 280;
+const MIN_SIZE = 320;
 const MAX_SIZE_OFFSET = 280;
 
 const ExpressionPanelResizer = () => {

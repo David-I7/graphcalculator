@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import FilledButton from "../../../../components/buttons/common/FilledButton";
-import { statesSnapshotsAreEqual } from "../../../../state/graph/controllers";
 import { saveGraph } from "../../../../state/graph/graph";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { useGraphContext } from "../../../graph/Graph";
-import { useInitialRender } from "../../../../hooks/reactutils";
+import { useInitialRender, usePrevious } from "../../../../hooks/reactutils";
 
 const ExpressionPanelSaveGraph = () => {
   const dispatch = useAppDispatch();
@@ -12,9 +11,13 @@ const ExpressionPanelSaveGraph = () => {
   const graph = useGraphContext();
   const [disabled, setDisabled] = useState<boolean>(true);
   const initalRender = useInitialRender();
+  const prevId = usePrevious(currentGraph.id, currentGraph.id);
 
   useEffect(() => {
     if (!graph || initalRender) return;
+    if (prevId !== currentGraph.id) {
+      if (!disabled) setDisabled(true);
+    }
     if (disabled) setDisabled(false);
   }, [currentGraph.name, currentGraph.items.data]);
 

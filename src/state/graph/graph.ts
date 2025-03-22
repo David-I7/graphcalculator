@@ -68,6 +68,15 @@ const graphSlice = createSlice({
         state.savedGraphs[graphIdx] = savedGraph;
       }
     }),
+    createBlankGraph: create.reducer(
+      (state, action: PayloadAction<ClientGraphData>) => {
+        const nonOverlappingId = action.payload.items.nextId;
+        action.payload.items.data[0].id = nonOverlappingId;
+        action.payload.items.nextId = nonOverlappingId + 1;
+        action.payload.items.focusedId = nonOverlappingId;
+        state.currentGraph = action.payload;
+      }
+    ),
 
     // ITEM CASES
     createItem: create.reducer(
@@ -453,6 +462,7 @@ export const {
   // graph
   restoreGraph,
   saveGraph,
+  createBlankGraph,
 
   // item
   createItem,

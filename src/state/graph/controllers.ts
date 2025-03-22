@@ -27,11 +27,11 @@ import {
   pointParser,
   variableParser,
 } from "../../features/graph/lib/mathjs/parse";
-import { getAllSymbols } from "../../features/graph/lib/mathjs/utils";
+
 import { restrictedVariables } from "../../features/graph/data/math";
 import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
 
-export function createNewGraph(): ClientGraphData {
+export function createNewGraph(id: number = 1): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
     id: uuid(),
@@ -52,9 +52,9 @@ export function createNewGraph(): ClientGraphData {
     items: {
       scope: {},
       dependencyGraph: {},
-      nextId: 2,
-      focusedId: 1,
-      data: [createNewItem("expression", 1)],
+      nextId: id + 1,
+      focusedId: id,
+      data: [createNewItem("expression", id)],
     },
   };
 }
@@ -109,31 +109,6 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
       dependencyGraph: depGraph,
     },
   };
-}
-
-export function statesSnapshotsAreEqual(
-  s1: Omit<GraphSnapshot, "image">,
-  s2: Omit<GraphSnapshot, "image">
-): boolean {
-  const settings1 = s1.settings;
-  const settings2 = s2.settings;
-
-  if (
-    settings1.offsetX !== settings2.offsetX ||
-    settings1.offsetY !== settings2.offsetY
-  )
-    return false;
-
-  const scales1 = s1.scales;
-  const scales2 = s2.scales;
-
-  if (
-    scales1.scalesIndex !== scales2.scalesIndex ||
-    scales1.zoom !== scales2.zoom
-  )
-    return false;
-
-  return true;
 }
 
 // ITEM
