@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import ButtonTarget from "../../../../components/buttons/target/ButtonTarget";
-import { Menu } from "../../../../components/svgs";
+import { Menu, Plus } from "../../../../components/svgs";
 import "../../assets/graphmenu.scss";
 import {
   AnimateSlideX,
@@ -20,6 +20,7 @@ import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { useAppSelector } from "../../../../state/hooks";
 import { createPortal } from "react-dom";
 import Tooltip from "../../../../components/tooltip/Tooltip";
+import NewBlankGraph from "./NewBlankGraph";
 
 type GraphMenuContext = {
   ariaControlsId: string;
@@ -205,7 +206,7 @@ GraphMenu.Menu = () => {
       )}
       {isAuthenticated && <header>Logout controls; Search controls</header>}
 
-      <button>new blank graph</button>
+      <NewBlankGraph />
       {isAuthenticated && (
         <>
           <section>

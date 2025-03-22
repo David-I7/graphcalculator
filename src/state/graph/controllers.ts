@@ -111,31 +111,6 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
   };
 }
 
-export function statesSnapshotsAreEqual(
-  s1: Omit<GraphSnapshot, "image">,
-  s2: Omit<GraphSnapshot, "image">
-): boolean {
-  const settings1 = s1.settings;
-  const settings2 = s2.settings;
-
-  if (
-    settings1.offsetX !== settings2.offsetX ||
-    settings1.offsetY !== settings2.offsetY
-  )
-    return false;
-
-  const scales1 = s1.scales;
-  const scales2 = s2.scales;
-
-  if (
-    scales1.scalesIndex !== scales2.scalesIndex ||
-    scales1.zoom !== scales2.zoom
-  )
-    return false;
-
-  return true;
-}
-
 // ITEM
 
 export function createNewItem<T extends ItemType>(

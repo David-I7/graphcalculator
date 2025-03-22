@@ -16,3 +16,41 @@
     color: base.$inverse-on-surface-heading;
   }
 }
+
+.new-blank-graph {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: base.$inverse-on-surface-heading;
+  padding: 0.5rem;
+  cursor: pointer;
+  outline: none;
+
+  &:hover {
+    & button:nth-child(1) {
+      scale: 1.1;
+    }
+
+    & {
+      text-decoration: underline;
+    }
+  }
+
+  &:focus {
+    & button:nth-child(1) {
+      outline: 3px solid base.$primary;
+      outline-offset: 1px;
+      scale: 1.1;
+    }
+
+    & {
+      text-decoration: underline;
+    }
+  }
+
+  & button:nth-child(1) {
+    border-radius: base.$br-round;
+    border: 1px solid base.$inverse-on-surface-heading;
+    transition: scale base.$an-sp-fast ease-out;
+  }
+}
