@@ -49,12 +49,6 @@ export class GraphSettings {
     this.initEvents();
   }
 
-  getState(): GraphSettingsState {
-    return { offsetX: this.offsetX, offsetY: this.offsetY };
-  }
-
-  restoreState(state: GraphSettingsState) {}
-
   private initEvents() {
     //scoped variables
 
@@ -197,6 +191,22 @@ export class GraphSettings {
     this.graph.ctx.font = `500 ${12 * this.dpr}px Inter`;
     this.graph.ctx.textAlign = "center";
     this.graph.ctx.textBaseline = "middle";
+  }
+
+  getState(): GraphSettingsState {
+    return { offsetX: this.offsetX, offsetY: this.offsetY };
+  }
+
+  restoreState(state: GraphSettingsState) {
+    this.graph.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.graph.ctx.translate(
+      this.canvasCenterX + state.offsetX,
+      this.canvasCenterY + state.offsetY
+    );
+
+    this.offsetX = state.offsetX;
+    this.offsetY = state.offsetY;
+    this.updateClientPosition(this.offsetX, this.offsetY);
   }
 
   destroy() {

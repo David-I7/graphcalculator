@@ -137,4 +137,8 @@ export class Graph implements MessageBus {
   toDataURL(): string {
     return this.canvas.toDataURL("PNG");
   }
+  restoreStateSnapshot(snapshot: Omit<GraphSnapshot, "image">) {
+    this.settings.restoreState(snapshot.settings);
+    this.scales.restoreState(snapshot.scales);
+  }
 }
