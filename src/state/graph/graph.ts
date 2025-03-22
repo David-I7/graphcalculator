@@ -68,6 +68,11 @@ const graphSlice = createSlice({
         state.savedGraphs[graphIdx] = savedGraph;
       }
     }),
+    createBlankGraph: create.reducer(
+      (state, action: PayloadAction<ClientGraphData>) => {
+        state.currentGraph = action.payload;
+      }
+    ),
 
     // ITEM CASES
     createItem: create.reducer(
@@ -453,6 +458,7 @@ export const {
   // graph
   restoreGraph,
   saveGraph,
+  createBlankGraph,
 
   // item
   createItem,

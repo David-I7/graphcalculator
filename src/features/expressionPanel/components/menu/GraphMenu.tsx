@@ -1,6 +1,7 @@
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useId,
@@ -28,6 +29,8 @@ type GraphMenuContext = {
   rootRef: React.RefObject<HTMLDivElement | null>;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
 };
 
 const GraphMenuContext = createContext<GraphMenuContext | undefined>(undefined);
@@ -37,41 +40,13 @@ const useGraphMenuContextSetup = (): GraphMenuContext => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  usePopulateRef(rootRef, { id: "root" });
-
-  return { menuRef, ariaControlsId: id, isOpen, setIsOpen, rootRef };
-};
-
-const useGraphMenuContext = () => {
-  const ctx = useContext(GraphMenuContext);
-  if (!ctx)
-    throw new Error("Graph menu context cannot be accessed outside its scope");
-
-  return ctx;
-};
-
-const GraphMenu = ({ children }: { children: ReactNode }) => {
-  return (
-    <GraphMenuContext.Provider value={useGraphMenuContextSetup()}>
-      {children}
-    </GraphMenuContext.Provider>
-  );
-};
-
-GraphMenu.Toggle = function () {
-  const { ariaControlsId, menuRef, isOpen, setIsOpen, rootRef } =
-    useGraphMenuContext();
+  const mainRef = useRef<HTMLElement | null>(null);
+  const isAnimating = useRef<boolean>(false);
   const animationOptions = useRef(
     new KeyframeAnimationOptionsBuilder().build()
   );
-  const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
-  const isAnimating = useRef<boolean>(false);
-  const mainRef = useRef<HTMLElement | null>(null);
 
-  usePopulateRef(mainRef, { cb: () => document.querySelector("main")! });
-
-  const onClose = () => {
+  const onClose = useCallback(() => {
     if (isAnimating.current) return;
     isAnimating.current = true;
 
@@ -84,8 +59,9 @@ GraphMenu.Toggle = function () {
     setTimeout(() => {
       isAnimating.current = false;
     }, CSS_VARIABLES.animationSpeedDefault);
-  };
-  const onOpen = () => {
+  }, [isOpen]);
+
+  const onOpen = useCallback(() => {
     if (isAnimating.current) return;
 
     isAnimating.current = true;
@@ -99,7 +75,10 @@ GraphMenu.Toggle = function () {
     setTimeout(() => {
       isAnimating.current = false;
     }, CSS_VARIABLES.animationSpeedDefault);
-  };
+  }, [isOpen]);
+
+  usePopulateRef(mainRef, { cb: () => document.querySelector("main")! });
+  usePopulateRef(rootRef, { id: "root" });
 
   useEffect(() => {
     if (!mainRef.current) return;
@@ -123,6 +102,39 @@ GraphMenu.Toggle = function () {
       abortController?.abort();
     };
   }, [isOpen]);
+
+  return {
+    menuRef,
+    ariaControlsId: id,
+    isOpen,
+    setIsOpen,
+    rootRef,
+    onClose,
+    onOpen,
+  };
+};
+
+const useGraphMenuContext = () => {
+  const ctx = useContext(GraphMenuContext);
+  if (!ctx)
+    throw new Error("Graph menu context cannot be accessed outside its scope");
+
+  return ctx;
+};
+
+const GraphMenu = ({ children }: { children: ReactNode }) => {
+  return (
+    <GraphMenuContext.Provider value={useGraphMenuContextSetup()}>
+      {children}
+    </GraphMenuContext.Provider>
+  );
+};
+
+GraphMenu.Toggle = function () {
+  const { ariaControlsId, menuRef, isOpen, rootRef, onOpen, onClose } =
+    useGraphMenuContext();
+
+  const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
 
   return (
     <>
@@ -177,9 +189,7 @@ GraphMenu.Toggle = function () {
             right: "auto",
             width: `calc(100vw - 17.625rem)`,
           }}
-          onClose={(e) => {
-            onClose();
-          }}
+          onClose={onClose}
         />
       )}
     </>
@@ -187,7 +197,8 @@ GraphMenu.Toggle = function () {
 };
 
 GraphMenu.Menu = () => {
-  const { ariaControlsId, menuRef, isOpen, rootRef } = useGraphMenuContext();
+  const { ariaControlsId, menuRef, isOpen, rootRef, onClose } =
+    useGraphMenuContext();
   const isAuthenticated = useAppSelector(
     (state) => state.globalSlice.isAuthenticated
   );
@@ -195,7 +206,6 @@ GraphMenu.Menu = () => {
   return createPortal(
     <div
       inert={!isOpen}
-      aria-hidden={!isOpen}
       ref={menuRef}
       id={ariaControlsId}
       className="graph-menu"
@@ -206,7 +216,7 @@ GraphMenu.Menu = () => {
       )}
       {isAuthenticated && <header>Logout controls; Search controls</header>}
 
-      <NewBlankGraph />
+      <NewBlankGraph handleClick={onClose} />
       {isAuthenticated && (
         <>
           <section>
