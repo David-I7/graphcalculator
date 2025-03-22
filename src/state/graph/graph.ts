@@ -70,6 +70,10 @@ const graphSlice = createSlice({
     }),
     createBlankGraph: create.reducer(
       (state, action: PayloadAction<ClientGraphData>) => {
+        const nonOverlappingId = action.payload.items.nextId;
+        action.payload.items.data[0].id = nonOverlappingId;
+        action.payload.items.nextId = nonOverlappingId + 1;
+        action.payload.items.focusedId = nonOverlappingId;
         state.currentGraph = action.payload;
       }
     ),

@@ -1,4 +1,10 @@
-import { useCallback, useRef } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
 import { useAppDispatch } from "../../../../state/hooks";
 import {
@@ -61,7 +67,8 @@ const FunctionTextArea = ({
   error,
 }: ExpressionTextAreaProps<"expression">) => {
   const ref = useRef<HTMLInputElement>(null);
-
+  const [input, setInput] = useState<string>(item.data.content);
+  const deferredInput = useDeferredValue(input);
   const onFocus = useCallback(() => handleFocus(item.id), [item.id]);
   const onBlur = useCallback(() => {
     ref.current?.blur();
@@ -69,6 +76,18 @@ const FunctionTextArea = ({
   }, [item.id]);
 
   useFocus(focused, ref, onFocus, onBlur);
+
+  useEffect(() => {
+    if (item.data.content !== deferredInput) {
+      dispatch(
+        updateItemContent({
+          id: item.id,
+          content: deferredInput,
+          idx: idx,
+        })
+      );
+    }
+  }, [deferredInput]);
 
   return (
     <div
@@ -82,20 +101,15 @@ const FunctionTextArea = ({
           className="function-input"
           ref={ref}
           autoFocus={focused}
-          value={item.data.content}
+          value={input}
           onFocus={() => {
             if (!focused) {
               dispatch(setFocusedItem(item.id));
             }
           }}
           onChange={(e) => {
-            dispatch(
-              updateItemContent({
-                id: item.id,
-                content: e.target.value,
-                idx: idx,
-              })
-            );
+            console.log("called, outside");
+            setInput(e.target.value);
           }}
         ></input>
       </div>
@@ -118,6 +132,8 @@ const NoteTextArea = ({
   idx,
 }: ExpressionTextAreaProps<"note">) => {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const [input, setInput] = useState<string>(item.data.content);
+  const deferredInput = useDeferredValue(input);
 
   const onFocus = useCallback(() => {
     handleFocus(item.id);
@@ -127,6 +143,18 @@ const NoteTextArea = ({
   }, [item.id]);
 
   useFocus(focused, ref, onFocus, onBlur);
+
+  useEffect(() => {
+    if (item.data.content !== deferredInput) {
+      dispatch(
+        updateItemContent({
+          id: item.id,
+          content: deferredInput,
+          idx: idx,
+        })
+      );
+    }
+  }, [deferredInput]);
 
   return (
     <ResizableTextarea
@@ -145,16 +173,8 @@ const NoteTextArea = ({
           if (!focused) dispatch(setFocusedItem(item.id));
         },
         autoFocus: focused,
-        value: item.data.content,
-        onChange: (e) => {
-          dispatch(
-            updateItemContent({
-              id: item.id,
-              content: e.target.value,
-              idx: idx,
-            })
-          );
-        },
+        value: input,
+        onChange: (e) => setInput(e.target.value),
       }}
     />
   );

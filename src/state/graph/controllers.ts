@@ -27,11 +27,11 @@ import {
   pointParser,
   variableParser,
 } from "../../features/graph/lib/mathjs/parse";
-import { getAllSymbols } from "../../features/graph/lib/mathjs/utils";
+
 import { restrictedVariables } from "../../features/graph/data/math";
 import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
 
-export function createNewGraph(): ClientGraphData {
+export function createNewGraph(id: number = 1): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
     id: uuid(),
@@ -52,9 +52,9 @@ export function createNewGraph(): ClientGraphData {
     items: {
       scope: {},
       dependencyGraph: {},
-      nextId: 2,
-      focusedId: 1,
-      data: [createNewItem("expression", 1)],
+      nextId: id + 1,
+      focusedId: id,
+      data: [createNewItem("expression", id)],
     },
   };
 }
