@@ -1,0 +1,20 @@
+@use "../../../assets/styles/base" as base;
+
+.filled-button {
+  height: 2.5rem;
+  padding: 0 2rem;
+  border-radius: base.$br-200;
+  font-weight: base.$fw-semibold;
+  background-color: base.$primary;
+  color: base.$on-primary;
+
+  &:hover:not(:disabled) {
+    filter: brightness(85%);
+  }
+
+  &:disabled {
+    background-color: base.$on-surface-body;
+    color: base.$on-surface-body-low;
+    cursor: default;
+  }
+}

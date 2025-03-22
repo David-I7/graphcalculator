@@ -2,6 +2,7 @@ import ExpressionPanelResizer from "./ExpressionPanelResizer";
 import GraphMenu from "../menu/GraphMenu";
 import { ResizableInput } from "../../../../components/input/ResizableInput";
 import ExpressionPanelNewItem from "./ExpressionPanelNewItem";
+import ExpressionPanelSaveGraph from "./ExpressionPanelSaveGraph";
 
 const defaultValue = "Untitled";
 
@@ -23,6 +24,7 @@ const ExpressionTopBar = () => {
         />
       </div>
       <div className="expression-panel-top-bar__right">
+        <ExpressionPanelSaveGraph />
         <ExpressionPanelNewItem />
         <ExpressionPanelResizer />
       </div>

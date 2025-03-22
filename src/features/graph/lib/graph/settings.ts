@@ -1,6 +1,11 @@
 import { throttle } from "../../../../helpers/performance";
 import { Graph } from "./graph";
 
+export type GraphSettingsState = {
+  offsetX: number;
+  offsetY: number;
+};
+
 export class GraphSettings {
   MAX_TRANSLATE = 1000000;
   protected destroyController: AbortController = new AbortController();
@@ -43,6 +48,12 @@ export class GraphSettings {
     // init event listeners
     this.initEvents();
   }
+
+  getState(): GraphSettingsState {
+    return { offsetX: this.offsetX, offsetY: this.offsetY };
+  }
+
+  restoreState(state: GraphSettingsState) {}
 
   private initEvents() {
     //scoped variables

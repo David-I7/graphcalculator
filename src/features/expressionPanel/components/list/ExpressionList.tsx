@@ -16,12 +16,7 @@ import {
 } from "../../../../lib/animations";
 import ExpressionDynamicIsland from "./ExpressionDynamicIsland";
 import ExpressionTextArea from "./ExpressionTextArea";
-import {
-  Expression,
-  isExpression,
-  Item,
-  Scope,
-} from "../../../../state/graph/types";
+import { isExpression, Item, Scope } from "../../../../state/graph/types";
 import useValidateExpression from "../../../graph/hooks/useValidateExpression";
 import { GraphExpression } from "../../../graph/components/GraphExpression";
 
@@ -40,7 +35,6 @@ function ExpressionListRenderer() {
     data: items,
     focusedId,
     scope,
-    dependencyGraph,
   } = useAppSelector((state) => state.graphSlice.currentGraph.items);
   const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -114,8 +108,6 @@ function ExpressionListRenderer() {
       dispatch(createItem({ type: "expression", loc: "end" }));
     }
   }, [items.length]);
-
-  console.log(scope, dependencyGraph, items);
 
   return (
     <ol className="expression-list" ref={draggableContainerRef}>

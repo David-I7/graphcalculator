@@ -24,6 +24,7 @@ import {
 } from "./controllers";
 import { restrictedVariables } from "../../features/graph/data/math";
 import { PREDEFINED_COLORS } from "../../data/css/variables";
+import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
 
 interface GraphState {
   currentGraph: ClientGraphData;
@@ -50,18 +51,19 @@ const graphSlice = createSlice({
         state.currentGraph = restoreSavedGraph(graph);
       }
     ),
-    saveGraph: create.reducer((state, action: PayloadAction<string>) => {
+    saveGraph: create.reducer((state, action: PayloadAction<GraphSnapshot>) => {
       let graphIdx: number | null = null;
 
       for (let i = 0; i < state.savedGraphs.length; i++) {
-        if (state.savedGraphs[i].id === action.payload) {
+        if (state.savedGraphs[i].id === state.currentGraph.id) {
+          graphIdx = i;
         }
       }
 
-      const savedGraph = saveCurrentGraph(state.currentGraph);
+      const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
 
       if (graphIdx === null) {
-        state.savedGraphs.push(savedGraph);
+        state.savedGraphs.unshift(savedGraph);
       } else {
         state.savedGraphs[graphIdx] = savedGraph;
       }
