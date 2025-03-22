@@ -29,6 +29,7 @@ import {
 } from "../../features/graph/lib/mathjs/parse";
 import { getAllSymbols } from "../../features/graph/lib/mathjs/utils";
 import { restrictedVariables } from "../../features/graph/data/math";
+import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
 
 export function createNewGraph(): ClientGraphData {
   const createdAt = new Date().toJSON();
@@ -36,7 +37,17 @@ export function createNewGraph(): ClientGraphData {
     id: uuid(),
     createdAt,
     modifiedAt: createdAt,
-    thumb: "",
+    graphSnapshot: {
+      scales: {
+        scalesIndex: 300,
+        zoom: 1,
+      },
+      settings: {
+        offsetX: 0,
+        offsetY: 0,
+      },
+      image: "",
+    },
     name: "Untitled",
     items: {
       scope: {},
@@ -48,15 +59,18 @@ export function createNewGraph(): ClientGraphData {
   };
 }
 
-export function saveCurrentGraph(currentGraph: ClientGraphData): GraphData {
+export function saveCurrentGraph(
+  currentGraph: ClientGraphData,
+  snapshot: GraphSnapshot
+): GraphData {
   // apiReq to server in the background
 
   return {
     ...currentGraph,
     modifiedAt: new Date().toJSON(),
-    thumb: "", //base64encoded canvasGetImageData
+    graphSnapshot: snapshot,
     items: currentGraph.items.data,
-  };
+  } as GraphData;
 }
 
 export function restoreSavedGraph(graph: GraphData): ClientGraphData {
@@ -95,6 +109,31 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
       dependencyGraph: depGraph,
     },
   };
+}
+
+export function statesSnapshotsAreEqual(
+  s1: Omit<GraphSnapshot, "image">,
+  s2: Omit<GraphSnapshot, "image">
+): boolean {
+  const settings1 = s1.settings;
+  const settings2 = s2.settings;
+
+  if (
+    settings1.offsetX !== settings2.offsetX ||
+    settings1.offsetY !== settings2.offsetY
+  )
+    return false;
+
+  const scales1 = s1.scales;
+  const scales2 = s2.scales;
+
+  if (
+    scales1.scalesIndex !== scales2.scalesIndex ||
+    scales1.zoom !== scales2.zoom
+  )
+    return false;
+
+  return true;
 }
 
 // ITEM

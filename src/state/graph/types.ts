@@ -1,4 +1,5 @@
 import { PREDEFINED_COLORS } from "../../data/css/variables";
+import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
 import { SerializedAdjList } from "../../helpers/dts";
 
 // API data
@@ -6,7 +7,7 @@ import { SerializedAdjList } from "../../helpers/dts";
 export type GraphData = {
   name: string;
   id: string;
-  thumb: string;
+  graphSnapshot: GraphSnapshot;
   createdAt: string;
   modifiedAt: string;
   items: Item[];

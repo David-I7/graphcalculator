@@ -3,6 +3,11 @@ import { throttle } from "../../../../helpers/performance";
 import { ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
 
+export type ScalesState = {
+  zoom: number;
+  scalesIndex: number;
+};
+
 export class Scales {
   protected destroyController: AbortController = new AbortController();
   private ZOOM_IN_FACTOR = 1.05;
@@ -61,6 +66,13 @@ export class Scales {
 
   get scaledStep(): number {
     return this._scaledStep;
+  }
+
+  getState(): ScalesState {
+    return {
+      scalesIndex: this.scalesIndex,
+      zoom: this.zoom,
+    };
   }
 
   calculateGraphCoordinates(offsetX: number, offsetY: number) {

@@ -7,8 +7,14 @@ import {
   MessageBus,
 } from "../../interfaces";
 import { CommandController } from "./commands";
-import { Scales } from "./scales";
-import { GraphSettings } from "./settings";
+import { Scales, ScalesState } from "./scales";
+import { GraphSettings, GraphSettingsState } from "./settings";
+
+export type GraphSnapshot = {
+  settings: GraphSettingsState;
+  scales: ScalesState;
+  image: ReturnType<HTMLCanvasElement["toDataURL"]>;
+};
 
 export class Graph implements MessageBus {
   readonly events: Partial<Record<keyof EventDataMap, BusEvent>> = {};
@@ -120,5 +126,15 @@ export class Graph implements MessageBus {
   reset() {
     this.settings.reset();
     this.scales.reset();
+  }
+
+  getStateSnapshot(): Omit<GraphSnapshot, "image"> {
+    return {
+      settings: this.settings.getState(),
+      scales: this.scales.getState(),
+    };
+  }
+  toDataURL(): string {
+    return this.canvas.toDataURL("PNG");
   }
 }

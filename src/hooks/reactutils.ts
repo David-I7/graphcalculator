@@ -24,3 +24,13 @@ export function usePrevious<T>(next: T, initValue: T | null = null) {
 
   return prev.current;
 }
+
+export function useInitialRender() {
+  const initialRender = useRef<boolean>(true);
+
+  useEffect(() => {
+    initialRender.current = false;
+  });
+
+  return initialRender.current;
+}
