@@ -15,6 +15,12 @@
     @extend .font-body-xl;
     color: base.$inverse-on-surface-heading;
   }
+
+  h3 {
+    @extend .font-body-m;
+    color: base.$inverse-on-surface-heading;
+    font-weight: base.$fw-medium;
+  }
 }
 
 .new-blank-graph {
@@ -52,5 +58,64 @@
     border-radius: base.$br-round;
     border: 1px solid base.$inverse-on-surface-heading;
     transition: scale base.$an-sp-fast ease-out;
+  }
+}
+
+.section-separator {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  &::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    border-radius: base.$br-100;
+    background-color: base.$border-normal;
+  }
+}
+
+.preview-list {
+  &-item {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    align-items: center;
+    cursor: pointer;
+    background-color: base.$inverse-surface;
+    transition: background-color base.$an-sp-fast ease-out;
+
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        base.$inverse-surface 85%,
+        white 15%
+      );
+    }
+
+    &-left {
+      width: 4rem;
+      height: 4rem;
+      background-color: white;
+      border-radius: base.$br-200;
+      & img {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    &-right {
+      overflow: hidden;
+      @extend .font-body-sm;
+      & h3 {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
   }
 }

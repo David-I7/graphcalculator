@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
 import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
@@ -67,14 +67,15 @@ const graphSlice = createSlice({
 
         const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
 
+        console.log(current(state.currentGraph));
         console.log(savedGraph);
         return;
 
-        if (graphIdx === null) {
-          state.savedGraphs.unshift(savedGraph);
-        } else {
-          state.savedGraphs[graphIdx] = savedGraph;
-        }
+        // if (graphIdx === null) {
+        //   state.savedGraphs.unshift(savedGraph);
+        // } else {
+        //   state.savedGraphs[graphIdx] = savedGraph;
+        // }
       }
     ),
     createBlankGraph: create.preparedReducer(
