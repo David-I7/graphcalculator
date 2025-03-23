@@ -10,7 +10,7 @@ export type GraphData = {
   graphSnapshot: GraphSnapshot;
   createdAt: string;
   modifiedAt: string;
-  items: Item[];
+  items: ItemServer[];
 };
 
 export type ExpressionSettings = {
@@ -38,6 +38,19 @@ export type PointType =
   | "x"
   | "+";
 
+export type ItemServer<T extends keyof ItemData = ItemType> = {
+  id: number;
+  type: T;
+  data: ItemDataServer[T];
+};
+
+export type ItemDataServer = {
+  expression: ExpressionServer;
+  note: {
+    content: string;
+  };
+};
+
 export type Item<T extends keyof ItemData = ItemType> = {
   id: number;
   type: T;
@@ -53,6 +66,19 @@ export type ItemData = {
 
 export type ItemType = keyof ItemData;
 export type ExpressionType = "function" | "variable" | "point";
+export type ExpressionServer<T extends ExpressionType = ExpressionType> =
+  T extends "variable"
+    ? {
+        type: T;
+        content: string;
+      }
+    : T extends "function" | "point"
+    ? {
+        type: T;
+        content: string;
+        settings: ExpressionSettings[T];
+      }
+    : never;
 export type Expression<T extends ExpressionType = ExpressionType> =
   T extends "variable"
     ? {

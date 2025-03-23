@@ -17,6 +17,7 @@ const ExpressionPanelSaveGraph = () => {
     if (!graph || initalRender) return;
     if (prevId !== currentGraph.id) {
       if (!disabled) setDisabled(true);
+      return;
     }
     if (disabled) setDisabled(false);
   }, [currentGraph.name, currentGraph.items.data]);
@@ -26,8 +27,8 @@ const ExpressionPanelSaveGraph = () => {
       disabled={disabled}
       style={{ padding: "0 1rem" }}
       onClick={(e) => {
-        const stateSnapshot = graph!.getStateSnapshot();
-        dispatch(saveGraph({ ...stateSnapshot, image: graph!.toDataURL() }));
+        if (!graph) return;
+        dispatch(saveGraph(graph!));
         setDisabled(true);
       }}
     >

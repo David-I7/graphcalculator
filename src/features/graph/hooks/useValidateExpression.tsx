@@ -64,7 +64,6 @@ const useValidateExpression = ({
       }
       setError(res.err);
     } else {
-      // console.log(res.node);
       if (res.node instanceof FunctionAssignmentNode) {
         const parsedContent = functionParser.parse(res.node, scope);
         dispatch(
