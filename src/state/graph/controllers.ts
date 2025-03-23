@@ -1,5 +1,6 @@
 // GRAPH
 
+import { current } from "@reduxjs/toolkit";
 import {
   AssignmentNode,
   FunctionAssignmentNode,
@@ -14,7 +15,6 @@ import {
   ClientGraphData,
   Expression,
   ExpressionSettings,
-  ExpressionType,
   GraphData,
   isExpression,
   Item,
@@ -66,10 +66,10 @@ export function saveCurrentGraph(
   // apiReq to server in the background
 
   return {
-    ...currentGraph,
+    ...current(currentGraph),
     modifiedAt: new Date().toJSON(),
     graphSnapshot: snapshot,
-    items: currentGraph.items.data,
+    items: current(currentGraph.items.data),
   } as GraphData;
 }
 
@@ -77,6 +77,24 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
   const scope: Scope = {};
   const depGraph: SerializedAdjList = {};
   let maxId: number = 1;
+  const data: GraphData["items"] = structuredClone(graph.items);
+
+  let hasChanged = false;
+  for (let i = 0; i < data.length; i++) {
+    const expr = data[i];
+    if (!isExpression(expr) || expr.data.parsedContent) {
+      continue;
+    }
+
+    const parsedContent = parseExpression(expr.data, scope, depGraph);
+    if (!parsedContent.err) {
+      hasChanged = true;
+    }
+    if (hasChanged && i === data.length - 1) {
+      hasChanged = false;
+      i = 0;
+    }
+  }
 
   // for (let i = 0; i < graph.items.length; i++) {
   //   const item = graph.items[i];
@@ -105,7 +123,7 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
       scope,
       nextId: maxId + 1,
       focusedId: -1,
-      data: graph.items,
+      data,
       dependencyGraph: depGraph,
     },
   };
@@ -335,72 +353,6 @@ export function updateScopeSync(
     }
     return false;
   };
-  const parseExpression = (expr: Expression) => {
-    // content that was not parsed due to error
-    const res = ExpressionTransformer.transform(expr, scope);
-
-    if (res.node)
-      if (res.node instanceof FunctionAssignmentNode) {
-        const parsedContent = functionParser.parse(res.node, scope);
-        if (!restrictedVariables.has(parsedContent.name)) {
-          scope[parsedContent.name] = {
-            type: "function",
-            node: parsedContent.node,
-            deps: parsedContent.scopeDeps,
-          };
-
-          addDependencies(
-            parsedContent.name,
-            parsedContent.scopeDeps,
-            depGraph
-          );
-        }
-
-        if (expr.type !== "function") {
-          //@ts-ignore
-          expr.settings = createSettings("function");
-        }
-
-        expr.type = "function";
-        expr.parsedContent = parsedContent;
-      } else if (res.node instanceof AssignmentNode) {
-        const parsedContent = variableParser.parse(res.node, scope);
-        if (!restrictedVariables.has(parsedContent.name)) {
-          scope[parsedContent.name] = {
-            type: "variable",
-            node: parsedContent.node,
-            deps: parsedContent.scopeDeps,
-            value: parsedContent.value,
-          };
-
-          addDependencies(
-            parsedContent.name,
-            parsedContent.scopeDeps,
-            depGraph
-          );
-        }
-
-        if (expr.type !== "variable") {
-          //@ts-ignore
-          delete expr.settings;
-        }
-
-        expr.type = "variable";
-        expr.parsedContent = parsedContent;
-      } else if (res.node instanceof ObjectNode) {
-        const parsedContent = pointParser.parse(res.node, scope);
-
-        if (expr.type !== "point") {
-          //@ts-ignore
-          expr.settings = createSettings("point");
-        }
-
-        expr.type = "point";
-        expr.parsedContent = parsedContent;
-      }
-
-    return res;
-  };
 
   const nonUpdated: Expression[] = [];
   nonScopedExpr.forEach((expr) => {
@@ -447,14 +399,14 @@ export function updateScopeSync(
     } else {
       // content that was not parsed due to error
 
-      const res = parseExpression(expr);
+      const res = parseExpression(expr, scope, depGraph);
       if (res.err) nonUpdated.push(expr);
     }
   });
 
   let hasChanged = false;
   for (let i = 0; i < nonUpdated.length; i++) {
-    const res = parseExpression(nonUpdated[i]);
+    const res = parseExpression(nonUpdated[i], scope, depGraph);
     if (!res.err) {
       nonUpdated.splice(i, 1);
       hasChanged = true;
@@ -467,6 +419,69 @@ export function updateScopeSync(
     }
   }
 }
+
+export const parseExpression = (
+  expr: Expression,
+  scope: Scope,
+  depGraph: SerializedAdjList
+) => {
+  // content that was not parsed due to error
+  const res = ExpressionTransformer.transform(expr, scope);
+
+  if (res.node)
+    if (res.node instanceof FunctionAssignmentNode) {
+      const parsedContent = functionParser.parse(res.node, scope);
+      if (!restrictedVariables.has(parsedContent.name)) {
+        scope[parsedContent.name] = {
+          type: "function",
+          node: parsedContent.node,
+          deps: parsedContent.scopeDeps,
+        };
+
+        addDependencies(parsedContent.name, parsedContent.scopeDeps, depGraph);
+      }
+
+      if (expr.type !== "function") {
+        //@ts-ignore
+        expr.settings = createSettings("function");
+      }
+
+      expr.type = "function";
+      expr.parsedContent = parsedContent;
+    } else if (res.node instanceof AssignmentNode) {
+      const parsedContent = variableParser.parse(res.node, scope);
+      if (!restrictedVariables.has(parsedContent.name)) {
+        scope[parsedContent.name] = {
+          type: "variable",
+          node: parsedContent.node,
+          deps: parsedContent.scopeDeps,
+          value: parsedContent.value,
+        };
+
+        addDependencies(parsedContent.name, parsedContent.scopeDeps, depGraph);
+      }
+
+      if (expr.type !== "variable") {
+        //@ts-ignore
+        delete expr.settings;
+      }
+
+      expr.type = "variable";
+      expr.parsedContent = parsedContent;
+    } else if (res.node instanceof ObjectNode) {
+      const parsedContent = pointParser.parse(res.node, scope);
+
+      if (expr.type !== "point") {
+        //@ts-ignore
+        expr.settings = createSettings("point");
+      }
+
+      expr.type = "point";
+      expr.parsedContent = parsedContent;
+    }
+
+  return res;
+};
 
 export function deleteScopeSync(
   deleted: string,

@@ -108,7 +108,6 @@ const FunctionTextArea = ({
             }
           }}
           onChange={(e) => {
-            console.log("called, outside");
             setInput(e.target.value);
           }}
         ></input>

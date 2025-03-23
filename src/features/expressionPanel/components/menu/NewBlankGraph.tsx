@@ -3,7 +3,6 @@ import { Plus } from "../../../../components/svgs";
 import { useAppDispatch } from "../../../../state/hooks";
 import { createBlankGraph } from "../../../../state/graph/graph";
 import { useGraphContext } from "../../../graph/Graph";
-import { createNewGraph } from "../../../../state/graph/controllers";
 
 const NewBlankGraph = ({ handleClick }: { handleClick: () => void }) => {
   const dispatch = useAppDispatch();
@@ -12,9 +11,7 @@ const NewBlankGraph = ({ handleClick }: { handleClick: () => void }) => {
     <div
       onClick={() => {
         if (!graph) return;
-        const newGraph = createNewGraph();
-        graph.restoreStateSnapshot(newGraph.graphSnapshot);
-        dispatch(createBlankGraph(newGraph));
+        dispatch(createBlankGraph(graph));
         handleClick();
       }}
       role="button"

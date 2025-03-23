@@ -16,6 +16,8 @@ export type GraphSnapshot = {
   image: ReturnType<HTMLCanvasElement["toDataURL"]>;
 };
 
+export type LibGraph = Graph;
+
 export class Graph implements MessageBus {
   readonly events: Partial<Record<keyof EventDataMap, BusEvent>> = {};
   protected commandController: GraphCommandController;
@@ -135,7 +137,7 @@ export class Graph implements MessageBus {
     };
   }
   toDataURL(): string {
-    return this.canvas.toDataURL("PNG");
+    return this.canvas.toDataURL("image/webp", 0.9);
   }
   restoreStateSnapshot(snapshot: Omit<GraphSnapshot, "image">) {
     this.settings.restoreState(snapshot.settings);

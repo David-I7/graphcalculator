@@ -21,7 +21,7 @@ type ResizableInputProps = {
     | "onKeyDown"
     | "type"
   >;
-  onSave?: () => void;
+  onSave?: (inputValue: string) => void;
 };
 
 export const ResizableInput = React.forwardRef<
@@ -64,12 +64,13 @@ export const ResizableInput = React.forwardRef<
       } else {
         input.style.maxWidth = `${width}px`;
       }
-      onSave?.();
+      onSave?.(value);
     };
 
     const handleEnter = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         e.currentTarget.blur();
+        onSave?.(inputValue);
       }
     };
 
@@ -104,7 +105,7 @@ export const ResizableInput = React.forwardRef<
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
-        onKeyDown={onSave ? handleEnter : undefined}
+        onKeyDown={handleEnter}
         value={inputValue}
       />
     );

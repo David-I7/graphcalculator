@@ -24,7 +24,7 @@ import {
 } from "./controllers";
 import { restrictedVariables } from "../../features/graph/data/math";
 import { PREDEFINED_COLORS } from "../../data/css/variables";
-import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
+import { GraphSnapshot, LibGraph } from "../../features/graph/lib/graph/graph";
 
 interface GraphState {
   currentGraph: ClientGraphData;
@@ -51,24 +51,41 @@ const graphSlice = createSlice({
         state.currentGraph = restoreSavedGraph(graph);
       }
     ),
-    saveGraph: create.reducer((state, action: PayloadAction<GraphSnapshot>) => {
-      let graphIdx: number | null = null;
+    saveGraph: create.preparedReducer(
+      (graph: LibGraph) => {
+        const snapshot = graph.getStateSnapshot();
+        return { payload: { ...snapshot, image: graph.toDataURL() } };
+      },
+      (state, action: PayloadAction<GraphSnapshot>) => {
+        let graphIdx: number | null = null;
 
-      for (let i = 0; i < state.savedGraphs.length; i++) {
-        if (state.savedGraphs[i].id === state.currentGraph.id) {
-          graphIdx = i;
+        for (let i = 0; i < state.savedGraphs.length; i++) {
+          if (state.savedGraphs[i].id === state.currentGraph.id) {
+            graphIdx = i;
+          }
+        }
+
+        const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
+
+        console.log(savedGraph);
+        return;
+
+        if (graphIdx === null) {
+          state.savedGraphs.unshift(savedGraph);
+        } else {
+          state.savedGraphs[graphIdx] = savedGraph;
         }
       }
+    ),
+    createBlankGraph: create.preparedReducer(
+      (graph: LibGraph) => {
+        const newGraph = createNewGraph();
+        graph.restoreStateSnapshot(newGraph.graphSnapshot);
 
-      const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
-
-      if (graphIdx === null) {
-        state.savedGraphs.unshift(savedGraph);
-      } else {
-        state.savedGraphs[graphIdx] = savedGraph;
-      }
-    }),
-    createBlankGraph: create.reducer(
+        return {
+          payload: newGraph,
+        };
+      },
       (state, action: PayloadAction<ClientGraphData>) => {
         const nonOverlappingId = action.payload.items.nextId;
         action.payload.items.data[0].id = nonOverlappingId;
@@ -77,6 +94,10 @@ const graphSlice = createSlice({
         state.currentGraph = action.payload;
       }
     ),
+    changeGraphName: create.reducer((state, action: PayloadAction<string>) => {
+      if (state.currentGraph.name !== action.payload)
+        state.currentGraph.name = action.payload;
+    }),
 
     // ITEM CASES
     createItem: create.reducer(
@@ -426,7 +447,7 @@ const graphSlice = createSlice({
 
         if (expr.type !== "variable") {
           //@ts-ignore
-          delete ["settings"];
+          delete expr.settings;
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
@@ -463,6 +484,7 @@ export const {
   restoreGraph,
   saveGraph,
   createBlankGraph,
+  changeGraphName,
 
   // item
   createItem,
