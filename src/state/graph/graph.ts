@@ -71,11 +71,11 @@ const graphSlice = createSlice({
         console.log(savedGraph);
         return;
 
-        if (graphIdx === null) {
-          state.savedGraphs.unshift(savedGraph);
-        } else {
-          state.savedGraphs[graphIdx] = savedGraph;
-        }
+        // if (graphIdx === null) {
+        //   state.savedGraphs.unshift(savedGraph);
+        // } else {
+        //   state.savedGraphs[graphIdx] = savedGraph;
+        // }
       }
     ),
     createBlankGraph: create.preparedReducer(

@@ -22,6 +22,8 @@ import { useAppSelector } from "../../../../state/hooks";
 import { createPortal } from "react-dom";
 import Tooltip from "../../../../components/tooltip/Tooltip";
 import NewBlankGraph from "./NewBlankGraph";
+import { useGetExampleGraphsQuery } from "../../../../state/api/apiSlice";
+import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
 
 type GraphMenuContext = {
   ariaControlsId: string;
@@ -199,6 +201,7 @@ GraphMenu.Toggle = function () {
 GraphMenu.Menu = () => {
   const { ariaControlsId, menuRef, isOpen, rootRef, onClose } =
     useGraphMenuContext();
+  const { data, isLoading, isError } = useGetExampleGraphsQuery();
   const isAuthenticated = useAppSelector(
     (state) => state.globalSlice.isAuthenticated
   );
@@ -228,7 +231,20 @@ GraphMenu.Menu = () => {
         </>
       )}
       <section>
-        <h2>Examples</h2>
+        <div className="section-separator">
+          <h2>Examples</h2>
+        </div>
+        {isLoading && <>Loading...</>}
+        {isError && <>Error</>}
+        {data && (
+          <GraphPreviewList data={data}>
+            {data.map((item) => {
+              return (
+                <PreviewListItem key={item.id} body={"example"} item={item} />
+              );
+            })}
+          </GraphPreviewList>
+        )}
       </section>
     </div>,
     rootRef.current || document.getElementById("root")!
