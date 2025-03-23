@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
 import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
@@ -67,6 +67,7 @@ const graphSlice = createSlice({
 
         const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
 
+        console.log(current(state.currentGraph));
         console.log(savedGraph);
         return;
 
