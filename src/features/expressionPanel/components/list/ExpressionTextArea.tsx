@@ -89,6 +89,12 @@ const FunctionTextArea = ({
     }
   }, [deferredInput]);
 
+  useEffect(() => {
+    if (item.data.content !== input) {
+      setInput(item.data.content);
+    }
+  }, [item.data]);
+
   return (
     <div
       style={{
@@ -154,6 +160,12 @@ const NoteTextArea = ({
       );
     }
   }, [deferredInput]);
+
+  useEffect(() => {
+    if (item.data.content !== input) {
+      setInput(item.data.content);
+    }
+  }, [item.data]);
 
   return (
     <ResizableTextarea

@@ -17,6 +17,8 @@ function useGraphFunction({
   data,
   focused,
   scope,
+  graphId,
+  prevGraphId,
 }: useGraphExprProps<"function">) {
   const graph = useGraphContext();
   const node = useMemo(() => {
@@ -36,7 +38,6 @@ function useGraphFunction({
       fnData = FunctionCommandStateFactory.createState(node, scope);
     } catch (err) {
       // synchronization err
-      // console.log(err);
       return;
     }
 
@@ -68,6 +69,7 @@ function useGraphFunction({
 
   useEffect(() => {
     if (!command.current) return;
+    if (graphId !== prevGraphId) return;
     if (command.current.commandState.status === "idle" && focused) {
       command.current.setStatus("focused");
     } else if (command.current.commandState.status === "focused" && !focused) {
@@ -87,8 +89,10 @@ export const GraphFunction = ({
   id,
   focused,
   scope,
+  graphId,
+  prevGraphId,
 }: useGraphExprProps<"function">) => {
-  useGraphFunction({ id, focused, data, scope });
+  useGraphFunction({ id, focused, data, scope, graphId, prevGraphId });
 
   return null;
 };

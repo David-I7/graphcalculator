@@ -28,14 +28,10 @@ import { GraphSnapshot, LibGraph } from "../../features/graph/lib/graph/graph";
 
 interface GraphState {
   currentGraph: ClientGraphData;
-  savedGraphs: GraphData[];
-  exampleGraphs: GraphData[];
 }
 
 const initialState: GraphState = {
   currentGraph: createNewGraph(),
-  savedGraphs: [],
-  exampleGraphs: [],
 };
 
 const graphSlice = createSlice({
@@ -43,14 +39,9 @@ const graphSlice = createSlice({
   initialState,
   reducers: (create) => ({
     // GRAPH CASES
-    restoreGraph: create.reducer(
-      (state, action: PayloadAction<{ id: string; idx: number }>) => {
-        const graph = state.savedGraphs[action.payload.idx];
-        if (graph.id !== action.payload.id) return;
-
-        state.currentGraph = restoreSavedGraph(graph);
-      }
-    ),
+    restoreGraph: create.reducer((state, action: PayloadAction<GraphData>) => {
+      state.currentGraph = restoreSavedGraph(action.payload);
+    }),
     saveGraph: create.preparedReducer(
       (graph: LibGraph) => {
         const snapshot = graph.getStateSnapshot();
@@ -59,11 +50,11 @@ const graphSlice = createSlice({
       (state, action: PayloadAction<GraphSnapshot>) => {
         let graphIdx: number | null = null;
 
-        for (let i = 0; i < state.savedGraphs.length; i++) {
-          if (state.savedGraphs[i].id === state.currentGraph.id) {
-            graphIdx = i;
-          }
-        }
+        // for (let i = 0; i < state.savedGraphs.length; i++) {
+        //   if (state.savedGraphs[i].id === state.currentGraph.id) {
+        //     graphIdx = i;
+        //   }
+        // }
 
         const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
 
@@ -183,7 +174,6 @@ const graphSlice = createSlice({
       if (state.currentGraph.items.focusedId === action.payload) {
         return;
       }
-
       state.currentGraph.items.focusedId = action.payload;
     }),
     resetFocusedItem: create.reducer((state, action: PayloadAction<number>) => {

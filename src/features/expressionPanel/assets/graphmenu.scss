@@ -80,7 +80,7 @@
 .preview-list {
   &-item {
     display: grid;
-    grid-template-columns: 4rem 1fr;
+    grid-template-columns: 3rem 1fr;
     gap: 0.5rem;
     padding: 0.5rem;
     align-items: center;
@@ -97,14 +97,11 @@
     }
 
     &-left {
-      width: 4rem;
-      height: 4rem;
       background-color: white;
       border-radius: base.$br-200;
       & img {
         aspect-ratio: 1 / 1;
         width: 100%;
-        height: 100%;
       }
     }
 
