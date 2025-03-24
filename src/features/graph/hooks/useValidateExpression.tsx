@@ -23,17 +23,23 @@ const useValidateExpression = ({
   item,
   scope,
   dispatch,
+  graphId,
+  prevGraphId,
 }: {
   idx: number;
   item: Item;
   scope: Scope;
   dispatch: ReturnType<typeof useAppDispatch>;
+  graphId: string;
+  prevGraphId: string;
 }) => {
   if (!isExpression(item)) return null;
 
   const [error, setError] = useState<ApplicationError | null>(null);
 
   useEffect(() => {
+    if (prevGraphId !== graphId) return;
+
     if (!item.data.content.length) {
       if (error) {
         setError(null);

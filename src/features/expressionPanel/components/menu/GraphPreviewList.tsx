@@ -1,15 +1,48 @@
 import React, { ReactNode } from "react";
 import { GraphData } from "../../../../state/graph/types";
+import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
+import { restoreSavedGraph } from "../../../../state/graph/controllers";
+import { restoreGraph } from "../../../../state/graph/graph";
+import { current } from "@reduxjs/toolkit";
+import { useGraphContext } from "../../../graph/Graph";
 
 const GraphPreviewList = ({
   data,
   children,
+  toggleMenu,
 }: {
   data: GraphData[];
   children: ReactNode;
+  toggleMenu: () => void;
 }) => {
+  const dispatch = useAppDispatch();
+  const libGraph = useGraphContext();
+
   return (
-    <ul onClick={(e) => {}} className="preview-list">
+    <ul
+      onClick={(e) => {
+        if (!libGraph) return;
+
+        let node: HTMLElement | null | undefined = e.target as HTMLElement;
+
+        while (node?.tagName !== "LI" && node !== e.currentTarget) {
+          node = node?.parentElement;
+        }
+
+        if (node.tagName === "LI") {
+          const id = node.getAttribute("graph-id")!;
+          const idx = Number(node.getAttribute("graph-idx"));
+          if (isNaN(idx)) return;
+          const graph = data[idx];
+          if (graph.id !== id) return;
+
+          libGraph.restoreStateSnapshot(graph.graphSnapshot);
+          dispatch(restoreGraph(graph));
+          toggleMenu();
+        }
+      }}
+      className="preview-list"
+    >
       {children}
     </ul>
   );
@@ -18,12 +51,14 @@ const GraphPreviewList = ({
 export const PreviewListItem = ({
   item,
   body,
+  idx,
 }: {
   item: GraphData;
+  idx: number;
   body: string;
 }) => {
   return (
-    <li className="preview-list-item">
+    <li graph-id={item.id} graph-idx={idx} className="preview-list-item">
       <div className="preview-list-item-left">
         <img src={item.graphSnapshot.image} loading="lazy" />
       </div>

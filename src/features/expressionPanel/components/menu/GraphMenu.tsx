@@ -237,10 +237,15 @@ GraphMenu.Menu = () => {
         {isLoading && <>Loading...</>}
         {isError && <>Error</>}
         {data && (
-          <GraphPreviewList data={data}>
-            {data.map((item) => {
+          <GraphPreviewList toggleMenu={onClose} data={data}>
+            {data.map((item, idx) => {
               return (
-                <PreviewListItem key={item.id} body={"example"} item={item} />
+                <PreviewListItem
+                  idx={idx}
+                  key={item.id}
+                  body={"example"}
+                  item={item}
+                />
               );
             })}
           </GraphPreviewList>

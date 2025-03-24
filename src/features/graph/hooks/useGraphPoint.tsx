@@ -10,6 +10,8 @@ export function useGraphPoint({
   data,
   scope,
   focused,
+  graphId,
+  prevGraphId,
 }: useGraphExprProps<"point">) {
   const graph = useGraphContext();
   const node = useMemo(() => {
@@ -48,6 +50,7 @@ export function useGraphPoint({
 
   useEffect(() => {
     if (!command.current) return;
+    if (graphId !== prevGraphId) return;
     if (command.current.commandState.status === "idle" && focused) {
       command.current.setStatus("focused");
     } else if (command.current.commandState.status === "focused" && !focused) {
@@ -69,8 +72,10 @@ export const GraphPoint = ({
   id,
   focused,
   scope,
+  graphId,
+  prevGraphId,
 }: useGraphExprProps<"point">) => {
-  useGraphPoint({ id, focused, data, scope });
+  useGraphPoint({ id, focused, data, scope, graphId, prevGraphId });
 
   return null;
 };

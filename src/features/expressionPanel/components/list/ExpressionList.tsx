@@ -19,6 +19,7 @@ import ExpressionTextArea from "./ExpressionTextArea";
 import { isExpression, Item, Scope } from "../../../../state/graph/types";
 import useValidateExpression from "../../../graph/hooks/useValidateExpression";
 import { GraphExpression } from "../../../graph/components/GraphExpression";
+import { usePrevious } from "../../../../hooks/reactutils";
 
 const ExpressionList = () => {
   return (
@@ -36,6 +37,8 @@ function ExpressionListRenderer() {
     focusedId,
     scope,
   } = useAppSelector((state) => state.graphSlice.currentGraph.items);
+  const graphId = useAppSelector((state) => state.graphSlice.currentGraph.id);
+  const prevGraphId = usePrevious(graphId, graphId);
   const dispatch = useAppDispatch();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const draggedMetadata = useRef<{ id: number; startPos: number }>({
@@ -115,6 +118,8 @@ function ExpressionListRenderer() {
         items.map((item, index) => {
           return (
             <ExpressionListItem
+              graphId={graphId}
+              prevGraphId={prevGraphId!}
               scope={scope}
               focused={focusedId === item.id}
               key={item.id}
@@ -149,6 +154,8 @@ type ExpressionListItemProps = {
   dispatch: ReturnType<typeof useAppDispatch>;
   animationOptions: KeyframeAnimationOptions;
   scope: Scope;
+  graphId: string;
+  prevGraphId: string;
 };
 
 const ExpressionListItem = React.memo(
@@ -159,8 +166,17 @@ const ExpressionListItem = React.memo(
     animationOptions,
     focused,
     scope,
+    graphId,
+    prevGraphId,
   }: ExpressionListItemProps) => {
-    const error = useValidateExpression({ idx, item, scope, dispatch });
+    const error = useValidateExpression({
+      idx,
+      item,
+      scope,
+      dispatch,
+      graphId,
+      prevGraphId,
+    });
 
     return (
       <li
@@ -197,7 +213,13 @@ const ExpressionListItem = React.memo(
         </ButtonTarget>
 
         {!error && (
-          <GraphExpression item={item} scope={scope} focused={focused} />
+          <GraphExpression
+            graphId={graphId}
+            prevGraphId={prevGraphId}
+            item={item}
+            scope={scope}
+            focused={focused}
+          />
         )}
       </li>
     );
@@ -207,7 +229,8 @@ const ExpressionListItem = React.memo(
       return (
         prev.idx === cur.idx &&
         prev.focused === cur.focused &&
-        prev.item === cur.item
+        prev.item === cur.item &&
+        prev.graphId === cur.graphId
       );
     }
 
@@ -215,7 +238,8 @@ const ExpressionListItem = React.memo(
       prev.idx === cur.idx &&
       prev.focused === cur.focused &&
       prev.item === cur.item &&
-      prev.scope === cur.scope
+      prev.scope === cur.scope &&
+      prev.graphId === cur.graphId
     );
   }
 );

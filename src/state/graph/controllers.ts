@@ -85,6 +85,7 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
     if (!isExpression(expr) || expr.data.parsedContent) {
       continue;
     }
+    maxId = Math.max(maxId, expr.id);
 
     const parsedContent = parseExpression(expr.data, scope, depGraph);
     if (!parsedContent.err) {
@@ -92,7 +93,7 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
     }
     if (hasChanged && i === data.length - 1) {
       hasChanged = false;
-      i = 0;
+      i = -1;
     }
   }
 
@@ -116,6 +117,17 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
   //     }
   //   }
   // }
+
+  console.log({
+    ...graph,
+    items: {
+      scope,
+      nextId: maxId + 1,
+      focusedId: -1,
+      data,
+      dependencyGraph: depGraph,
+    },
+  });
 
   return {
     ...graph,

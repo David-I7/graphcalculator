@@ -39,6 +39,12 @@ export const ResizableInput = React.forwardRef<
   ) => {
     const [inputValue, setInputVal] = useState<string>(initialValue);
 
+    useEffect(() => {
+      if (initialValue !== inputValue) {
+        setInputVal(initialValue);
+      }
+    }, [initialValue]);
+
     const handleChange = (e: ChangeEvent) => {
       setInputVal((e.target as HTMLInputElement).value);
     };
