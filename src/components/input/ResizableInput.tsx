@@ -76,6 +76,11 @@ export const ResizableInput = React.forwardRef<
     const handleEnter = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         e.currentTarget.blur();
+        if (inputValue === "") {
+          setInputVal(defaultValue);
+          onSave?.(defaultValue);
+          return;
+        }
         onSave?.(inputValue);
       }
     };

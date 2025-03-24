@@ -9,6 +9,9 @@ const apiSlice = createApi({
       query: () => "graphs",
       transformResponse: (response: GraphData[]) => response,
     }),
+    getSavedGraphs: build.query<GraphData[], void>({
+      query: () => "saved",
+    }),
   }),
 });
 
