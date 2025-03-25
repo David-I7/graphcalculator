@@ -13,5 +13,7 @@ export default defineConfig({
       localsConvention: "camelCaseOnly",
     },
   },
-  root: "client",
+  resolve: {
+    preserveSymlinks: true,
+  },
 });
