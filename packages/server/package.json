@@ -2,8 +2,11 @@
   "name": "@graphcalculator/server",
   "version": "1.0.0",
   "main": "dist/api/v1/server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"nodemon --watch dist/api/v1 dist/api/v1/server.js\"  \"tsc -p tsconfig.server.json -w\"",
+    "build": "tsc -p ./tsconfig.server.json",
+    "clean": "rm -rf dist"
   },
   "author": "Iosub David",
   "license": "ISC",
@@ -13,6 +16,8 @@
     "uuid": "*"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1"
+    "@types/express": "^5.0.1",
+    "nodemon": "^3.1.9",
+    "concurrently": "*"
   }
 }
