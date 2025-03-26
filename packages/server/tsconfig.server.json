@@ -1,6 +1,13 @@
 {
   "compilerOptions": {
-    "rootDir": "server/src"
+    "rootDir": "src",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "module": "ESNext",
+    "skipLibCheck": true
   },
-  "include": ["server/src/**/*.ts"]
+  "watchOptions": {
+    "excludeDirectories": ["dist"]
+  },
+  "include": ["src/**/*"]
 }
