@@ -1,28 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { clientDirname } from "../constants.js";
 
 export default function serveStaticGZIP(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-  let extension: string = "";
-
-  let i = req.url.length - 1;
-  while (i >= 0 && (req.url[i] !== "." || req.url[i] !== "/")) {
-    i--;
-  }
-
-  if (i >= 0 && req.url[i] === ".") {
-    extension = req.url.substring(i);
-  }
-
-  console.log(i, extension);
+  let extension: string = path.extname(req.url);
 
   if (extension === ".js" || extension === ".css") {
-    req.url = req.url.concat(".gz");
+    req.originalUrl = req.originalUrl.concat(".gz");
     res.setHeader("cache-control", "public, max-age=60000, must-revalidate");
     res.setHeader("content-encoding", "gzip");
 
@@ -31,16 +20,11 @@ export default function serveStaticGZIP(
       `text/${extension == ".js" ? "javascript" : "css"}`
     );
 
-    console.log(
-      path.join(
-        fileURLToPath(import.meta.url),
-        "../../../../../client/dist",
-        req.url
-      )
-    );
-
-    // res.sendFile(path.join(fileURLToPath(import.meta.url),"../../../../../client/dist",req.url))
-    // return;
+    const pathname = path.join(clientDirname, req.originalUrl);
+    if (fs.existsSync(pathname)) {
+      res.sendFile(pathname);
+      return;
+    }
   }
 
   next();

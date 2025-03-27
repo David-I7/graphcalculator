@@ -6,11 +6,11 @@ const apiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8080/" }),
   endpoints: (build) => ({
     getExampleGraphs: build.query<GraphData[], void>({
-      query: () => "graphs",
-      transformResponse: (response: GraphData[]) => response,
+      query: () => "graphs/examples",
+      transformResponse: (response: { graphs: GraphData[] }) => response.graphs,
     }),
     getSavedGraphs: build.query<GraphData[], void>({
-      query: () => "saved",
+      query: () => "graphs/saved",
     }),
   }),
 });
