@@ -5,7 +5,8 @@
     "outDir": "dist",
     "module": "ESNext",
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "moduleResolution": "nodenext"
   },
   "watchOptions": {
     "excludeDirectories": ["dist"]
