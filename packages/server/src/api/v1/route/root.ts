@@ -3,17 +3,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Zlib } from "zlib";
 import fs from "node:fs";
+import { clientDirname } from "../constants.js";
 
 const root = Router();
 
 root.get("/", (req, res) => {
-  console.log("hello");
-  res.sendFile(
-    path.join(
-      fileURLToPath(import.meta.url),
-      "../../../../../../client/dist/index.html"
-    )
-  );
+  res.sendFile(path.join(clientDirname, "index.html"));
 });
 
 export default root;
