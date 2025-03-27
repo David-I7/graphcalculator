@@ -12,8 +12,10 @@ app.use((req, res, next) => {
 
 app.use("/assets", serveStaticGZIP);
 
-import root from "./route/root.js";
+import root from "./controller/rootController.js";
 app.get("/", root);
+import graphs from "./route/graphs.js";
+app.use("/graphs", graphs);
 
 app.all("*", (req, res) => {
   res.sendFile(path.join(serverDirname, "/view/notFound.html"));

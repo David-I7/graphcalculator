@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b tsconfig.client.json && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "zip": "gzip ./dist/assets/*",
+    "unzip": "gzip -d ./dist/assets/*"
   },
   "author": "Iosub David",
   "license": "ISC",
