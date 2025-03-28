@@ -4,15 +4,17 @@
   "main": "dist/api/v1/server.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"nodemon --watch dist/api/v1 dist/api/v1/server.js\"  \"tsc -p tsconfig.server.json -w\"",
-    "build": "tsc -p ./tsconfig.server.json",
+    "dev": "concurrently \"nodemon --watch dist/api/v1 dist/api/v1/server.js\"  \"tsc -w\"",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "author": "Iosub David",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "uuid": "*"
   },

@@ -17,10 +17,10 @@ export const errorController = (
             code: err.code,
           },
         });
-
         return;
     }
   }
 
+  console.log(err);
   res.sendStatus(500);
 };
