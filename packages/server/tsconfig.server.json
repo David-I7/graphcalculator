@@ -3,7 +3,7 @@
     "rootDir": "src",
     "esModuleInterop": true,
     "outDir": "dist",
-    "module": "ESNext",
+    "module": "NodeNext",
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "moduleResolution": "nodenext"

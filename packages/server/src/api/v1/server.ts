@@ -1,8 +1,6 @@
 import express from "express";
 import path from "node:path";
-import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import { serverDirname } from "./constants.js";
-import cors from "cors";
 
 const app = express();
 
@@ -11,13 +9,17 @@ app.use((req, res, next) => {
   next();
 });
 
+import cors from "cors";
+import { corsOptions } from "./config/cors.js";
 app.use(cors(corsOptions));
+
+import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 app.use("/assets", serveStaticGZIP);
 
 import root from "./controller/rootController.js";
 app.get("/", root);
+
 import graphs from "./route/graphs.js";
-import { corsOptions } from "./config/cors.js";
 app.use("/graphs", graphs);
 
 app.all("*", (req, res) => {
