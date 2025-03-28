@@ -6,12 +6,15 @@ const app = express();
 
 app.use((req, res, next) => {
   console.log(req.method, req.url);
+  console.log(req.headers.cookie);
   next();
 });
 
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 app.use(cors(corsOptions));
+import cookieParser from "cookie-parser";
+app.use(cookieParser());
 
 import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 app.use("/assets", serveStaticGZIP);

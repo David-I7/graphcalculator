@@ -21,5 +21,6 @@ export const errorController = (
     }
   }
 
+  console.log(err);
   res.sendStatus(500);
 };
