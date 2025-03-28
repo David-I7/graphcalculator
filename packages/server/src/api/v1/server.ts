@@ -1,3 +1,4 @@
+import "./config/dotenvConfig.js";
 import express from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
@@ -6,6 +7,8 @@ import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import router from "./route/index.js";
 
 const app = express();
+
+console.log(process.env);
 
 app.use((req, res, next) => {
   console.log(req.method, req.url);
