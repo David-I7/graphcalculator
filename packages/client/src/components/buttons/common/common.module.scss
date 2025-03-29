@@ -12,9 +12,24 @@
     filter: brightness(85%);
   }
 
+  &:focus {
+    outline: 2px solid white;
+  }
+
   &:disabled {
     background-color: base.$on-surface-body;
     color: base.$on-surface-body-low;
     cursor: default;
+  }
+}
+
+.outlined-button {
+  @extend .filled-button;
+  background-color: transparent;
+  border: 1px solid base.$on-primary;
+
+  &:focus {
+    outline: 2px solid base.$primary;
+    border: none;
   }
 }

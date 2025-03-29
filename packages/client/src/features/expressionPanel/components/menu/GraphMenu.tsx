@@ -22,8 +22,15 @@ import { useAppSelector } from "../../../../state/hooks";
 import { createPortal } from "react-dom";
 import Tooltip from "../../../../components/tooltip/Tooltip";
 import NewBlankGraph from "./NewBlankGraph";
-import { useGetExampleGraphsQuery } from "../../../../state/api/apiSlice";
+import {
+  useGetExampleGraphsQuery,
+  useGetUserQuery,
+} from "../../../../state/api/apiSlice";
 import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
+import FilledButton from "../../../../components/buttons/common/FilledButton";
+import OutlinedButton from "../../../../components/buttons/common/OutlineButton";
+import GraphPreviews from "./GraphPreviews";
+import GraphMenuHeader from "./GraphMenuHeader";
 
 type GraphMenuContext = {
   ariaControlsId: string;
@@ -201,10 +208,9 @@ GraphMenu.Toggle = function () {
 GraphMenu.Menu = () => {
   const { ariaControlsId, menuRef, isOpen, rootRef, onClose } =
     useGraphMenuContext();
-  const { data, isLoading, isError } = useGetExampleGraphsQuery();
-  const isAuthenticated = useAppSelector(
-    (state) => state.globalSlice.isAuthenticated
-  );
+  const { data: user, isError, isLoading } = useGetUserQuery();
+
+  console.log(user, isError, isLoading);
 
   return createPortal(
     <div
@@ -214,43 +220,9 @@ GraphMenu.Menu = () => {
       className="graph-menu"
       role="menu"
     >
-      {!isAuthenticated && (
-        <header>Login to save your beautiful graphs!</header>
-      )}
-      {isAuthenticated && <header>Logout controls; Search controls</header>}
-
+      <GraphMenuHeader isAuthenticated={user !== undefined} />
       <NewBlankGraph handleClick={onClose} />
-      {isAuthenticated && (
-        <>
-          <section>
-            <h2>Current Graph</h2>
-          </section>
-          <section>
-            <h2>Saved Graphs</h2>
-          </section>
-        </>
-      )}
-      <section>
-        <div className="section-separator">
-          <h2>Examples</h2>
-        </div>
-        {isLoading && <>Loading...</>}
-        {isError && <>Error</>}
-        {data && (
-          <GraphPreviewList toggleMenu={onClose} data={data}>
-            {data.map((item, idx) => {
-              return (
-                <PreviewListItem
-                  idx={idx}
-                  key={item.id}
-                  body={"example"}
-                  item={item}
-                />
-              );
-            })}
-          </GraphPreviewList>
-        )}
-      </section>
+      <GraphPreviews isAuthenticated={user !== undefined} onClose={onClose} />
     </div>,
     rootRef.current || document.getElementById("root")!
   );
