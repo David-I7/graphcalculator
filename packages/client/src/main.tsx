@@ -10,14 +10,14 @@ import { ErrorFallback } from "./components/error/ErrorFallback";
 import { GraphContextProvider } from "./features/graph/Graph";
 
 createRoot(document.getElementById("root")!).render(
-  // <StrictMode>
-  <ErrorBoundary onReset={() => {}} FallbackComponent={ErrorFallback}>
-    <GraphContextProvider>
-      <Provider store={store}>
-        <Globalstate />
-        <Home />
-      </Provider>
-    </GraphContextProvider>
-  </ErrorBoundary>
-  // </StrictMode>
+  <StrictMode>
+    <ErrorBoundary onReset={() => {}} FallbackComponent={ErrorFallback}>
+      <GraphContextProvider>
+        <Provider store={store}>
+          <Globalstate />
+          <Home />
+        </Provider>
+      </GraphContextProvider>
+    </ErrorBoundary>
+  </StrictMode>
 );

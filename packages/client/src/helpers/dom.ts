@@ -30,3 +30,11 @@ export function getParentElement<T extends HTMLElement>(
 export function isTouchEnabled() {
   return "ontouchstart" in window || navigator.maxTouchPoints > 0;
 }
+
+export function getCookie(name: string) {
+  const regex = new RegExp(`(?:^| )${name}=([^;]*)`);
+  const match = document.cookie.match(regex);
+  if (match) {
+    return match[2];
+  }
+}
