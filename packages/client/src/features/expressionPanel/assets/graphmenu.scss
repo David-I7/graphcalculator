@@ -21,21 +21,31 @@
     color: base.$inverse-on-surface-heading;
     font-weight: base.$fw-medium;
   }
+}
 
-  &-unauthenticated {
-    @extend .font-body-sm;
-    padding: 1rem 0.5rem;
-    background-color: base.$invere-surface-high;
-    text-align: center;
-    color: base.$inverse-on-surface-heading;
+.auth-dialog {
+  @extend .font-body-sm;
+  padding: 1rem 0.5rem;
+  background-color: base.$invere-surface-high;
+  text-align: center;
+  color: base.$inverse-on-surface-heading;
+  margin-bottom: 0.5rem;
+
+  > div:nth-child(1) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
+  }
 
-    > div:nth-child(1) {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
+  &-content {
+    @extend .font-body-m;
+    padding: 0 1rem;
+    text-align: left;
+
+    h2 {
+      color: base.$on-surface-heading;
     }
   }
 }

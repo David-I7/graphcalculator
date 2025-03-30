@@ -1,3 +1,5 @@
+import { MouseEvent } from "react";
+
 export function calculateTextWidth(text: string, className: string): number {
   const div = document.createElement("div");
   div.className = className;
@@ -37,4 +39,14 @@ export function getCookie(name: string) {
   if (match) {
     return match[2];
   }
+}
+
+export function isClickOutside(element: HTMLElement, e: MouseEvent) {
+  const contentRect = element.getBoundingClientRect();
+  return (
+    e.clientX < contentRect.left ||
+    e.clientX > contentRect.right ||
+    e.clientY < contentRect.top ||
+    e.clientY > contentRect.bottom
+  );
 }

@@ -4,7 +4,7 @@ const GraphMenuHeader = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   return (
     <>
       {!isAuthenticated && (
-        <header className="graph-menu-unauthenticated">
+        <header>
           <AuthDialog />
         </header>
       )}
