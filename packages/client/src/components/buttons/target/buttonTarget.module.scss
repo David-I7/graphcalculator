@@ -9,4 +9,7 @@
   &:hover {
     cursor: pointer;
   }
+  &:focus {
+    outline: 2px solid white;
+  }
 }

@@ -30,7 +30,7 @@
     color: base.$inverse-on-surface-heading;
     margin-bottom: 0.5rem;
 
-    div {
+    > div:nth-child(1) {
       display: flex;
       justify-content: center;
       align-items: center;
