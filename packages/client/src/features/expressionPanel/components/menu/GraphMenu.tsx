@@ -22,13 +22,7 @@ import { useAppSelector } from "../../../../state/hooks";
 import { createPortal } from "react-dom";
 import Tooltip from "../../../../components/tooltip/Tooltip";
 import NewBlankGraph from "./NewBlankGraph";
-import {
-  useGetExampleGraphsQuery,
-  useGetUserQuery,
-} from "../../../../state/api/apiSlice";
-import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
-import FilledButton from "../../../../components/buttons/common/FilledButton";
-import OutlinedButton from "../../../../components/buttons/common/OutlineButton";
+import { useGetUserQuery } from "../../../../state/api/apiSlice";
 import GraphPreviews from "./GraphPreviews";
 import GraphMenuHeader from "./GraphMenuHeader";
 

@@ -1,18 +1,11 @@
-import React from "react";
-import OutlinedButton from "../../../../components/buttons/common/OutlineButton";
-import FilledButton from "../../../../components/buttons/common/FilledButton";
+import AuthDialog from "./AuthDialog";
 
 const GraphMenuHeader = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   return (
     <>
       {!isAuthenticated && (
         <header className="graph-menu-unauthenticated">
-          <div>
-            <OutlinedButton>Log in</OutlinedButton>
-            or
-            <FilledButton>Sign up</FilledButton>
-          </div>
-          to save your graphs!
+          <AuthDialog />
         </header>
       )}
       {isAuthenticated && (
