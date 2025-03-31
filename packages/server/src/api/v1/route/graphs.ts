@@ -1,9 +1,9 @@
 import { Router } from "express";
 import graphController from "../controller/graphController.js";
 
-const graphs = Router();
+const graphRouter = Router();
 
-graphs.get("/examples", graphController.handleExampleGraphs);
-graphs.route("/saved").get(graphController.handleGetSavedGraphs);
+graphRouter.get("/examples", graphController.handleExampleGraphs);
+graphRouter.route("/saved").get(graphController.handleGetSavedGraphs);
 
-export default graphs;
+export default graphRouter;

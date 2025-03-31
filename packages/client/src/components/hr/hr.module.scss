@@ -4,3 +4,16 @@
   color: base.$border-lowest;
   border: 1px solid base.$border-lowest;
 }
+
+.or-separator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  div {
+    flex: 1;
+    height: 0.5px;
+    background-color: base.$border-lowest;
+    border-radius: base.$br-100;
+  }
+}

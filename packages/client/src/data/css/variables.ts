@@ -4,6 +4,7 @@ export const CSS_VARIABLES = {
   secondary: "#4d4d4d",
   onPrimary: "#f0f0f0",
   onSecondary: "#f0f0f0",
+  error: "#c74440",
 
   // Inverse (contrasting effects)
   inverseSurface: "black",

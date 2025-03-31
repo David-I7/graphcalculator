@@ -22,7 +22,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     name: "sid",
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET!,
     cookie: {
       sameSite: "strict",
       secure: process.env.NODE_ENV !== "DEV",
@@ -31,14 +31,7 @@ app.use(
   })
 );
 app.use(express.json());
-
-const users = [
-  {
-    name: "james",
-    password: "xdxd",
-    id: 1,
-  },
-];
+// app.use(express.urlencoded({ extended: false }));
 
 declare module "express-session" {
   interface SessionData {
@@ -81,15 +74,6 @@ declare module "express-session" {
 //     });
 //   }
 // });
-
-app.get("/api/auth/status", (req, res) => {
-  if (req.session.user) {
-    res.status(200).json(req.session.user);
-    return;
-  }
-
-  res.sendStatus(401);
-});
 
 app.use(router);
 

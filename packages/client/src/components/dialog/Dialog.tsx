@@ -9,6 +9,7 @@ import React, {
 import styles from "./dialog.module.scss";
 import { Close } from "../svgs";
 import ButtonTarget from "../buttons/target/ButtonTarget";
+import { isClickOutside } from "../../helpers/dom";
 
 type DialogProps = DialogHTMLAttributes<HTMLDialogElement> & {
   children: ReactNode;
@@ -23,7 +24,16 @@ const Dialog = ({ children, ref, ...dialogAttr }: DialogProps) => {
   }, [dialogAttr.className]);
 
   return (
-    <dialog ref={ref} {...dialogAttr} className={mergedClassname}>
+    <dialog
+      onClick={(e) => {
+        if (isClickOutside(e.currentTarget, e)) {
+          ref.current?.close();
+        }
+      }}
+      ref={ref}
+      {...dialogAttr}
+      className={mergedClassname}
+    >
       {children}
       <CloseDialog ref={ref} />
     </dialog>
