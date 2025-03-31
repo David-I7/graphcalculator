@@ -1,5 +1,6 @@
 import { CorsOptions } from "cors";
-import { ManagedErrorFactory } from "../services/ErrorFactory.js";
+import { ManagedErrorFactory } from "../services/ErrorFactoryService.js";
+import { ERROR_MESSAGES } from "../constants.js";
 
 const allowedOrigins: Set<string> = new Set<string>([
   "http://localhost",
@@ -14,7 +15,13 @@ export const corsOptions: CorsOptions = {
     const strippedPort = portIdx !== -1 ? origin.substring(0, portIdx) : origin;
     if (allowedOrigins.has(strippedPort)) callback(null, true);
     else {
-      callback(ManagedErrorFactory.makeError("cors"), false);
+      callback(
+        ManagedErrorFactory.makeError(
+          "cors",
+          ERROR_MESSAGES.cors.invalidOrigin
+        ),
+        false
+      );
     }
   },
   credentials: true,

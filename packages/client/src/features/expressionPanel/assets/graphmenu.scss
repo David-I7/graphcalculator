@@ -43,9 +43,21 @@
     @extend .font-body-m;
     padding: 0 1rem;
     text-align: left;
+    height: 100%;
+    overflow-y: auto;
 
     h2 {
       color: base.$on-surface-heading;
+      font-weight: base.$fw-medium;
+      margin-block: 1.5rem;
+      font-size: 1.75rem;
+    }
+
+    label {
+      @extend .font-body-sm;
+      color: base.$on-surface-body-low;
+      display: block;
+      margin-bottom: 0.5rem;
     }
   }
 }
