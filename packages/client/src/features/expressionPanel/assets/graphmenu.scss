@@ -41,7 +41,6 @@
 
   &-content {
     @extend .font-body-m;
-    padding: 0 1rem;
     text-align: left;
     height: 100%;
     overflow-y: auto;
@@ -49,8 +48,7 @@
     h2 {
       color: base.$on-surface-heading;
       font-weight: base.$fw-medium;
-      margin-block: 1.5rem;
-      font-size: 1.75rem;
+      font-size: 1.5rem;
     }
 
     label {
@@ -58,6 +56,69 @@
       color: base.$on-surface-body-low;
       display: block;
       margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.email-form {
+  width: 25rem;
+  padding-bottom: 1rem;
+
+  & > * {
+    padding: 0 1rem;
+  }
+
+  &-header {
+    margin-block: 1rem;
+    padding: 0 1rem;
+  }
+
+  & form {
+  }
+}
+
+.auth-form {
+  width: 25rem;
+  padding-bottom: 1rem;
+
+  &-header {
+    margin-block: 1rem;
+    padding-left: 0.25rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  & form {
+    padding: 0 1rem;
+  }
+}
+
+.register-form {
+  width: 25rem;
+  padding-bottom: 1rem;
+
+  &-header {
+    margin-block: 1rem;
+    padding-left: 0.25rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  & form {
+    padding: 0 1rem;
+
+    & > div:nth-child(1) {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    & button {
+      margin-left: auto;
+      margin-top: 2rem;
     }
   }
 }

@@ -1,4 +1,4 @@
-import AuthDialog from "./AuthDialog";
+import AuthDialog from "./auth/AuthDialog";
 
 const GraphMenuHeader = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   return (

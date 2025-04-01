@@ -7,32 +7,35 @@ type FetchState<T> = {
   error: Error | null;
 };
 
-export function useFetch<T>(cb: () => Promise<T>) {
-  const [reqState, setReqState] = useState<FetchState<T>>({
+type Trigger = () => void;
+
+export function useLazyFetch<Data>(
+  cb: () => Promise<Data>
+): [Trigger, FetchState<Data>] {
+  const [reqState, setReqState] = useState<FetchState<Data>>({
     data: null,
-    isLoading: true,
+    isLoading: false,
     isError: false,
     error: null,
   });
+  const [isActivated, setIsActivated] = useState<boolean>(false);
 
-  let dataPromise!: Promise<T>;
-  try {
-    dataPromise = cb();
-  } catch (err) {
+  const trigger: Trigger = () => {
+    setIsActivated(true);
     setReqState({
-      data: null,
-      isLoading: false,
-      isError: true,
-      error: err as Error,
+      data: reqState.data,
+      isLoading: true,
+      isError: false,
+      error: null,
     });
-  }
+  };
 
   useEffect(() => {
-    if (reqState.isError) return;
+    if (!isActivated) return;
 
-    const handleResponse = async () => {
+    (async () => {
       try {
-        const data = await dataPromise;
+        const data = await cb();
         setReqState({
           data,
           isLoading: false,
@@ -55,11 +58,11 @@ export function useFetch<T>(cb: () => Promise<T>) {
             error: new Error(JSON.stringify(err)),
           });
         }
+      } finally {
+        setIsActivated(false);
       }
-    };
+    })();
+  }, [isActivated]);
 
-    handleResponse();
-  }, []);
-
-  return reqState;
+  return [trigger, reqState];
 }
