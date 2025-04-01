@@ -45,6 +45,7 @@ const AuthForm = ({
         <label htmlFor={id}>Enter your password:</label>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <FormInput
+            name="password"
             autoFocus={true}
             id={id}
             type="password"

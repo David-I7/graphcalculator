@@ -11,4 +11,11 @@ const handleAuthStatus = (req: Request, res: Response) => {
   res.sendStatus(401);
 };
 
+const handleAuth = (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  const userDao = new UserDao();
+  const user = userDao.findUserByEmail(email, ["email", "password"]);
+};
+
 export default { handleAuthStatus };

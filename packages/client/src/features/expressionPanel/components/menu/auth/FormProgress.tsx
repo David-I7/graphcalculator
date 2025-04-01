@@ -42,8 +42,6 @@ export default function FormProgress({
     setProgress(progress - 1);
   };
 
-  console.log(user.current);
-
   const handleSuccessAuth = () => {
     onComplete();
   };

@@ -45,6 +45,7 @@ const RegisterForm = ({
           <div>
             <label htmlFor={firstNameId}>First Name:</label>
             <FormInput
+              name="firstName"
               type="text"
               required
               value={userData.firstName}
@@ -56,6 +57,7 @@ const RegisterForm = ({
           <div>
             <label htmlFor={lastNameId}>Last Name (optional):</label>
             <FormInput
+              name="lastName"
               type="text"
               value={userData.lastName}
               onChange={(e) => {
@@ -67,6 +69,7 @@ const RegisterForm = ({
         <div>
           <label htmlFor={passwordId}>Password:</label>
           <FormInput
+            name="password"
             type="password"
             minLength={8}
             required

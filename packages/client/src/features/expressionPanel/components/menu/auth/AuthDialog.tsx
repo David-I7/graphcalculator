@@ -39,7 +39,10 @@ const AuthDialog = () => {
       <Dialog
         ref={ref}
         onClose={(e) => setIsOpen(false)}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.preventDefault();
+          e.stopPropagation();
+        }}
       >
         {isOpen && (
           <div className="auth-dialog-content">

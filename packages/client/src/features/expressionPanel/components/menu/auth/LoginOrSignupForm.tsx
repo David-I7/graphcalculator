@@ -56,6 +56,7 @@ function VerifyEmailForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        console.log("submit");
         if (isLoading) return;
         if (
           input !== "" &&

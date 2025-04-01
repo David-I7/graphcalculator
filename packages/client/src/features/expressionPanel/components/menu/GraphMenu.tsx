@@ -204,8 +204,6 @@ GraphMenu.Menu = () => {
     useGraphMenuContext();
   const { data: user, isError, isLoading } = useGetUserQuery();
 
-  console.log(user, isError, isLoading);
-
   return createPortal(
     <div
       inert={!isOpen}
