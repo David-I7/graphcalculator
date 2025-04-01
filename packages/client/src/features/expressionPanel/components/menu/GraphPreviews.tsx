@@ -18,7 +18,7 @@ const GraphPreviews = ({ onClose, isAuthenticated }: GraphPreviewProps) => {
     isError: isErrorSaved,
     isUninitialized,
   } = useGetSavedGraphsQuery(undefined, { skip: !isAuthenticated });
-  console.log(isUninitialized);
+  // console.log(isUninitialized);
   return (
     <>
       {isAuthenticated && (

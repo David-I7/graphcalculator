@@ -1,11 +1,4 @@
-import React, {
-  DialogHTMLAttributes,
-  ReactNode,
-  RefObject,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { DialogHTMLAttributes, ReactNode, RefObject, useMemo } from "react";
 import styles from "./dialog.module.scss";
 import { Close } from "../svgs";
 import ButtonTarget from "../buttons/target/ButtonTarget";

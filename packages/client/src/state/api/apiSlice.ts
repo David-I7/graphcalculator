@@ -1,10 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { GraphData } from "../graph/types";
 import { User } from "./types";
+import { baseUrl } from "./config";
 
 const apiSlice = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8080/api" }),
+  baseQuery: fetchBaseQuery({ baseUrl }),
   endpoints: (build) => ({
     getExampleGraphs: build.query<GraphData[], void>({
       query: () => ({

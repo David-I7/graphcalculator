@@ -136,6 +136,10 @@ main {
   background-color: var.$surface-container-low;
 }
 
+.bg-surface {
+  background-color: var.$surface;
+}
+
 .button--hovered {
   transition: filter var.$an-sp-fast ease-out;
   &:hover {
