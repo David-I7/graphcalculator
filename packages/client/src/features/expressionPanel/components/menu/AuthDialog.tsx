@@ -4,6 +4,14 @@ import OutlinedButton from "../../../../components/buttons/common/OutlineButton"
 import FilledButton from "../../../../components/buttons/common/FilledButton";
 import Or from "../../../../components/hr/Or";
 import FormInput from "../../../../components/input/FormInput";
+import Spinner from "../../../../components/Loading/Spinner/Spinner";
+import { CSS_VARIABLES } from "../../../../data/css/variables";
+import {
+  User,
+  UserData,
+  VerifyEmailResponse,
+} from "../../../../state/api/types";
+import { verifyEmail } from "../../../../state/api/actions";
 
 const AuthDialog = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -43,13 +51,7 @@ const AuthDialog = () => {
         onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="auth-dialog-content">
-          <h2>Log In or Sign Up</h2>
-
-          <button>google</button>
-          <button>apple</button>
-
-          <Or />
-          <AuthForm />
+          <FormProgress onComplete={() => setIsOpen(false)} />
         </div>
       </Dialog>
     </div>
@@ -58,8 +60,71 @@ const AuthDialog = () => {
 
 export default AuthDialog;
 
-function AuthForm() {
-  const [input, setInput] = useState<string>("");
+function FormProgress({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState<number>(0);
+  const user = useRef<UserData>({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+  });
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
+
+  const handleSuccessEmail = (
+    email: string,
+    data: VerifyEmailResponse["data"]
+  ) => {
+    user.current.email = email;
+    setIsRegistered(data.isRegistered);
+    setProgress(progress + 1);
+  };
+
+  const handlePreviousStep = () => {
+    setProgress(progress - 1);
+    setIsRegistered(false);
+  };
+
+  const handleSuccessAuth = () => {
+    onComplete();
+  };
+
+  switch (progress) {
+    case 0:
+      return (
+        <>
+          <h2>Log In or Sign Up</h2>
+
+          <button>google</button>
+          <button>apple</button>
+
+          <Or />
+          <VerifyEmailForm
+            initialValue={user.current.email}
+            handleSuccessEmail={handleSuccessEmail}
+          />
+        </>
+      );
+    case 1: {
+      if (isRegistered) {
+        return <></>;
+      }
+
+      return <></>;
+    }
+  }
+}
+
+function VerifyEmailForm({
+  handleSuccessEmail,
+  initialValue,
+}: {
+  initialValue: string;
+  handleSuccessEmail: (
+    email: string,
+    data: VerifyEmailResponse["data"]
+  ) => void;
+}) {
+  const [input, setInput] = useState<string>(initialValue);
   const [error, setError] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const inputId = useId();
@@ -68,24 +133,15 @@ function AuthForm() {
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        if (isLoading) return;
 
-        async function verifyEmail(email: string) {
-          return await fetch("http://localhost:8080/api/register/verify", {
-            method: "post",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email }),
-          })
-            .then(async (res) => {
-              if (!res.ok) throw await res.json();
-              return await res.json();
-            })
-            .catch((err) => err);
-        }
+        const trimmedEmail = input.trim();
 
-        verifyEmail(input).then((res) => {
-          if (res.error) {
+        verifyEmail(trimmedEmail).then((res) => {
+          if ("error" in res) {
             setError(res.error.message);
           } else {
+            handleSuccessEmail(trimmedEmail, res.data);
           }
 
           setIsLoading(false);
@@ -108,9 +164,30 @@ function AuthForm() {
           }}
         />
         <FilledButton disabled={input === ""}>
-          {isLoading ? "Spinner" : "Next"}
+          {isLoading ? (
+            <div
+              style={{
+                width: "1.875rem",
+                display: "grid",
+                placeContent: "center",
+              }}
+            >
+              <Spinner
+                style={{
+                  borderColor: CSS_VARIABLES.onPrimary,
+                  borderTopColor: "transparent",
+                }}
+              />
+            </div>
+          ) : (
+            "Next"
+          )}
         </FilledButton>
       </div>
     </form>
   );
 }
+
+function AuthForm({}: { handlePreviousStep: () => void }) {}
+
+function RegisterForm({}: { handlePreviousStep: () => void }) {}

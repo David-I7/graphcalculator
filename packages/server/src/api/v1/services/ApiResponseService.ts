@@ -13,30 +13,14 @@ export type SuccessResponse<T extends unknown> = {
 };
 
 export class ApiResponseService {
-  static createErrorResponse(props: { err: ManagedError }): ErrorResponse;
-  static createErrorResponse(props: {
-    type: ManagedError["type"];
-    message: string;
-  }): ErrorResponse;
+  static createErrorResponse(err: ManagedError): ErrorResponse;
 
-  static createErrorResponse({
-    err,
-    type,
-    message,
-  }: {
-    err: ManagedError;
-    type: ManagedError["type"];
-    message: string;
-  }): ErrorResponse {
-    const errInstance = err
-      ? err
-      : ManagedErrorFactory.makeError(type, message);
-
+  static createErrorResponse(err: ManagedError): ErrorResponse {
     return {
       error: {
-        message: errInstance.message,
-        code: errInstance.code,
-        type: errInstance.type,
+        message: err.message,
+        code: err.code,
+        type: err.type,
       },
     };
   }

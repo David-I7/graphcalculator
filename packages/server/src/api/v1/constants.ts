@@ -13,10 +13,7 @@ export const ERROR_TYPES = {
   register: 2,
 };
 
-export const ERROR_MESSAGES: Record<
-  keyof typeof ERROR_TYPES,
-  Record<string, string>
-> = {
+export const ERROR_MESSAGES = {
   cors: { invalidOrigin: "Not allowed by CORS." },
   register: {
     duplicateEmail: "Email already exists.",

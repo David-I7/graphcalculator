@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserService } from "../services/UserService.js";
+import { UserDao } from "../db/DAO/UserDao.js";
 import { ApiResponseService } from "../services/ApiResponseService.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
