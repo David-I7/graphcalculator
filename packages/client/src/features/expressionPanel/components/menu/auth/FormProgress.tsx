@@ -16,21 +16,33 @@ export default function FormProgress({
     firstName: "",
     lastName: "",
   });
-  const [isRegistered, setIsRegistered] = useState<boolean>(false);
+  const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
 
   const handleSuccessEmail = (
     email: string,
     data: VerifyEmailResponse["data"]
   ) => {
-    user.current.email = email;
+    if (data.isRegistered) {
+      user.current = { password: "", lastName: "", firstName: "", email };
+    } else {
+      user.current = { ...user.current, email, password: "" };
+    }
     setIsRegistered(data.isRegistered);
     setProgress(progress + 1);
   };
 
-  const handlePreviousStep = () => {
+  const handlePreviousRegistered = (password: string) => {
+    user.current.password = password;
     setProgress(progress - 1);
-    setIsRegistered(false);
   };
+  const handlePreviousUnregistered = (
+    data: Pick<UserData, "firstName" | "lastName" | "password">
+  ) => {
+    user.current = { ...user.current, ...data };
+    setProgress(progress - 1);
+  };
+
+  console.log(user.current);
 
   const handleSuccessAuth = () => {
     onComplete();
@@ -45,11 +57,13 @@ export default function FormProgress({
         />
       );
     case 1: {
+      if (isRegistered === null) return;
+
       if (isRegistered) {
         return (
           <AuthForm
             email={user.current.email}
-            handlePreviousStep={handlePreviousStep}
+            handlePreviousStep={handlePreviousRegistered}
             handleSuccess={handleSuccessAuth}
           />
         );
@@ -57,8 +71,10 @@ export default function FormProgress({
 
       return (
         <RegisterForm
-          email={user.current.email}
-          handlePreviousStep={handlePreviousStep}
+          credentials={{
+            ...user.current,
+          }}
+          handlePreviousStep={handlePreviousUnregistered}
           handleSuccess={handleSuccessAuth}
         />
       );

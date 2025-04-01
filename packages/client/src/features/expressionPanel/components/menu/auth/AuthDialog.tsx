@@ -1,17 +1,7 @@
-import React, { RefObject, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Dialog from "../../../../../components/dialog/Dialog";
 import OutlinedButton from "../../../../../components/buttons/common/OutlineButton";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
-import Or from "../../../../../components/hr/Or";
-import FormInput from "../../../../../components/input/FormInput";
-import Spinner from "../../../../../components/Loading/Spinner/Spinner";
-import { CSS_VARIABLES } from "../../../../../data/css/variables";
-import {
-  User,
-  UserData,
-  VerifyEmailResponse,
-} from "../../../../../state/api/types";
-import { verifyEmail } from "../../../../../state/api/actions";
 import FormProgress from "./FormProgress";
 
 const AuthDialog = () => {

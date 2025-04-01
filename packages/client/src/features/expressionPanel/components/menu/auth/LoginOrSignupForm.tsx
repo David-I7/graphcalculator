@@ -9,7 +9,7 @@ import Or from "../../../../../components/hr/Or";
 import { useLazyFetch } from "../../../../../hooks/api";
 
 type LoginOrSignupFormPorps = {
-  previousValue: { email: string; isRegistered: boolean };
+  previousValue: { email: string; isRegistered: boolean | null };
   handleSuccessEmail: (
     email: string,
     data: VerifyEmailResponse["data"]
@@ -57,7 +57,11 @@ function VerifyEmailForm({
       onSubmit={(e) => {
         e.preventDefault();
         if (isLoading) return;
-        if (input !== "" && previousValue.email === input)
+        if (
+          input !== "" &&
+          previousValue.isRegistered !== null &&
+          previousValue.email === input
+        )
           return handleSuccessEmail(input, {
             isRegistered: previousValue.isRegistered,
           });

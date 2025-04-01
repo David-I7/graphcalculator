@@ -5,11 +5,12 @@ import { useLazyFetch } from "../../../../../hooks/api";
 import { validatePassword } from "../../../../../state/api/actions";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
+import { UserData } from "../../../../../state/api/types";
 
 type AuthFormProps = {
   email: string;
   handleSuccess: () => void;
-  handlePreviousStep: () => void;
+  handlePreviousStep: (password: string) => void;
 };
 
 const AuthForm = ({
@@ -30,7 +31,7 @@ const AuthForm = ({
     <div className="auth-form">
       <div className="auth-form-header">
         <ButtonTarget className="button--hovered bg-surface">
-          <ArrowLeft onClick={handlePreviousStep} />
+          <ArrowLeft onClick={() => handlePreviousStep(password)} />
         </ButtonTarget>
         <h2>Welcome back!</h2>
       </div>
@@ -54,7 +55,7 @@ const AuthForm = ({
               setPassword(e.target.value);
             }}
           />
-          <FilledButton disabled={password === ""}>Submit</FilledButton>
+          <FilledButton disabled={password.length < 8}>Submit</FilledButton>
         </div>
       </form>
     </div>

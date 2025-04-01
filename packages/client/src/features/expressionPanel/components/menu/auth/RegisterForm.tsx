@@ -6,18 +6,18 @@ import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 
 type RegisterFormProps = {
-  email: string;
+  credentials: UserData;
   handleSuccess: () => void;
-  handlePreviousStep: () => void;
+  handlePreviousStep: (
+    data: Pick<UserData, "password" | "lastName" | "firstName">
+  ) => void;
 };
 
-const RegisterForm = ({ email, handlePreviousStep }: RegisterFormProps) => {
-  const [userData, setUserData] = useState<UserData>({
-    email,
-    firstName: "",
-    lastName: "",
-    password: "",
-  });
+const RegisterForm = ({
+  credentials,
+  handlePreviousStep,
+}: RegisterFormProps) => {
+  const [userData, setUserData] = useState<UserData>(credentials);
   const firstNameId = useId();
   const lastNameId = useId();
   const passwordId = useId();
@@ -27,7 +27,13 @@ const RegisterForm = ({ email, handlePreviousStep }: RegisterFormProps) => {
       <div className="register-form-header">
         <ButtonTarget
           className="bg-surface button--hovered"
-          onClick={handlePreviousStep}
+          onClick={() =>
+            handlePreviousStep({
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              password: userData.password,
+            })
+          }
         >
           <ArrowLeft />
         </ButtonTarget>
@@ -72,7 +78,7 @@ const RegisterForm = ({ email, handlePreviousStep }: RegisterFormProps) => {
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <FilledButton
-            disabled={userData.password === "" || userData.firstName === ""}
+            disabled={userData.password.length < 8 || userData.firstName === ""}
           >
             Submit
           </FilledButton>
