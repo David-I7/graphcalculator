@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import exampleGraphs from "../db/model/examples.json" with { type: "json" };
-import savedGraphs from "../db/model/saved.json" with {type : "json"}
+import exampleGraphs from "../db/data/examples.json" with { type: "json" };
+import savedGraphs from "../db/data/saved.json" with {type : "json"}
 
 const handleExampleGraphs = (req: Request, res: Response) => {
   res.status(200).json(exampleGraphs);

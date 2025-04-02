@@ -22,3 +22,7 @@ export type ApiErrorResponse = {
     type: string;
   };
 };
+
+export function isApiErrorResponse(obj: Object): obj is ApiErrorResponse {
+  return "error" in obj && typeof obj["error"] === "object";
+}

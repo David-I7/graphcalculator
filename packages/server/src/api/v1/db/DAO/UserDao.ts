@@ -1,4 +1,4 @@
-import { User } from "../entity/User.js";
+import { User } from "../entity/user.js";
 import { DB } from "../index.js";
 
 export interface IUserDao {

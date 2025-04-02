@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { ManagedError } from "../services/ErrorFactoryService.js";
-import { ApiResponseService } from "../services/ApiResponseService.js";
+import { isClientError } from "../services/error/clientError.js";
+import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 
 export const errorController = (
   err: Error,
@@ -8,8 +8,8 @@ export const errorController = (
   res: Response,
   next: NextFunction
 ) => {
-  if (err instanceof ManagedError) {
-    res.status(403).json(ApiResponseService.createErrorResponse(err));
+  if (isClientError(err)) {
+    res.status(403).json(new ApiErrorResponse().createResponse(err));
     return;
   }
 
