@@ -1,6 +1,5 @@
 import { CorsOptions } from "cors";
-import { ManagedErrorFactory } from "../services/ErrorFactoryService.js";
-import { ERROR_MESSAGES } from "../constants.js";
+import { SimpleErrorFactory } from "../services/error/SimpleErrorFactory.js";
 
 const allowedOrigins: Set<string> = new Set<string>([
   "http://localhost",
@@ -16,9 +15,9 @@ export const corsOptions: CorsOptions = {
     if (allowedOrigins.has(strippedPort)) callback(null, true);
     else {
       callback(
-        ManagedErrorFactory.makeError(
+        new SimpleErrorFactory().createClientError(
           "cors",
-          ERROR_MESSAGES.cors.invalidOrigin
+          "Not allowed by CORS."
         ),
         false
       );

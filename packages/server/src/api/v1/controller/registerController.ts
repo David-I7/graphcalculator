@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { UserDao } from "../db/DAO/UserDao.js";
-import { ApiResponseService } from "../services/ApiResponseService.js";
-import { ERROR_MESSAGES } from "../constants.js";
-import { ManagedErrorFactory } from "../services/ErrorFactoryService.js";
+import { UserDao } from "../db/dao/userDao.js";
+import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
+import { SimpleErrorFactory } from "../services/error/SimpleErrorFactory.js";
+import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 
 const handleEmailVerification = async (req: Request, res: Response) => {
   const email = req.body.email;
@@ -11,10 +11,10 @@ const handleEmailVerification = async (req: Request, res: Response) => {
     res
       .status(400)
       .json(
-        ApiResponseService.createErrorResponse(
-          ManagedErrorFactory.makeError(
+        new ApiErrorResponse().createResponse(
+          new SimpleErrorFactory().createClientError(
             "register",
-            ERROR_MESSAGES.register.invalidEmail
+            "Email is of invalid format."
           )
         )
       );
@@ -26,7 +26,7 @@ const handleEmailVerification = async (req: Request, res: Response) => {
   const isRegistered = await userDao.existsEmail(email);
   res
     .status(200)
-    .json(ApiResponseService.createSuccessResponse({ isRegistered }));
+    .json(new ApiSuccessResponse().createResponse({ isRegistered }));
 };
 
 export default { handleEmailVerification };

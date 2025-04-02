@@ -25,13 +25,12 @@ app.use(
     secret: process.env.SESSION_SECRET!,
     cookie: {
       sameSite: "strict",
-      secure: process.env.NODE_ENV !== "DEV",
+      secure: process.env.NODE_ENV !== "development",
       maxAge: 60000 * 60 * 24 * 365,
     },
   })
 );
 app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
 
 declare module "express-session" {
   interface SessionData {
@@ -41,39 +40,6 @@ declare module "express-session" {
     };
   }
 }
-
-// app.post("/api/auth", (req, res) => {
-//   const { id, password } = req.body;
-//   if (!id || !password) {
-//     res.status(400).json({
-//       error: {
-//         message: "Authorization requires passowrd and id.",
-//       },
-//     });
-//     return;
-//   }
-
-//   const user = users.find((user) => user.id === Number(id));
-//   if (!user) {
-//     res.status(400).json({
-//       error: {
-//         message: "Cannot find user with the specified id.",
-//       },
-//     });
-//     return;
-//   }
-
-//   if (user.password === password) {
-//     req.session.user = user;
-//     res.status(200).json(user);
-//   } else {
-//     res.status(403).json({
-//       error: {
-//         message: "Incorrect password",
-//       },
-//     });
-//   }
-// });
 
 app.use(router);
 

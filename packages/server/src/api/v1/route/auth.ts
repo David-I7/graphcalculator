@@ -4,5 +4,6 @@ import authController from "../controller/authController.js";
 const authRouter = Router();
 
 authRouter.get("/status", authController.handleAuthStatus);
+authRouter.post("/", authController.handleAuth);
 
 export default authRouter;
