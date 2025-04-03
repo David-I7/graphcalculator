@@ -18,7 +18,7 @@ const handleAuthStatus = (req: Request, res: Response) => {
 const handleAuth = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !isValidPassword(password)) {
-    return res
+    res
       .status(400)
       .json(
         new ApiErrorResponse().createResponse(
@@ -28,6 +28,7 @@ const handleAuth = async (req: Request, res: Response) => {
           )
         )
       );
+    return;
   }
 
   if (!isEmail(email)) {
@@ -45,7 +46,7 @@ const handleAuth = async (req: Request, res: Response) => {
   }
 
   const userDao = new UserDao();
-  const user = await userDao.findUserByEmail(email, ["email", "password"]);
+  const user = await userDao.findUserByEmail(email);
 
   if (!user) {
     res
@@ -59,6 +60,9 @@ const handleAuth = async (req: Request, res: Response) => {
   }
 
   if (await isHashedPassword(password, user.password)) {
+    // @ts-ignore
+    delete user.password;
+    req.session.user = user;
     res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
   } else {
     res

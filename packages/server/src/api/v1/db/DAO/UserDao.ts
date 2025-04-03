@@ -1,13 +1,14 @@
-import { User } from "../entity/user.js";
+import { User, UserSessionData } from "../entity/user.js";
 import { DB } from "../index.js";
 
 export interface IUserDao {
   existsEmail(email: string): Promise<boolean>;
-  findUserByEmail<T extends (keyof User)[]>(
+  findUserByID<T extends (keyof User)[]>(
     email: string,
     fields: T | "*"
   ): Promise<Pick<User, T[number]> | undefined>;
-  createUser(user: User): Promise<User>;
+  findUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: User): Promise<Pick<User, "id">>;
   deleteUser?(user: User): Promise<boolean>;
 }
 
@@ -20,7 +21,7 @@ export class UserDao implements IUserDao {
     return res.rows.length > 0;
   }
 
-  async findUserByEmail<T extends (keyof User)[]>(
+  async findUserByID<T extends (keyof User)[]>(
     email: string,
     fields: T | "*"
   ): Promise<Pick<User, T[number]> | undefined> {
@@ -40,12 +41,20 @@ export class UserDao implements IUserDao {
     }
   }
 
+  async findUserByEmail(email: string): Promise<User | undefined> {
+    const res = await DB.query<User>(`Select * from users where email = $1`, [
+      email,
+    ]);
+    console.table(res.rows);
+    return res.rowCount !== null ? res.rows[0] : undefined;
+  }
+
   async createUser(
     user: Omit<User, "email_is_verified" | "id">
-  ): Promise<User> {
-    const res = await DB.query<User>(
+  ): Promise<UserSessionData> {
+    const res = await DB.query<UserSessionData>(
       `Insert into users (email,first_name,last_name,password) 
-      values ($1,$2,$3,$4) returning *;`,
+      values ($1,$2,$3,$4) returning id;`,
       [user.email, user.first_name, user.last_name, user.password]
     );
 

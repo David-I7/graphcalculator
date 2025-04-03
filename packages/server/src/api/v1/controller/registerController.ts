@@ -47,13 +47,15 @@ const handleRegister = async (req: Request, res: Response) => {
 
   const userDao = new UserDao();
   const hashedPassword = await hashPassword(password);
-  console.log(hashedPassword.length, hashedPassword);
+
   const user = await userDao.createUser({
     email,
     first_name: firstName,
     last_name: lastName,
     password: hashedPassword,
   });
+
+  req.session.user = user;
 
   res.status(200).json(new ApiSuccessResponse().createResponse(user));
 };

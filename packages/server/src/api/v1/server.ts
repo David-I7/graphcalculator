@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import router from "./route/index.js";
 import sesssion from "express-session";
+import { User, UserSessionData } from "./db/entity/user.js";
 
 const app = express();
 
@@ -34,10 +35,7 @@ app.use(express.json());
 
 declare module "express-session" {
   interface SessionData {
-    user: {
-      id: number;
-      name: string;
-    };
+    user: UserSessionData;
   }
 }
 
