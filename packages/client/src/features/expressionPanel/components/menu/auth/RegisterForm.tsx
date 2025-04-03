@@ -1,15 +1,18 @@
 import { useId, useState } from "react";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
-import { UserData } from "../../../../../state/api/types";
+import { RegisterUserData } from "../../../../../state/api/types";
 import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
+import { useLazyFetch } from "../../../../../hooks/api";
+import { registerUser } from "../../../../../state/api/actions";
+import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 
 type RegisterFormProps = {
-  credentials: UserData;
+  credentials: RegisterUserData;
   handleSuccess: () => void;
   handlePreviousStep: (
-    data: Pick<UserData, "password" | "lastName" | "firstName">
+    data: Pick<RegisterUserData, "password" | "lastName" | "firstName">
   ) => void;
 };
 
@@ -17,10 +20,13 @@ const RegisterForm = ({
   credentials,
   handlePreviousStep,
 }: RegisterFormProps) => {
-  const [userData, setUserData] = useState<UserData>(credentials);
+  const [userData, setUserData] = useState<RegisterUserData>(credentials);
   const firstNameId = useId();
   const lastNameId = useId();
   const passwordId = useId();
+  const [trigger, { data, isLoading }] = useLazyFetch(() =>
+    registerUser(userData)
+  );
 
   return (
     <div className="register-form">
@@ -40,7 +46,13 @@ const RegisterForm = ({
         <h2>Welcome</h2>
       </div>
 
-      <form>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (isLoading) return;
+          trigger();
+        }}
+      >
         <div>
           <div>
             <label htmlFor={firstNameId}>First Name:</label>
@@ -83,7 +95,13 @@ const RegisterForm = ({
           <FilledButton
             disabled={userData.password.length < 8 || userData.firstName === ""}
           >
-            Submit
+            {isLoading ? (
+              <div>
+                <Spinner />
+              </div>
+            ) : (
+              "Submit"
+            )}
           </FilledButton>
         </div>
       </form>

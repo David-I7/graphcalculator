@@ -1,5 +1,8 @@
 import { useRef, useState } from "react";
-import { UserData, VerifyEmailResponse } from "../../../../../state/api/types";
+import {
+  RegisterUserData,
+  VerifyEmailResponse,
+} from "../../../../../state/api/types";
 import LoginOrSignupForm from "./LoginOrSignupForm";
 import AuthForm from "./AuthForm";
 import RegisterForm from "./RegisterForm";
@@ -10,7 +13,7 @@ export default function FormProgress({
   onComplete: () => void;
 }) {
   const [progress, setProgress] = useState<number>(0);
-  const user = useRef<UserData>({
+  const user = useRef<RegisterUserData>({
     email: "",
     password: "",
     firstName: "",
@@ -36,7 +39,7 @@ export default function FormProgress({
     setProgress(progress - 1);
   };
   const handlePreviousUnregistered = (
-    data: Pick<UserData, "firstName" | "lastName" | "password">
+    data: Pick<RegisterUserData, "firstName" | "lastName" | "password">
   ) => {
     user.current = { ...user.current, ...data };
     setProgress(progress - 1);

@@ -2,6 +2,8 @@ import { baseUrl } from "./config";
 import {
   ApiErrorResponse,
   isApiErrorResponse,
+  RegisterUserData,
+  User,
   VerifyEmailResponse,
 } from "./types";
 
@@ -13,6 +15,13 @@ function createFetchError(message: string = "unknown cause"): ApiErrorResponse {
       message: `Fetch error: \n${message}`,
     },
   };
+}
+
+function handleError(err: Error) {
+  if (isApiErrorResponse(err)) return err;
+  if (err instanceof Error) {
+    return createFetchError(err.message);
+  } else return createFetchError("Unknown");
 }
 
 export async function verifyEmail(
@@ -27,15 +36,10 @@ export async function verifyEmail(
       if (!res.ok) throw await res.json();
       return await res.json();
     })
-    .catch((err) => {
-      if ("error" in err) return err;
-      return createFetchError(
-        typeof err === "object" && "message" in err && err.message
-      );
-    });
+    .catch((err) => handleError(err));
 }
 
-export async function validatePassword(data: {
+export async function authenticateUser(data: {
   email: string;
   password: string;
 }) {
@@ -48,10 +52,20 @@ export async function validatePassword(data: {
       if (!res.ok) throw await res.json();
       return await res.json();
     })
-    .catch((err) => {
-      if (isApiErrorResponse(err)) return err;
-      if (err instanceof Error) {
-        return createFetchError(err.message);
-      } else return createFetchError("Unknown");
-    });
+    .catch((err) => handleError(err));
+}
+
+export async function registerUser(user: RegisterUserData) {
+  return await fetch(baseUrl + "/register", {
+    method: "post",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(user),
+  })
+    .then(async (res) => {
+      if (!res.ok) throw await res.json();
+      return await res.json();
+    })
+    .catch((err) => handleError(err));
 }

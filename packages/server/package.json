@@ -12,20 +12,21 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/cookie-parser": "^1.4.8",
-    "@types/pg": "^8.11.11",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "pg": "^8.14.1",
-    "uuid": "*"
+    "uuid": "*",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/express-session": "^1.18.1",
+    "@types/pg": "^8.11.11",
     "concurrently": "*",
     "nodemon": "^3.1.9"
   }

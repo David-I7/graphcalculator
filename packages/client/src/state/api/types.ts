@@ -1,10 +1,11 @@
 export type User = {
-  id: number;
   firstName: string;
+  lastName?: string;
   email: string;
+  password: string;
 };
 
-export type UserData = {
+export type RegisterUserData = {
   email: string;
   firstName: string;
   lastName?: string;
@@ -23,6 +24,7 @@ export type ApiErrorResponse = {
   };
 };
 
-export function isApiErrorResponse(obj: Object): obj is ApiErrorResponse {
+export function isApiErrorResponse(obj: unknown): obj is ApiErrorResponse {
+  if (!obj || typeof obj !== "object") return false;
   return "error" in obj && typeof obj["error"] === "object";
 }
