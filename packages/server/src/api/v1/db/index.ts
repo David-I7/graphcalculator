@@ -12,7 +12,7 @@ const pool = new Pool({
 export class DB {
   static async query<QueryResult extends QueryResultRow>(
     text: string,
-    values?: string[]
+    values?: any[]
   ) {
     return pool.query<QueryResult>(text, values);
   }

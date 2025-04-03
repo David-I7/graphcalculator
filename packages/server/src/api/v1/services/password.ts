@@ -1,28 +1,26 @@
 import crypto from "node:crypto";
 
-export function hashPassword(password: string): Promise<string> {
-  const salt = crypto.randomBytes(16).toString("hex");
+export function hashPassword(password: string): Promise<Buffer<ArrayBuffer>> {
+  const salt = crypto.randomBytes(16);
   return new Promise((res, rej) =>
     crypto.scrypt(password.normalize(), salt, 64, (err, hash) => {
       if (err) return rej(err);
-      return res(salt + `$` + hash.toString("hex"));
+      return res(Buffer.concat([salt, hash]));
     })
   );
 }
 
 export function isHashedPassword(
   password: string,
-  hashedPassword: string
+  hashedPassword: Buffer<ArrayBufferLike>
 ): Promise<boolean> {
   return new Promise((res, rej) => {
-    const parts = hashedPassword.split("$");
-    if (parts.length !== 2) return res(false);
-
-    const [salt, hash] = parts;
+    const salt = hashedPassword.subarray(0, 16);
+    const hash = hashedPassword.subarray(16);
 
     crypto.scrypt(password.normalize(), salt, 64, (err, derivedKey) => {
       if (err) return rej(err);
-      derivedKey.toString("hex") === hash ? res(true) : res(false);
+      Buffer.compare(hash, derivedKey) === 0 ? res(true) : res(false);
     });
   });
 }

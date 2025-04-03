@@ -4,6 +4,6 @@ import registerController from "../controller/registerController.js";
 const registerRouter = Router();
 
 registerRouter.post("/verify", registerController.handleEmailVerification);
-//registerRouter.post("/")
+registerRouter.post("/", registerController.handleRegister);
 
 export default registerRouter;

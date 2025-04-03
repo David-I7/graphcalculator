@@ -2,10 +2,9 @@ import React, { useId, useState } from "react";
 import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { useLazyFetch } from "../../../../../hooks/api";
-import { validatePassword } from "../../../../../state/api/actions";
+import { authenticateUser } from "../../../../../state/api/actions";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
-import { UserData } from "../../../../../state/api/types";
 
 type AuthFormProps = {
   email: string;
@@ -24,7 +23,7 @@ const AuthForm = ({
     undefined
   );
   const [trigger, { data, isLoading }] = useLazyFetch(() =>
-    validatePassword({ email, password })
+    authenticateUser({ email, password })
   );
 
   return (

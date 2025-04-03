@@ -7,7 +7,7 @@ export interface IUserDao {
     email: string,
     fields: T | "*"
   ): Promise<Pick<User, T[number]> | undefined>;
-  createUser?(user: User): Promise<boolean>;
+  createUser(user: User): Promise<User>;
   deleteUser?(user: User): Promise<boolean>;
 }
 
@@ -38,5 +38,18 @@ export class UserDao implements IUserDao {
       console.table(res.rows);
       return res.rowCount !== null ? res.rows[0] : undefined;
     }
+  }
+
+  async createUser(
+    user: Omit<User, "email_is_verified" | "id">
+  ): Promise<User> {
+    const res = await DB.query<User>(
+      `Insert into users (email,first_name,last_name,password) 
+      values ($1,$2,$3,$4) returning *;`,
+      [user.email, user.first_name, user.last_name, user.password]
+    );
+
+    console.table(res.rows);
+    return res.rows[0];
   }
 }
