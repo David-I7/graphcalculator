@@ -6,3 +6,5 @@ export interface User {
   email_is_verified: boolean;
   password: Buffer<ArrayBufferLike>;
 }
+
+export type UserSessionData = Omit<User, "password">;

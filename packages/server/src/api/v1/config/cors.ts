@@ -1,5 +1,5 @@
 import { CorsOptions } from "cors";
-import { SimpleErrorFactory } from "../services/error/SimpleErrorFactory.js";
+import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 
 const allowedOrigins: Set<string> = new Set<string>([
   "http://localhost",

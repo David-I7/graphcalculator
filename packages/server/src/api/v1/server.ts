@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import router from "./route/index.js";
 import sesssion from "express-session";
+import sessionOptions from "./config/session.js";
 
 const app = express();
 
@@ -17,29 +18,8 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use("/assets", serveStaticGZIP);
-app.use(
-  sesssion({
-    resave: false,
-    saveUninitialized: false,
-    name: "sid",
-    secret: process.env.SESSION_SECRET!,
-    cookie: {
-      sameSite: "strict",
-      secure: process.env.NODE_ENV !== "development",
-      maxAge: 60000 * 60 * 24 * 365,
-    },
-  })
-);
+app.use(sesssion(sessionOptions));
 app.use(express.json());
-
-declare module "express-session" {
-  interface SessionData {
-    user: {
-      id: number;
-      name: string;
-    };
-  }
-}
 
 app.use(router);
 
