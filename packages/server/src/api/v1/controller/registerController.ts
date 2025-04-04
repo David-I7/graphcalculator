@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { UserDao } from "../db/dao/userDao.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
-import { SimpleErrorFactory } from "../services/error/SimpleErrorFactory.js";
+import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/utlis.js";
-import { hashPassword } from "../services/password.js";
+import { PasswordService } from "../services/passwordService.js";
 
 const handleEmailVerification = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -46,7 +46,7 @@ const handleRegister = async (req: Request, res: Response) => {
   }
 
   const userDao = new UserDao();
-  const hashedPassword = await hashPassword(password);
+  const hashedPassword = await new PasswordService().hash(password);
 
   const user = await userDao.createUser({
     email,

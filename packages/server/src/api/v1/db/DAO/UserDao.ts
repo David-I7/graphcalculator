@@ -1,5 +1,5 @@
 import { User, UserSessionData } from "../entity/user.js";
-import { DB } from "../index.js";
+import DB from "../index.js";
 
 export interface IUserDao {
   existsEmail(email: string): Promise<boolean>;

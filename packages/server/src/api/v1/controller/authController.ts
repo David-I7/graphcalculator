@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { UserDao } from "../db/dao/userDao.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
-import { SimpleErrorFactory } from "../services/error/SimpleErrorFactory.js";
+import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/utlis.js";
-import { isHashedPassword } from "../services/password.js";
+import { PasswordService } from "../services/passwordService.js";
+import { hasSession } from "../middleware/session.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
-  if (req.session.user) {
+  if (hasSession(req)) {
     res.status(200).json(req.session.user);
     return;
   }
@@ -16,8 +17,22 @@ const handleAuthStatus = (req: Request, res: Response) => {
 };
 
 const handleAuth = async (req: Request, res: Response) => {
+  if (hasSession(req)) {
+    res
+      .status(400)
+      .json(
+        new ApiErrorResponse().createResponse(
+          new SimpleErrorFactory().createClientError(
+            "auth",
+            "Already logged in."
+          )
+        )
+      );
+    return;
+  }
+
   const { email, password } = req.body;
-  if (!email || !isValidPassword(password)) {
+  if (!email || !isEmail(email) || !isValidPassword(password)) {
     res
       .status(400)
       .json(
@@ -25,20 +40,6 @@ const handleAuth = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createClientError(
             "auth",
             "Invalid credentials."
-          )
-        )
-      );
-    return;
-  }
-
-  if (!isEmail(email)) {
-    res
-      .status(401)
-      .json(
-        new ApiErrorResponse().createResponse(
-          new SimpleErrorFactory().createClientError(
-            "auth",
-            "Invalid email address."
           )
         )
       );
@@ -59,7 +60,7 @@ const handleAuth = async (req: Request, res: Response) => {
     return;
   }
 
-  if (await isHashedPassword(password, user.password)) {
+  if (await new PasswordService().compare(password, user.password)) {
     // @ts-ignore
     delete user.password;
     req.session.user = user;
