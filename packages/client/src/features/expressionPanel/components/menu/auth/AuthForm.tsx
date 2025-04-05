@@ -5,6 +5,7 @@ import { useLazyFetch } from "../../../../../hooks/api";
 import { authenticateUser } from "../../../../../state/api/actions";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
+import PasswordInput from "../../../../../components/input/PasswordInput";
 
 type AuthFormProps = {
   email: string;
@@ -49,13 +50,13 @@ const AuthForm = ({
       >
         <label htmlFor={id}>Enter your password:</label>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <FormInput
+          <PasswordInput
             name="password"
             autoFocus={true}
             id={id}
-            type="password"
             minLength={8}
             value={password}
+            message={errorMessage}
             onChange={(e) => {
               if (errorMessage) setErrorMessage(undefined);
               setPassword(e.target.value);

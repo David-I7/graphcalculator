@@ -7,6 +7,7 @@ import FilledButton from "../../../../../components/buttons/common/FilledButton"
 import { useLazyFetch } from "../../../../../hooks/api";
 import { registerUser } from "../../../../../state/api/actions";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
+import PasswordInput from "../../../../../components/input/PasswordInput";
 
 type RegisterFormProps = {
   credentials: RegisterUserData;
@@ -66,6 +67,7 @@ const RegisterForm = ({
               name="firstName"
               type="text"
               required
+              id={firstNameId}
               value={userData.firstName}
               onChange={(e) => {
                 setUserData({ ...userData, firstName: e.target.value });
@@ -77,6 +79,7 @@ const RegisterForm = ({
             <FormInput
               name="lastName"
               type="text"
+              id={lastNameId}
               value={userData.lastName}
               onChange={(e) => {
                 setUserData({ ...userData, lastName: e.target.value });
@@ -86,9 +89,9 @@ const RegisterForm = ({
         </div>
         <div>
           <label htmlFor={passwordId}>Password:</label>
-          <FormInput
+          <PasswordInput
             name="password"
-            type="password"
+            id={passwordId}
             minLength={8}
             required
             value={userData.password}
