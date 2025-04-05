@@ -9,7 +9,11 @@ import { hasSession } from "../middleware/session.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
   if (hasSession(req)) {
-    res.status(200).json(req.session.user);
+    res
+      .status(200)
+      .json(
+        new ApiSuccessResponse().createResponse({ user: req.session.user })
+      );
     return;
   }
 

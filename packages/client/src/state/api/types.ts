@@ -1,16 +1,15 @@
-export type User = {
+export type UserSessionData = {
   firstName: string;
   lastName?: string;
   email: string;
-  password: string;
+  email_is_verified: boolean;
+  id: string;
 };
 
-export type RegisterUserData = {
-  email: string;
-  firstName: string;
-  lastName?: string;
-  password: string;
-};
+export type RegisterUserData = Omit<
+  UserSessionData,
+  "email_is_verified" | "id"
+> & { password: string };
 
 export type VerifyEmailResponse = {
   data: { isRegistered: boolean };

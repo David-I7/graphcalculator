@@ -8,10 +8,11 @@ import { ArrowLeft } from "../../../../../components/svgs";
 import PasswordInput from "../../../../../components/input/PasswordInput";
 import { CSS_VARIABLES } from "../../../../../data/css/variables";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
+import { UserSessionData } from "../../../../../state/api/types";
 
 type AuthFormProps = {
   email: string;
-  handleSuccess: () => void;
+  handleSuccess: (user: UserSessionData) => void;
   handlePreviousStep: (password: string) => void;
 };
 
@@ -36,7 +37,12 @@ const AuthForm = ({
           <p>
             You're logging in with <strong>{email}</strong>
           </p>
-          <Form email={email} password={password} setPassword={setPassword} />
+          <Form
+            handleSuccess={handleSuccess}
+            email={email}
+            password={password}
+            setPassword={setPassword}
+          />
         </div>
       </div>
     </div>
@@ -49,17 +55,22 @@ function Form({
   email,
   password,
   setPassword,
+  handleSuccess,
 }: {
   email: string;
   password: string;
   setPassword: React.Dispatch<SetStateAction<string>>;
+  handleSuccess: (user: UserSessionData) => void;
 }) {
   const id = useId();
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
     undefined
   );
   const [trigger, { data, isLoading }] = useLazyFetch(() =>
-    authenticateUser({ email, password })
+    authenticateUser({ email, password }).then((res) => {
+      if ("error" in res) return setErrorMessage(errorMessage);
+      handleSuccess(res);
+    })
   );
 
   return (

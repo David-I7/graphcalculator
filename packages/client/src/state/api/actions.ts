@@ -3,7 +3,7 @@ import {
   ApiErrorResponse,
   isApiErrorResponse,
   RegisterUserData,
-  User,
+  UserSessionData,
   VerifyEmailResponse,
 } from "./types";
 
@@ -42,9 +42,10 @@ export async function verifyEmail(
 export async function authenticateUser(data: {
   email: string;
   password: string;
-}) {
+}): Promise<UserSessionData | ApiErrorResponse> {
   return await fetch(baseUrl + "/auth", {
     method: "post",
+    credentials: "include",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(data),
   })
@@ -55,9 +56,12 @@ export async function authenticateUser(data: {
     .catch((err) => handleError(err));
 }
 
-export async function registerUser(user: RegisterUserData) {
+export async function registerUser(
+  user: RegisterUserData
+): Promise<UserSessionData | ApiErrorResponse> {
   return await fetch(baseUrl + "/register", {
     method: "post",
+    credentials: "include",
     headers: {
       "content-type": "application/json",
     },

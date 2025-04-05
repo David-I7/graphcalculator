@@ -1,7 +1,10 @@
 import React, { SetStateAction, useId, useState } from "react";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
-import { RegisterUserData } from "../../../../../state/api/types";
+import {
+  RegisterUserData,
+  UserSessionData,
+} from "../../../../../state/api/types";
 import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { useLazyFetch } from "../../../../../hooks/api";
@@ -12,7 +15,7 @@ import { CSS_VARIABLES } from "../../../../../data/css/variables";
 
 type RegisterFormProps = {
   credentials: RegisterUserData;
-  handleSuccess: () => void;
+  handleSuccess: (user: UserSessionData) => void;
   handlePreviousStep: (
     data: Pick<RegisterUserData, "password" | "lastName" | "firstName">
   ) => void;
@@ -21,6 +24,7 @@ type RegisterFormProps = {
 const RegisterForm = ({
   credentials,
   handlePreviousStep,
+  handleSuccess,
 }: RegisterFormProps) => {
   const [userData, setUserData] = useState<RegisterUserData>(credentials);
 
@@ -47,7 +51,11 @@ const RegisterForm = ({
           <p>
             You're Signing in with <strong>{userData.email}.</strong>
           </p>
-          <Form userData={userData} setUserData={setUserData} />
+          <Form
+            handleSuccess={handleSuccess}
+            userData={userData}
+            setUserData={setUserData}
+          />
         </div>
       </div>
     </div>
@@ -59,15 +67,20 @@ export default RegisterForm;
 function Form({
   userData,
   setUserData,
+  handleSuccess,
 }: {
   userData: RegisterUserData;
   setUserData: React.Dispatch<SetStateAction<RegisterUserData>>;
+  handleSuccess: (user: UserSessionData) => void;
 }) {
   const firstNameId = useId();
   const lastNameId = useId();
   const passwordId = useId();
   const [trigger, { data, isLoading }] = useLazyFetch(() =>
-    registerUser(userData)
+    registerUser(userData).then((res) => {
+      if ("error" in res) return;
+      handleSuccess(res);
+    })
   );
 
   return (
