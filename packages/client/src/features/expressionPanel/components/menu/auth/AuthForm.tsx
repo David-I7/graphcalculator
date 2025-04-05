@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { SetStateAction, useId, useState } from "react";
 import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { useLazyFetch } from "../../../../../hooks/api";
@@ -6,6 +6,8 @@ import { authenticateUser } from "../../../../../state/api/actions";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
 import PasswordInput from "../../../../../components/input/PasswordInput";
+import { CSS_VARIABLES } from "../../../../../data/css/variables";
+import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 
 type AuthFormProps = {
   email: string;
@@ -18,14 +20,7 @@ const AuthForm = ({
   handlePreviousStep,
   handleSuccess,
 }: AuthFormProps) => {
-  const id = useId();
   const [password, setPassword] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(
-    undefined
-  );
-  const [trigger, { data, isLoading }] = useLazyFetch(() =>
-    authenticateUser({ email, password })
-  );
 
   return (
     <div className="auth-form">
@@ -35,38 +30,87 @@ const AuthForm = ({
         </ButtonTarget>
         <h2>Welcome back!</h2>
       </div>
-      <form
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (isLoading) return;
-          trigger();
-        }}
-      >
-        <label htmlFor={id}>Enter your password:</label>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <PasswordInput
-            name="password"
-            autoFocus={true}
-            id={id}
-            minLength={8}
-            value={password}
-            message={errorMessage}
-            onChange={(e) => {
-              if (errorMessage) setErrorMessage(undefined);
-              setPassword(e.target.value);
-            }}
-          />
-          <FilledButton disabled={password.length < 8}>Submit</FilledButton>
+
+      <div className="auth-form-body">
+        <div className="auth-form-body-content">
+          <p>
+            You're logging in with <strong>{email}</strong>
+          </p>
+          <Form email={email} password={password} setPassword={setPassword} />
         </div>
-      </form>
+      </div>
     </div>
   );
 };
 
 export default AuthForm;
+
+function Form({
+  email,
+  password,
+  setPassword,
+}: {
+  email: string;
+  password: string;
+  setPassword: React.Dispatch<SetStateAction<string>>;
+}) {
+  const id = useId();
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(
+    undefined
+  );
+  const [trigger, { data, isLoading }] = useLazyFetch(() =>
+    authenticateUser({ email, password })
+  );
+
+  return (
+    <form
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (isLoading) return;
+        trigger();
+      }}
+    >
+      <label htmlFor={id}>Enter your password:</label>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <PasswordInput
+          name="password"
+          autoFocus={true}
+          id={id}
+          minLength={8}
+          value={password}
+          message={errorMessage}
+          onChange={(e) => {
+            if (errorMessage) setErrorMessage(undefined);
+            setPassword(e.target.value);
+          }}
+        />
+        <FilledButton disabled={password.length < 8}>
+          {isLoading ? (
+            <div
+              style={{
+                display: "grid",
+                placeContent: "center",
+                width: "2.825rem",
+              }}
+            >
+              <Spinner
+                style={{
+                  borderColor: CSS_VARIABLES.onPrimary,
+                  borderTopColor: "transparent",
+                }}
+              />
+            </div>
+          ) : (
+            "Submit"
+          )}
+        </FilledButton>
+      </div>
+    </form>
+  );
+}

@@ -42,7 +42,6 @@
   &-content {
     @extend .font-body-m;
     text-align: left;
-    height: 400px;
     max-height: calc(100vh - 4rem - 8px);
 
     h2 {
@@ -53,7 +52,7 @@
 
     label {
       @extend .font-body-sm;
-      color: base.$on-surface-body-low;
+      color: base.$on-surface-body;
       display: block;
       margin-bottom: 0.5rem;
     }
@@ -64,68 +63,84 @@
   display: grid;
   grid-template-rows: 3.5rem 1fr;
   width: 25rem;
-  padding-top: 0.001rem;
-  height: 100%;
+  height: 300px;
+  max-height: inherit;
 
   &-body {
     overflow-y: auto;
 
     &-content {
-      padding: 0 1rem;
+      padding: 0 1rem 1rem;
     }
   }
 
   &-header {
     padding: 1rem 1rem;
-    // background-color: base.$surface;
-  }
-
-  & form {
-  }
-}
-
-.auth-form {
-  width: 25rem;
-  padding-bottom: 1rem;
-
-  &-header {
-    margin-block: 1rem;
-    padding-left: 0.25rem;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  & form {
-    padding: 0 1rem;
   }
 }
 
 .register-form {
-  width: 25rem;
-  padding-bottom: 1rem;
+  @extend .email-form;
+  height: 21.75rem;
 
   &-header {
-    margin-block: 1rem;
     padding-left: 0.25rem;
     display: flex;
     gap: 0.5rem;
     align-items: center;
   }
 
-  & form {
-    padding: 0 1rem;
+  &-body {
+    overflow-y: auto;
 
+    &-content {
+      padding: 0 1rem 1rem;
+
+      & > p {
+        @extend .font-body-sm;
+        color: base.$on-surface-body;
+        padding: 0.5rem 0 1.5rem;
+
+        & strong {
+          display: inline;
+        }
+      }
+    }
+  }
+
+  & form {
     & > div:nth-child(1) {
       display: flex;
-      align-items: center;
-      gap: 2rem;
-      margin-bottom: 1rem;
+      justify-content: space-between;
+      gap: 4rem;
+      margin-bottom: 1.5rem;
     }
+  }
+}
 
-    & button {
-      //   margin-left: auto;
-      //   margin-top: 2rem;
+.auth-form {
+  @extend .email-form;
+  height: 11.75rem;
+
+  &-header {
+    @extend .register-form-header;
+  }
+
+  &-body {
+    overflow-y: auto;
+
+    &-content {
+      padding: 0 1rem 1rem;
+
+      & > p {
+        @extend .font-body-sm;
+        color: base.$on-surface-body;
+        padding: 0.5rem 0 1.5rem;
+
+        & strong {
+          display: inline;
+        }
+      }
     }
   }
 }

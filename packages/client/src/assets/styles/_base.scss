@@ -132,6 +132,18 @@ main {
   max-height: 100svh;
 }
 
+// UTLILITY CLASSES
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.grid-center {
+  display: grid;
+  place-content: center;
+}
+
 .bg-surface-container-low {
   background-color: var.$surface-container-low;
 }
