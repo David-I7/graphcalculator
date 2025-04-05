@@ -74,18 +74,42 @@
       outline: none;
     }
   }
+}
 
-  .form-info-message {
-    @extend .font-body-xs;
-    position: absolute;
-    bottom: 0;
-    transform: translateY(calc(100% + 0.5rem));
-    left: 0.5rem;
-    color: base.$on-surface-body-low;
+.password-input-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: text;
+
+  border: 1px solid base.$border-normal;
+  border-radius: base.$br-100;
+  height: 2.5rem;
+  padding: 0.5rem;
+
+  &:focus-within {
+    border: 2px solid base.$primary;
   }
 
-  .form-error-message {
-    @extend .form-info-message;
-    color: base.$error;
+  & > input {
+    flex: 1;
+    outline: none;
+    width: 80px;
   }
+}
+
+.form-info-message {
+  @extend .font-body-xs;
+  position: absolute;
+  bottom: 0;
+  transform: translateY(calc(100% + 0.5rem));
+  left: 0.5rem;
+  color: base.$on-surface-body-low;
+}
+
+.form-error-message {
+  @extend .form-info-message;
+  color: base.$error;
 }

@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { GraphData } from "../graph/types";
-import { User } from "./types";
+import { UserSessionData } from "./types";
 import { baseUrl } from "./config";
 
 const apiSlice = createApi({
@@ -21,11 +21,12 @@ const apiSlice = createApi({
       }),
       transformResponse: (response: { graphs: GraphData[] }) => response.graphs,
     }),
-    getUser: build.query<User, void>({
+    getUser: build.query<UserSessionData, void>({
       query: () => ({
         url: "auth/status",
         credentials: "include",
       }),
+      transformResponse: (response: { data: UserSessionData }) => response.data,
     }),
   }),
 });

@@ -23,11 +23,15 @@ const LoginOrSignupForm = (props: LoginOrSignupFormPorps) => {
         <h2>Log In or Sign Up</h2>
       </div>
 
-      <button>google</button>
-      <button>apple</button>
+      <div className="email-form-body">
+        <div className="email-form-body-content">
+          <button>google</button>
+          <button>apple</button>
 
-      <Or />
-      <VerifyEmailForm {...props} />
+          <Or />
+          <VerifyEmailForm {...props} />
+        </div>
+      </div>
     </div>
   );
 };
@@ -54,9 +58,15 @@ function VerifyEmailForm({
 
   return (
     <form
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
       onSubmit={(e) => {
         e.preventDefault();
-        console.log("submit");
+        e.stopPropagation();
         if (isLoading) return;
         if (
           input !== "" &&
