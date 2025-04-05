@@ -40,7 +40,6 @@ const AuthDialog = () => {
         ref={ref}
         onClose={(e) => setIsOpen(false)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") e.preventDefault();
           e.stopPropagation();
         }}
       >

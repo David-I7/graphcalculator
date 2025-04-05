@@ -35,6 +35,12 @@ const AuthForm = ({
         <h2>Welcome back!</h2>
       </div>
       <form
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
         onSubmit={(e) => {
           e.preventDefault();
           if (isLoading) return;

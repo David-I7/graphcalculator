@@ -47,6 +47,12 @@ const RegisterForm = ({
       </div>
 
       <form
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
         onSubmit={(e) => {
           e.preventDefault();
           if (isLoading) return;

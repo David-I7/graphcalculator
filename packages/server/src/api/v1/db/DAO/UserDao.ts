@@ -54,7 +54,7 @@ export class UserDao implements IUserDao {
   ): Promise<UserSessionData> {
     const res = await DB.query<UserSessionData>(
       `Insert into users (email,first_name,last_name,password) 
-      values ($1,$2,$3,$4) returning id;`,
+      values ($1,$2,$3,$4) returning email,first_name,last_name,email_is_verfied,id;`,
       [user.email, user.first_name, user.last_name, user.password]
     );
 

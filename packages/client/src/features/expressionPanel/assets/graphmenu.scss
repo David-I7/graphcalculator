@@ -42,8 +42,8 @@
   &-content {
     @extend .font-body-m;
     text-align: left;
-    height: 100%;
-    overflow-y: auto;
+    height: 400px;
+    max-height: calc(100vh - 4rem - 8px);
 
     h2 {
       color: base.$on-surface-heading;
@@ -61,16 +61,23 @@
 }
 
 .email-form {
+  display: grid;
+  grid-template-rows: 3.5rem 1fr;
   width: 25rem;
-  padding-bottom: 1rem;
+  padding-top: 0.001rem;
+  height: 100%;
 
-  & > * {
-    padding: 0 1rem;
+  &-body {
+    overflow-y: auto;
+
+    &-content {
+      padding: 0 1rem;
+    }
   }
 
   &-header {
-    margin-block: 1rem;
-    padding: 0 1rem;
+    padding: 1rem 1rem;
+    // background-color: base.$surface;
   }
 
   & form {
