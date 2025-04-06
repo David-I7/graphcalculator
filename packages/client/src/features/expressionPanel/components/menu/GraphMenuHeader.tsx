@@ -1,16 +1,19 @@
+import { UserSessionData } from "../../../../state/api/types";
 import AuthDialog from "./auth/AuthDialog";
+import { AccountSettingsDropDown } from "./AccountSettingsDropDown";
 
-const GraphMenuHeader = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
+const GraphMenuHeader = ({ user }: { user: UserSessionData | undefined }) => {
   return (
     <>
-      {!isAuthenticated && (
+      {!user && (
         <header>
           <AuthDialog />
         </header>
       )}
-      {isAuthenticated && (
-        <header className="graph-menu-authenticated">
-          Logout controls; Search controls
+      {user && (
+        <header>
+          <AccountSettingsDropDown user={user} />
+          {/* Logout controls; Search controls */}
         </header>
       )}
     </>

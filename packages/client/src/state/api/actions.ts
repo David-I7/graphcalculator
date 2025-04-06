@@ -73,3 +73,12 @@ export async function registerUser(
     })
     .catch((err) => handleError(err));
 }
+
+export async function logoutUser(): Promise<void | ApiErrorResponse> {
+  return await fetch(baseUrl + "/logout", { credentials: "include" })
+    .then(async (res) => {
+      if (!res.ok) throw await res.json();
+      return;
+    })
+    .catch((err) => handleError(err));
+}

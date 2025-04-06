@@ -18,18 +18,26 @@
     box-shadow: base.$box-shadow;
     border: 1px solid base.$border-low;
 
-    @include base.afterAbsolute("&") {
-      top: -1.0625rem;
+    &-triangle {
+      @extend .grid-center;
+      position: absolute;
+      z-index: 110;
+      bottom: 0;
       left: 50%;
-      transform: translateX(-50%);
-      @include base.cssTriangle(1.0625rem, 1.0625rem, base.$border-low);
-    }
-    @include base.beforeAbsolute("&") {
-      z-index: 10;
-      top: -1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      @include base.cssTriangle(1rem, 1rem, base.$surface);
+      transform: translateY(100%) translateX(-50%);
+
+      & > div:nth-child(1) {
+        grid-area: 1 / 1 / 2 / 2;
+        @include base.cssTriangle(1.0625rem, 1.0625rem, base.$border-low);
+      }
+      & > div:nth-child(2) {
+        grid-area: 1 / 1 / 2 / 2;
+        transform: translateY(0.125rem);
+
+        margin-left: 0.0625rem;
+        z-index: 10;
+        @include base.cssTriangle(1rem, 1rem, base.$surface);
+      }
     }
   }
 

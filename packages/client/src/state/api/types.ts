@@ -1,6 +1,6 @@
 export type UserSessionData = {
-  firstName: string;
-  lastName?: string;
+  first_name: string;
+  last_name?: string;
   email: string;
   email_is_verified: boolean;
   id: string;

@@ -17,7 +17,7 @@ type RegisterFormProps = {
   credentials: RegisterUserData;
   handleSuccess: (user: UserSessionData) => void;
   handlePreviousStep: (
-    data: Pick<RegisterUserData, "password" | "lastName" | "firstName">
+    data: Pick<RegisterUserData, "password" | "last_name" | "first_name">
   ) => void;
 };
 
@@ -35,8 +35,8 @@ const RegisterForm = ({
           className="bg-surface button--hovered"
           onClick={() =>
             handlePreviousStep({
-              firstName: userData.firstName,
-              lastName: userData.lastName,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
               password: userData.password,
             })
           }
@@ -105,9 +105,9 @@ function Form({
             type="text"
             required
             id={firstNameId}
-            value={userData.firstName}
+            value={userData.first_name}
             onChange={(e) => {
-              setUserData({ ...userData, firstName: e.target.value });
+              setUserData({ ...userData, first_name: e.target.value });
             }}
           />
         </div>
@@ -117,9 +117,9 @@ function Form({
             name="lastName"
             type="text"
             id={lastNameId}
-            value={userData.lastName}
+            value={userData.last_name}
             onChange={(e) => {
-              setUserData({ ...userData, lastName: e.target.value });
+              setUserData({ ...userData, last_name: e.target.value });
             }}
           />
         </div>
@@ -145,7 +145,7 @@ function Form({
         }}
       >
         <FilledButton
-          disabled={userData.password.length < 8 || userData.firstName === ""}
+          disabled={userData.password.length < 8 || userData.first_name === ""}
         >
           {isLoading ? (
             <div

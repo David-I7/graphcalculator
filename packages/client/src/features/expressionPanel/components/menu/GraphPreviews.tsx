@@ -100,13 +100,15 @@ function CurrentGraph({ onClose }: { onClose: () => void }) {
       <div className="section-separator">
         <h2>Current Graph</h2>
       </div>
-      <button style={{ display: "block" }} onClick={onClose}>
+      <div onClick={onClose}>
         <PreviewListItem
           item={currentGraph}
           idx={0}
-          body={getElapsedTime(currentGraph.modifiedAt)}
+          body={
+            currentGraph.isModified ? "unsaved changes" : "no unsaved changes"
+          }
         />
-      </button>
+      </div>
     </section>
   );
 }

@@ -4,11 +4,13 @@ import { ChevronDown } from "../svgs";
 import styles from "./dropdown.module.scss";
 import React, {
   createContext,
+  ReactElement,
   ReactNode,
   RefObject,
   SetStateAction,
   useCallback,
   useContext,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -109,14 +111,13 @@ Dropdown.Chevron = () => {
               transition: "transform 150ms ease-out",
             }
       }
-      stroke={CSS_VARIABLES.onSurfaceHeading}
       width={16}
       height={16}
     />
   );
 };
 
-export type UserContentProps = {
+export type CustomMenuProps = {
   isOpen: boolean;
   ariaControlsId: string;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -127,7 +128,7 @@ Dropdown.CustomMenu = ({
   Menu,
   children,
 }: {
-  Menu: (props: UserContentProps) => ReactNode;
+  Menu: (props: CustomMenuProps) => ReactNode;
   children: ReactNode;
 }) => {
   const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
@@ -149,6 +150,7 @@ Dropdown.Menu = <T,>({
   onClick,
 }: {
   data: T[];
+  onClick: (arg: T) => void;
   ListItem: ({
     data,
     handleClick,
@@ -156,9 +158,9 @@ Dropdown.Menu = <T,>({
     data: T;
     handleClick: (arg: T) => void;
   }) => ReactNode;
-  onClick: (arg: T) => void;
 }) => {
   const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
+  const ref = useRef<HTMLUListElement>(null);
 
   const handleClick = useCallback(
     (arg: T) => {
@@ -168,14 +170,70 @@ Dropdown.Menu = <T,>({
     [onClick, isOpen]
   );
 
+  useEffect(() => {
+    if (!isOpen || !ref.current) return;
+
+    const dropdown = ref.current;
+    const contentRect = dropdown.getBoundingClientRect();
+    if (contentRect.left <= 0) {
+      dropdown.style.translate = `${Math.abs(contentRect.left) + 2}px`;
+    } else if (contentRect.right >= window.innerWidth) {
+      const offset = contentRect.right - window.innerWidth;
+      dropdown.style.translate = `-${offset + 2}px`;
+    }
+  }, [isOpen]);
+
   if (!isOpen) return;
 
   return (
-    <ul className={styles.dropdownMenu} id={ariaControlsID}>
-      {data.map((item, i) => {
-        return <ListItem handleClick={handleClick} data={item} key={i} />;
-      })}
-    </ul>
+    <>
+      <ul ref={ref} className={styles.dropdownMenu} id={ariaControlsID}>
+        {data.map((item, i) => {
+          return <ListItem handleClick={handleClick} data={item} key={i} />;
+        })}
+      </ul>
+      <div className={styles.dropdownMenuTriangle}>
+        <div></div>
+        <div></div>
+      </div>
+    </>
+  );
+};
+
+Dropdown.DialogMenu = ({
+  children,
+}: {
+  children: ReactElement<{ toggle: () => void }>;
+}) => {
+  const { isOpen, setIsOpen, ariaControlsID } = useDropdownContext();
+  const ref = useRef<HTMLUListElement>(null);
+  const toggle = () => setIsOpen(!isOpen);
+
+  useEffect(() => {
+    if (!isOpen || !ref.current) return;
+
+    const dropdown = ref.current;
+    const contentRect = dropdown.getBoundingClientRect();
+    if (contentRect.left <= 0) {
+      dropdown.style.translate = `${Math.abs(contentRect.left) + 2}px`;
+    } else if (contentRect.right >= window.innerWidth) {
+      const offset = contentRect.right - window.innerWidth;
+      dropdown.style.translate = `-${offset + 2}px`;
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <ul ref={ref} className={styles.dropdownMenu} id={ariaControlsID}>
+        {React.cloneElement(children, { toggle })}
+      </ul>
+      <div className={styles.dropdownMenuTriangle}>
+        <div></div>
+        <div></div>
+      </div>
+    </>
   );
 };
 
