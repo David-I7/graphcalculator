@@ -51,14 +51,27 @@ export const PreviewListItem = ({
   body,
   idx,
 }: {
-  item: GraphData;
+  item: Omit<GraphData, "items">;
   idx: number;
   body: string;
 }) => {
   return (
-    <li graph-id={item.id} graph-idx={idx} className="preview-list-item">
+    <li
+      role="button"
+      tabIndex={0}
+      graph-id={item.id}
+      graph-idx={idx}
+      className="preview-list-item"
+    >
       <div className="preview-list-item-left">
-        <img src={item.graphSnapshot.image} loading="lazy" />
+        <img
+          src={
+            item.graphSnapshot.image === ""
+              ? undefined
+              : item.graphSnapshot.image
+          }
+          loading="lazy"
+        />
       </div>
       <div className="preview-list-item-right">
         <h3>{item.name}</h3>

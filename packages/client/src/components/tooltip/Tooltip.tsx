@@ -36,13 +36,6 @@ const Tooltip = ({ style, content, message, fixedPosition }: TooltipProps) => {
   return (
     <div
       style={style}
-      // onFocus={(e) => {
-      //   setIsOpen(true);
-      // }}
-      // onBlurCapture={(e) => {
-      //   console.log(e);
-      //   setIsOpen(false);
-      // }}
       onMouseEnter={() => {
         if (timeoutId.current) return;
         timeoutId.current = setTimeout(() => {

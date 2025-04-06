@@ -17,8 +17,8 @@ export default function FormProgress({
   const user = useRef<RegisterUserData>({
     email: "",
     password: "",
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
   });
   const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
 
@@ -27,7 +27,7 @@ export default function FormProgress({
     data: VerifyEmailResponse["data"]
   ) => {
     if (data.isRegistered) {
-      user.current = { password: "", lastName: "", firstName: "", email };
+      user.current = { password: "", last_name: "", first_name: "", email };
     } else {
       user.current = { ...user.current, email, password: "" };
     }
@@ -40,7 +40,7 @@ export default function FormProgress({
     setProgress(progress - 1);
   };
   const handlePreviousUnregistered = (
-    data: Pick<RegisterUserData, "firstName" | "lastName" | "password">
+    data: Pick<RegisterUserData, "first_name" | "last_name" | "password">
   ) => {
     user.current = { ...user.current, ...data };
     setProgress(progress - 1);

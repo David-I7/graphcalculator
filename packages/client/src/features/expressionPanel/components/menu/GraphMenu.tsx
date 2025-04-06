@@ -30,7 +30,6 @@ type GraphMenuContext = {
   ariaControlsId: string;
   menuRef: React.RefObject<HTMLDivElement | null>;
   rootRef: React.RefObject<HTMLDivElement | null>;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isOpen: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -110,7 +109,6 @@ const useGraphMenuContextSetup = (): GraphMenuContext => {
     menuRef,
     ariaControlsId: id,
     isOpen,
-    setIsOpen,
     rootRef,
     onClose,
     onOpen,
@@ -212,7 +210,7 @@ GraphMenu.Menu = () => {
       className="graph-menu"
       role="menu"
     >
-      <GraphMenuHeader isAuthenticated={user !== undefined} />
+      <GraphMenuHeader user={user} />
       <NewBlankGraph handleClick={onClose} />
       <GraphPreviews isAuthenticated={user !== undefined} onClose={onClose} />
     </div>,

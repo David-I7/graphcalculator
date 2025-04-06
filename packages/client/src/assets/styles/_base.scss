@@ -158,6 +158,14 @@ main {
     filter: brightness(85%);
   }
 }
+
+.inverse-button--hovered {
+  transition: background-color var.$an-sp-fast ease-out;
+  &:hover {
+    background-color: color-mix(in srgb, var.$inverse-surface 85%, white 15%);
+  }
+}
+
 .button--focused {
   transition: filter var.$an-sp-fast ease-out;
   &:focus {

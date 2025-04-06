@@ -209,18 +209,11 @@
     align-items: center;
     cursor: pointer;
     background-color: base.$inverse-surface;
-    transition: background-color base.$an-sp-fast ease-out;
-
-    &:hover {
-      background-color: color-mix(
-        in srgb,
-        base.$inverse-surface 85%,
-        white 15%
-      );
-    }
+    @extend .inverse-button--hovered;
 
     &-left {
       background-color: white;
+      height: 3rem;
       border-radius: base.$br-200;
       & img {
         aspect-ratio: 1 / 1;
@@ -237,5 +230,20 @@
         overflow: hidden;
       }
     }
+  }
+}
+
+header:has(.account-settings-dropdown) {
+  border-bottom: 1px solid base.$border-normal;
+  color: base.$inverse-on-surface-heading;
+}
+
+header .account-settings-dropdown {
+  padding-block: 0.5rem;
+  @extend .inverse-button--hovered;
+
+  &-content {
+    color: base.$inverse-on-surface-body;
+    padding: 0.5rem;
   }
 }

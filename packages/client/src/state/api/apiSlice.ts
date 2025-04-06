@@ -26,7 +26,8 @@ const apiSlice = createApi({
         url: "auth/status",
         credentials: "include",
       }),
-      transformResponse: (response: { data: UserSessionData }) => response.data,
+      transformResponse: (response: { data: { user: UserSessionData } }) =>
+        response.data.user,
     }),
   }),
 });
