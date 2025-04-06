@@ -79,6 +79,7 @@ const graphSlice = createSlice({
         };
       },
       (state, action: PayloadAction<ClientGraphData>) => {
+        // doing this to for re-renders on all keys
         const nonOverlappingId = action.payload.items.nextId;
         action.payload.items.data[0].id = nonOverlappingId;
         action.payload.items.nextId = nonOverlappingId + 1;
@@ -87,8 +88,10 @@ const graphSlice = createSlice({
       }
     ),
     changeGraphName: create.reducer((state, action: PayloadAction<string>) => {
-      if (state.currentGraph.name !== action.payload)
+      if (state.currentGraph.name !== action.payload) {
         state.currentGraph.name = action.payload;
+        state.currentGraph.isModified = true;
+      }
     }),
 
     // ITEM CASES
@@ -111,6 +114,7 @@ const graphSlice = createSlice({
         }
         state.currentGraph.items.focusedId = state.currentGraph.items.nextId;
         state.currentGraph.items.nextId += 1;
+        state.currentGraph.isModified = true;
       }
     ),
     deleteItem: create.reducer(
@@ -137,6 +141,7 @@ const graphSlice = createSlice({
         }
 
         items.data.splice(action.payload.idx, 1);
+        state.currentGraph.isModified = true;
       }
     ),
     updateItemPos: create.reducer(
@@ -144,6 +149,8 @@ const graphSlice = createSlice({
         state,
         action: PayloadAction<{ id: number; startPos: number; endPos: number }>
       ) => {
+        if (action.payload.startPos === action.payload.endPos) return;
+
         if (action.payload.startPos < action.payload.endPos) {
           let i = action.payload.startPos;
           while (i < action.payload.endPos) {
@@ -157,6 +164,7 @@ const graphSlice = createSlice({
             --i;
           }
         }
+        state.currentGraph.isModified = true;
       }
     ),
     updateItemContent: create.reducer(
@@ -168,6 +176,7 @@ const graphSlice = createSlice({
         if (item.id !== action.payload.id) return;
         if (item.data.content === action.payload.content) return;
         item.data.content = action.payload.content;
+        state.currentGraph.isModified = true;
       }
     ),
     setFocusedItem: create.reducer((state, action: PayloadAction<number>) => {
@@ -196,6 +205,7 @@ const graphSlice = createSlice({
         if (expr.type === "function" || expr.type === "point") {
           expr.settings.hidden = !expr.settings.hidden;
         }
+        state.currentGraph.isModified = true;
       }
     ),
     changeColor: create.reducer(
@@ -216,6 +226,7 @@ const graphSlice = createSlice({
 
         if (expr.type === "function" || expr.type === "point") {
           expr.settings.color = action.payload.color;
+          state.currentGraph.isModified = true;
         }
       }
     ),
@@ -239,6 +250,7 @@ const graphSlice = createSlice({
           const sign = Math.sign(action.payload.opacity);
           const clamped = Math.min(Math.abs(action.payload.opacity), 1);
           expr.settings.opacity = Math.max(clamped * sign, 0);
+          state.currentGraph.isModified = true;
         }
       }
     ),
@@ -262,6 +274,7 @@ const graphSlice = createSlice({
           const sign = Math.sign(action.payload.strokeSize);
           const clamped = Math.min(Math.abs(action.payload.strokeSize), 10);
           expr.settings.strokeSize = Math.max(clamped * sign, 0);
+          state.currentGraph.isModified = true;
         }
       }
     ),
@@ -284,6 +297,7 @@ const graphSlice = createSlice({
         if (expr.type === "function") {
           if (expr.settings.lineType === action.payload.lineType) return;
           expr.settings.lineType = action.payload.lineType;
+          state.currentGraph.isModified = true;
         }
       }
     ),
@@ -306,6 +320,7 @@ const graphSlice = createSlice({
         if (expr.type === "point") {
           if (expr.settings.pointType === action.payload.pointType) return;
           expr.settings.pointType = action.payload.pointType;
+          state.currentGraph.isModified = true;
         }
       }
     ),
@@ -346,6 +361,7 @@ const graphSlice = createSlice({
         }
         expr.type = action.payload.type;
         expr.parsedContent = undefined;
+        state.currentGraph.isModified = true;
       }
     ),
     updateFunctionExpr: create.reducer(
@@ -372,6 +388,7 @@ const graphSlice = createSlice({
         }
         expr.type = "function";
         expr.parsedContent = action.payload.parsedContent;
+        state.currentGraph.isModified = true;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] = {
@@ -416,6 +433,7 @@ const graphSlice = createSlice({
         }
         expr.type = "point";
         expr.parsedContent = action.payload.parsedContent;
+        state.currentGraph.isModified = true;
       }
     ),
     updateVariableExpr: create.reducer(
@@ -442,6 +460,7 @@ const graphSlice = createSlice({
         }
         expr.parsedContent = action.payload.parsedContent;
         expr.type = "variable";
+        state.currentGraph.isModified = true;
 
         if (!restrictedVariables.has(action.payload.parsedContent.name)) {
           scope[action.payload.parsedContent.name] = {

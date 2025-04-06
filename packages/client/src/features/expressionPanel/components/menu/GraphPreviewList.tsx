@@ -51,7 +51,7 @@ export const PreviewListItem = ({
   body,
   idx,
 }: {
-  item: GraphData;
+  item: Omit<GraphData, "items">;
   idx: number;
   body: string;
 }) => {

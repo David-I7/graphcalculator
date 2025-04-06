@@ -48,6 +48,7 @@ export function createNewGraph(id: number = 1): ClientGraphData {
       },
       image: "",
     },
+    isModified: false,
     name: "Untitled",
     items: {
       scope: {},
@@ -97,40 +98,9 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
     }
   }
 
-  // for (let i = 0; i < graph.items.length; i++) {
-  //   const item = graph.items[i];
-  //   maxId = Math.max(maxId, item.id);
-
-  //   if (isExpression(item) && item.data.parsedContent) {
-  //     if (item.data.type === "variable") {
-  //       scope[item.data.parsedContent.name] = item.data.parsedContent.value;
-  //       addDependencies(
-  //         item.data.parsedContent.name,
-  //         item.data.parsedContent.scopeDeps,
-  //         depGraph
-  //       );
-  //     } else if (item.data.type == "function") {
-  //       const fnName = item.data.parsedContent.name;
-  //       if (restrictedVariables.has(fnName)) continue;
-  //       scope[fnName] = item.data.parsedContent.node;
-  //       addDependencies(fnName, item.data.parsedContent.scopeDeps, depGraph);
-  //     }
-  //   }
-  // }
-
-  console.log({
-    ...graph,
-    items: {
-      scope,
-      nextId: maxId + 1,
-      focusedId: -1,
-      data,
-      dependencyGraph: depGraph,
-    },
-  });
-
   return {
     ...graph,
+    isModified: false,
     items: {
       scope,
       nextId: maxId + 1,

@@ -1,9 +1,10 @@
-import React from "react";
 import {
   useGetExampleGraphsQuery,
   useGetSavedGraphsQuery,
 } from "../../../../state/api/apiSlice";
 import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
+import { useAppSelector } from "../../../../state/hooks";
+import { getElapsedTime } from "../../../../helpers/date";
 
 type GraphPreviewProps = {
   onClose: () => void;
@@ -11,50 +12,101 @@ type GraphPreviewProps = {
 };
 
 const GraphPreviews = ({ onClose, isAuthenticated }: GraphPreviewProps) => {
-  const { data, isLoading, isError } = useGetExampleGraphsQuery();
-  const {
-    data: savedGraphs,
-    isLoading: isLoadingSaved,
-    isError: isErrorSaved,
-    isUninitialized,
-  } = useGetSavedGraphsQuery(undefined, { skip: !isAuthenticated });
-  // console.log(isUninitialized);
   return (
     <>
       {isAuthenticated && (
         <>
-          <section>
-            <h2>Current Graph</h2>
-          </section>
-          <section>
-            <h2>Saved Graphs</h2>
-          </section>
+          <CurrentGraph onClose={onClose} />
+          <SavedGraphs onClose={onClose} isAuthenticated={isAuthenticated} />
         </>
       )}
 
-      <section>
-        <div className="section-separator">
-          <h2>Examples</h2>
-        </div>
-        {isLoading && <>Loading...</>}
-        {isError && <>Error</>}
-        {data && (
-          <GraphPreviewList toggleMenu={onClose} data={data}>
-            {data.map((item, idx) => {
-              return (
-                <PreviewListItem
-                  idx={idx}
-                  key={item.id}
-                  body={"example"}
-                  item={item}
-                />
-              );
-            })}
-          </GraphPreviewList>
-        )}
-      </section>
+      <ExampleGraphs onClose={onClose} />
     </>
   );
 };
 
 export default GraphPreviews;
+
+function ExampleGraphs({ onClose }: { onClose: () => void }) {
+  const { data, isLoading, isError } = useGetExampleGraphsQuery();
+
+  return (
+    <section>
+      <div className="section-separator">
+        <h2>Examples</h2>
+      </div>
+      {isLoading && <>Loading...</>}
+      {isError && <>Error</>}
+      {data && (
+        <GraphPreviewList toggleMenu={onClose} data={data}>
+          {data.map((item, idx) => {
+            return (
+              <PreviewListItem
+                idx={idx}
+                key={item.id}
+                body={"example"}
+                item={item}
+              />
+            );
+          })}
+        </GraphPreviewList>
+      )}
+    </section>
+  );
+}
+
+function SavedGraphs({
+  onClose,
+  isAuthenticated,
+}: {
+  onClose: () => void;
+  isAuthenticated: boolean;
+}) {
+  const { data, isLoading, isError } = useGetSavedGraphsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  return (
+    <section>
+      <div className="section-separator">
+        <h2>Saved Graphs</h2>
+      </div>
+      {isLoading && <>Loading...</>}
+      {isError && <>Error</>}
+      {data && (
+        <GraphPreviewList toggleMenu={onClose} data={data}>
+          {data.map((item, idx) => {
+            return (
+              <PreviewListItem
+                idx={idx}
+                key={item.id}
+                body={item.modifiedAt}
+                item={item}
+              />
+            );
+          })}
+        </GraphPreviewList>
+      )}
+    </section>
+  );
+}
+
+function CurrentGraph({ onClose }: { onClose: () => void }) {
+  const currentGraph = useAppSelector((state) => state.graphSlice.currentGraph);
+
+  return (
+    <section>
+      <div className="section-separator">
+        <h2>Current Graph</h2>
+      </div>
+      <button style={{ display: "block" }} onClick={onClose}>
+        <PreviewListItem
+          item={currentGraph}
+          idx={0}
+          body={getElapsedTime(currentGraph.modifiedAt)}
+        />
+      </button>
+    </section>
+  );
+}

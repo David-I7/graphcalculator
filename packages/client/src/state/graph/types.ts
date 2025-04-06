@@ -130,6 +130,7 @@ export type InternalScope = {
 };
 
 export type ClientGraphData = Omit<GraphData, "items"> & {
+  isModified: boolean;
   items: {
     nextId: number;
     focusedId: number;
