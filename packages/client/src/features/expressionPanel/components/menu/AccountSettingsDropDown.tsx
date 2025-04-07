@@ -1,9 +1,17 @@
+import { useRef } from "react";
+import OutlinedButton from "../../../../components/buttons/common/OutlineButton";
+import Dialog from "../../../../components/dialog/Dialog";
 import Dropdown from "../../../../components/dropdown/Dropdown";
+import Hr from "../../../../components/hr/Hr";
 import Spinner from "../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../hooks/api";
 import { logoutUser } from "../../../../state/api/actions";
 import { useGetUserQuery } from "../../../../state/api/apiSlice";
 import { UserSessionData } from "../../../../state/api/types";
+import {
+  DialogProvider,
+  useDialogContext,
+} from "../../../../components/dialog/DialogContext";
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -30,14 +38,44 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
   if (!data) return null;
 
   return (
-    <div className="account-settings-dropdown-content">
-      <div>
-        {data.first_name}
-        {data.email}
+    <div className="account-settings">
+      <div className="account-settings-credentials">
+        <div>
+          {data.first_name} {data.last_name}
+        </div>
+        <div>{data.email}</div>
       </div>
+
+      <DialogProvider>
+        <div></div>
+      </DialogProvider>
+
+      <Hr style={{ marginBlock: "1rem" }} />
       <div>
-        <button onClick={trigger}>{isLoading ? <Spinner /> : "logout"}</button>
+        <OutlinedButton
+          className="button--hovered"
+          style={{ backgroundColor: "white" }}
+          onClick={trigger}
+        >
+          {isLoading ? (
+            <div className="grid-center" style={{ width: "45px" }}>
+              <Spinner />
+            </div>
+          ) : (
+            "Logout"
+          )}
+        </OutlinedButton>
       </div>
     </div>
+  );
+}
+
+function AccountSettingsDialog() {
+  const { ref, isOpen, setIsOpen } = useDialogContext();
+
+  return (
+    <Dialog ref={ref}>
+      <></>
+    </Dialog>
   );
 }

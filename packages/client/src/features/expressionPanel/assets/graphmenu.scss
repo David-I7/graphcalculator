@@ -235,15 +235,30 @@
 
 header:has(.account-settings-dropdown) {
   border-bottom: 1px solid base.$border-normal;
-  color: base.$inverse-on-surface-heading;
 }
 
 header .account-settings-dropdown {
   padding-block: 0.5rem;
-  @extend .inverse-button--hovered;
 
-  &-content {
-    color: base.$inverse-on-surface-body;
-    padding: 0.5rem;
+  & > button {
+    @extend .inverse-button--hovered;
+    color: base.$inverse-on-surface-heading;
+    font-weight: base.$fw-bold;
+
+    & svg {
+      stroke-width: 3px;
+    }
+  }
+}
+
+.account-settings {
+  color: base.$on-surface-body;
+  padding: 0.5rem;
+
+  &-credentials {
+    color: base.$on-surface-body-low;
+    & > :nth-child(2) {
+      @extend .font-body-sm;
+    }
   }
 }

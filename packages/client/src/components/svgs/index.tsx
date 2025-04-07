@@ -109,15 +109,11 @@ export const ChevronDown = (props: SVGProps) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
+      strokeWidth="2"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M5 9L12 16L19 9"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M5 9L12 16L19 9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };
@@ -129,15 +125,11 @@ export const ChevronUp = (props: SVGProps) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
+      strokeWidth="2"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M19 15L12 8L5 15"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M19 15L12 8L5 15" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 };

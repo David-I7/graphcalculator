@@ -6,23 +6,15 @@ import FormProgress from "./FormProgress";
 import { useAppDispatch } from "../../../../../state/hooks";
 import { UserSessionData } from "../../../../../state/api/types";
 import apiSlice from "../../../../../state/api/apiSlice";
+import { useDialogContext } from "../../../../../components/dialog/DialogContext";
 
 const AuthDialog = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const ref = useRef<HTMLDialogElement>(null);
+  const { isOpen, setIsOpen, ref } = useDialogContext();
   const dispatch = useAppDispatch();
   const onComplete = (user: UserSessionData) => {
     setIsOpen(!isOpen);
     dispatch(apiSlice.util.upsertQueryData("getUser", undefined, user));
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      ref.current?.showModal();
-    } else {
-      ref.current?.close();
-    }
-  }, [isOpen]);
 
   return (
     <div className="auth-dialog">
