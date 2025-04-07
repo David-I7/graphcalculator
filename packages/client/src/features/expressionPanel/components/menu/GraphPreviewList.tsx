@@ -50,10 +50,12 @@ export const PreviewListItem = ({
   item,
   body,
   idx,
+  image,
 }: {
   item: Omit<GraphData, "items">;
   idx: number;
   body: string;
+  image: string;
 }) => {
   return (
     <li
@@ -64,14 +66,7 @@ export const PreviewListItem = ({
       className="preview-list-item"
     >
       <div className="preview-list-item-left">
-        <img
-          src={
-            item.graphSnapshot.image === ""
-              ? undefined
-              : item.graphSnapshot.image
-          }
-          loading="lazy"
-        />
+        {image && <img src={image} loading="lazy" />}
       </div>
       <div className="preview-list-item-right">
         <h3>{item.name}</h3>

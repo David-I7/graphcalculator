@@ -30,8 +30,8 @@ const handleEmailVerification = async (req: Request, res: Response) => {
 };
 
 const handleRegister = async (req: Request, res: Response) => {
-  const { email, firstName, lastName, password } = req.body;
-  if (!email || !isEmail(email) || !firstName || !isValidPassword(password)) {
+  const { email, first_name, last_name, password } = req.body;
+  if (!email || !isEmail(email) || !first_name || !isValidPassword(password)) {
     res
       .status(400)
       .json(
@@ -50,14 +50,14 @@ const handleRegister = async (req: Request, res: Response) => {
 
   const user = await userDao.createUser({
     email,
-    first_name: firstName,
-    last_name: lastName,
+    first_name,
+    last_name,
     password: hashedPassword,
   });
 
   req.session.user = user;
 
-  res.status(200).json(new ApiSuccessResponse().createResponse(user));
+  res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
 };
 
 export default { handleEmailVerification, handleRegister };

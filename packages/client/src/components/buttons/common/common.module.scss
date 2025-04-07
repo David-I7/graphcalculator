@@ -27,7 +27,7 @@
   @extend .filled-button;
   background-color: transparent;
   border: 1px solid base.$border-normal;
-  color: base.$border-normal;
+  color: base.$on-surface-heading;
 
   &:focus {
     outline: 2px solid base.$primary;
@@ -43,7 +43,7 @@
 
 .underline-button {
   font-weight: base.$fw-semibold;
-  color: base.$on-surface-body;
+  color: base.$on-surface-heading;
   height: 32px;
 
   &:hover:not(:disabled) {

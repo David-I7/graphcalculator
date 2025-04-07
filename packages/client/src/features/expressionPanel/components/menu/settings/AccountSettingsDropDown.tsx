@@ -1,6 +1,4 @@
-import { useRef } from "react";
 import OutlinedButton from "../../../../../components/buttons/common/OutlineButton";
-import Dialog from "../../../../../components/dialog/Dialog";
 import Dropdown from "../../../../../components/dropdown/Dropdown";
 import Hr from "../../../../../components/hr/Hr";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
@@ -8,11 +6,8 @@ import { useLazyFetch } from "../../../../../hooks/api";
 import { logoutUser } from "../../../../../state/api/actions";
 import { useGetUserQuery } from "../../../../../state/api/apiSlice";
 import { UserSessionData } from "../../../../../state/api/types";
-import {
-  DialogProvider,
-  useDialogContext,
-} from "../../../../../components/dialog/DialogContext";
-import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
+import { DialogProvider } from "../../../../../components/dialog/DialogContext";
+import { AccountSettingsDialog } from "./AccountSettingsDialog";
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -34,10 +29,9 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
       return { data };
     },
   }).data;
-  const [trigger, { data: res, isLoading, isError }] = useLazyFetch(() =>
+  const [trigger, { data: res, isLoading, isError, error }] = useLazyFetch(() =>
     logoutUser().then((res) => {
-      console.log(res);
-      if (res) return;
+      if (res) throw new Error(res.error.message);
       window.location.reload();
     })
   );
@@ -73,19 +67,6 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
           )}
         </OutlinedButton>
       </div>
-    </div>
-  );
-}
-
-function AccountSettingsDialog() {
-  const { ref, isOpen, setIsOpen } = useDialogContext();
-
-  return (
-    <div>
-      <UnderlineButton>Account settings</UnderlineButton>
-      <Dialog ref={ref}>
-        <></>
-      </Dialog>
     </div>
   );
 }

@@ -253,12 +253,15 @@ header .account-settings-dropdown {
 
 .account-settings {
   color: base.$on-surface-body;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
 
   &-credentials {
-    color: base.$on-surface-body-low;
     & > :nth-child(2) {
       @extend .font-body-sm;
     }
   }
+}
+
+.account-settings-dialog-opener {
+  margin-top: 1rem;
 }
