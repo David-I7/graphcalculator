@@ -12,6 +12,7 @@ import {
   DialogProvider,
   useDialogContext,
 } from "../../../../components/dialog/DialogContext";
+import UnderlineButton from "../../../../components/buttons/common/UnderlineButton";
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -47,7 +48,7 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
       </div>
 
       <DialogProvider>
-        <div></div>
+        <AccountSettingsDialog />
       </DialogProvider>
 
       <Hr style={{ marginBlock: "1rem" }} />
@@ -74,8 +75,11 @@ function AccountSettingsDialog() {
   const { ref, isOpen, setIsOpen } = useDialogContext();
 
   return (
-    <Dialog ref={ref}>
-      <></>
-    </Dialog>
+    <div>
+      <UnderlineButton>Account settings</UnderlineButton>
+      <Dialog ref={ref}>
+        <></>
+      </Dialog>
+    </div>
   );
 }

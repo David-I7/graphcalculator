@@ -34,3 +34,23 @@
     border: none;
   }
 }
+
+.underline-button {
+  font-weight: base.$fw-semibold;
+  color: base.$on-surface-body;
+  height: 32px;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:focus {
+    outline: 2px solid base.$primary;
+    border-radius: base.$br-100;
+  }
+
+  &:disabled {
+    color: base.$on-surface-body-low;
+    cursor: default;
+  }
+}
