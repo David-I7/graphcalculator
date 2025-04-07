@@ -68,7 +68,8 @@ function Form({
   );
   const [trigger, { data, isLoading }] = useLazyFetch(() =>
     authenticateUser({ email, password }).then((res) => {
-      if ("error" in res) return setErrorMessage(errorMessage);
+      console.log(res);
+      if ("error" in res) return setErrorMessage(res.error.message);
       handleSuccess(res);
     })
   );
@@ -95,6 +96,7 @@ function Form({
           id={id}
           minLength={8}
           value={password}
+          isError={errorMessage !== undefined}
           message={errorMessage}
           onChange={(e) => {
             if (errorMessage) setErrorMessage(undefined);

@@ -26,10 +26,37 @@
 .outlined-button {
   @extend .filled-button;
   background-color: transparent;
-  border: 1px solid base.$on-primary;
+  border: 1px solid base.$border-normal;
+  color: base.$on-surface-heading;
 
   &:focus {
     outline: 2px solid base.$primary;
     border: none;
+  }
+}
+
+.outlined-button-dark {
+  @extend .outlined-button;
+  border: 1px solid base.$inverse-on-surface-heading;
+  color: base.$inverse-on-surface-heading;
+}
+
+.underline-button {
+  font-weight: base.$fw-semibold;
+  color: base.$on-surface-heading;
+  height: 32px;
+
+  &:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  &:focus {
+    outline: 2px solid base.$primary;
+    border-radius: base.$br-100;
+  }
+
+  &:disabled {
+    color: base.$on-surface-body-low;
+    cursor: default;
   }
 }

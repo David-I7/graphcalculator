@@ -49,7 +49,7 @@ const RegisterForm = ({
       <div className="register-form-body">
         <div className="register-form-body-content">
           <p>
-            You're Signing in with <strong>{userData.email}.</strong>
+            You're Signing in with <strong>{userData.email}</strong>
           </p>
           <Form
             handleSuccess={handleSuccess}
@@ -76,9 +76,9 @@ function Form({
   const firstNameId = useId();
   const lastNameId = useId();
   const passwordId = useId();
-  const [trigger, { data, isLoading }] = useLazyFetch(() =>
+  const [trigger, { data, isLoading, isError, error }] = useLazyFetch(() =>
     registerUser(userData).then((res) => {
-      if ("error" in res) return;
+      if ("error" in res) throw new Error(res.error.message);
       handleSuccess(res);
     })
   );
@@ -140,10 +140,16 @@ function Form({
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
+          alignItems: "center",
+          justifyContent: isError ? "space-between" : "flex-end",
           marginTop: "2rem",
         }}
       >
+        {isError && (
+          <div style={{ color: CSS_VARIABLES.error, fontSize: "12px" }}>
+            {error?.message}
+          </div>
+        )}
         <FilledButton
           disabled={userData.password.length < 8 || userData.first_name === ""}
         >

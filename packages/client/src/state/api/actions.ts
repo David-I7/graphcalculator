@@ -1,27 +1,32 @@
 import { baseUrl } from "./config";
 import {
   ApiErrorResponse,
-  isApiErrorResponse,
   RegisterUserData,
   UserSessionData,
   VerifyEmailResponse,
 } from "./types";
 
-function createFetchError(message: string = "unknown cause"): ApiErrorResponse {
+function createFetchError(): ApiErrorResponse {
   return {
     error: {
       code: -1,
       type: "network error",
-      message: `Fetch error: \n${message}`,
+      message: `A network error has occurred.`,
     },
   };
 }
 
-function handleError(err: Error) {
-  if (isApiErrorResponse(err)) return err;
-  if (err instanceof Error) {
-    return createFetchError(err.message);
-  } else return createFetchError("Unknown");
+async function handleApiResponse(res: Response) {
+  const contentType = res.headers.get("content-type");
+  if (res.ok && contentType?.startsWith("application/json")) {
+    return await res.json();
+  } else if (res.ok) return;
+
+  if (contentType?.startsWith("application/json")) {
+    return await res.json();
+  } else {
+    return createFetchError();
+  }
 }
 
 export async function verifyEmail(
@@ -31,12 +36,7 @@ export async function verifyEmail(
     method: "post",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email }),
-  })
-    .then(async (res) => {
-      if (!res.ok) throw await res.json();
-      return await res.json();
-    })
-    .catch((err) => handleError(err));
+  }).then(handleApiResponse);
 }
 
 export async function authenticateUser(data: {
@@ -48,12 +48,7 @@ export async function authenticateUser(data: {
     credentials: "include",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(data),
-  })
-    .then(async (res) => {
-      if (!res.ok) throw await res.json();
-      return await res.json();
-    })
-    .catch((err) => handleError(err));
+  }).then(handleApiResponse);
 }
 
 export async function registerUser(
@@ -66,19 +61,11 @@ export async function registerUser(
       "content-type": "application/json",
     },
     body: JSON.stringify(user),
-  })
-    .then(async (res) => {
-      if (!res.ok) throw await res.json();
-      return await res.json();
-    })
-    .catch((err) => handleError(err));
+  }).then(handleApiResponse);
 }
 
 export async function logoutUser(): Promise<void | ApiErrorResponse> {
-  return await fetch(baseUrl + "/logout", { credentials: "include" })
-    .then(async (res) => {
-      if (!res.ok) throw await res.json();
-      return;
-    })
-    .catch((err) => handleError(err));
+  return await fetch(baseUrl + "/logout", { credentials: "include" }).then(
+    handleApiResponse
+  );
 }

@@ -212,7 +212,11 @@ GraphMenu.Menu = () => {
     >
       <GraphMenuHeader user={user} />
       <NewBlankGraph handleClick={onClose} />
-      <GraphPreviews isAuthenticated={user !== undefined} onClose={onClose} />
+      <GraphPreviews
+        isAuthenticated={user !== undefined}
+        isOpen={isOpen}
+        onClose={onClose}
+      />
     </div>,
     rootRef.current || document.getElementById("root")!
   );
