@@ -24,18 +24,18 @@ const PasswordInput = ({ isError, message, ...inputProps }: FormInputProps) => {
           (e.currentTarget.children[0] as HTMLInputElement).focus();
       }}
       className={styles.passwordInputContainer}
+      style={
+        isError
+          ? {
+              ...inputProps.style,
+              border: `2px solid ${CSS_VARIABLES.error}`,
+            }
+          : inputProps.style
+      }
     >
       <input
         {...inputProps}
         type={isVisble ? "text" : "password"}
-        style={
-          isError
-            ? {
-                ...inputProps.style,
-                border: `2px solid ${CSS_VARIABLES.error}`,
-              }
-            : inputProps.style
-        }
         className={mergedClassname}
       />
       <ButtonTarget

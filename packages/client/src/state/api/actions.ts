@@ -20,7 +20,7 @@ async function handleApiResponse(res: Response) {
   const contentType = res.headers.get("content-type");
   if (res.ok && contentType?.startsWith("application/json")) {
     return await res.json();
-  } else if (res.ok && !contentType) return;
+  } else if (res.ok) return;
 
   if (contentType?.startsWith("application/json")) {
     return await res.json();

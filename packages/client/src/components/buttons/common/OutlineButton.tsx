@@ -4,13 +4,21 @@ import styles from "./common.module.scss";
 type OutlinedButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   ref?: RefObject<HTMLButtonElement | null>;
+  theme?: "dark" | "light";
 };
 
-const OutlinedButton = ({ children, ref, ...props }: OutlinedButtonProps) => {
+const OutlinedButton = ({
+  children,
+  theme = "light",
+  ref,
+  ...props
+}: OutlinedButtonProps) => {
   const mergedClassname = useMemo(() => {
-    return props.className
-      ? props.className + " " + styles.outlinedButton
-      : styles.outlinedButton;
+    let base = props.className ?? "";
+    if (theme === "light") base = base + " " + styles.outlinedButton;
+    else base = base + " " + styles.outlinedButtonDark;
+
+    return base;
   }, [props.className]);
 
   return (

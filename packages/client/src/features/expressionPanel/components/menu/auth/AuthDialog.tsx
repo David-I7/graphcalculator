@@ -20,6 +20,8 @@ const AuthDialog = () => {
     <div className="auth-dialog">
       <div>
         <OutlinedButton
+          theme="dark"
+          className="bg-inverse-surface-high inverse-button--hovered"
           onClick={() => {
             setIsOpen(!isOpen);
           }}

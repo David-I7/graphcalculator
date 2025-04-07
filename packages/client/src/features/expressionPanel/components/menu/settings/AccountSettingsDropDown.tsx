@@ -1,18 +1,18 @@
 import { useRef } from "react";
-import OutlinedButton from "../../../../components/buttons/common/OutlineButton";
-import Dialog from "../../../../components/dialog/Dialog";
-import Dropdown from "../../../../components/dropdown/Dropdown";
-import Hr from "../../../../components/hr/Hr";
-import Spinner from "../../../../components/Loading/Spinner/Spinner";
-import { useLazyFetch } from "../../../../hooks/api";
-import { logoutUser } from "../../../../state/api/actions";
-import { useGetUserQuery } from "../../../../state/api/apiSlice";
-import { UserSessionData } from "../../../../state/api/types";
+import OutlinedButton from "../../../../../components/buttons/common/OutlineButton";
+import Dialog from "../../../../../components/dialog/Dialog";
+import Dropdown from "../../../../../components/dropdown/Dropdown";
+import Hr from "../../../../../components/hr/Hr";
+import Spinner from "../../../../../components/Loading/Spinner/Spinner";
+import { useLazyFetch } from "../../../../../hooks/api";
+import { logoutUser } from "../../../../../state/api/actions";
+import { useGetUserQuery } from "../../../../../state/api/apiSlice";
+import { UserSessionData } from "../../../../../state/api/types";
 import {
   DialogProvider,
   useDialogContext,
-} from "../../../../components/dialog/DialogContext";
-import UnderlineButton from "../../../../components/buttons/common/UnderlineButton";
+} from "../../../../../components/dialog/DialogContext";
+import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -34,7 +34,13 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
       return { data };
     },
   }).data;
-  const [trigger, { data: res, isLoading, isError }] = useLazyFetch(logoutUser);
+  const [trigger, { data: res, isLoading, isError }] = useLazyFetch(() =>
+    logoutUser().then((res) => {
+      console.log(res);
+      if (res) return;
+      window.location.reload();
+    })
+  );
 
   if (!data) return null;
 
@@ -51,7 +57,7 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
         <AccountSettingsDialog />
       </DialogProvider>
 
-      <Hr style={{ marginBlock: "1rem" }} />
+      <Hr style={{ marginBottom: "1rem" }} />
       <div>
         <OutlinedButton
           className="button--hovered"

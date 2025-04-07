@@ -26,7 +26,7 @@
 .auth-dialog {
   @extend .font-body-sm;
   padding: 1rem 0.5rem;
-  background-color: base.$invere-surface-high;
+  background-color: base.$inverse-surface-high;
   text-align: center;
   color: base.$inverse-on-surface-heading;
   margin-bottom: 0.5rem;
@@ -120,7 +120,7 @@
 
 .auth-form {
   @extend .email-form;
-  height: 11.75rem;
+  height: 12.75rem;
 
   &-header {
     @extend .register-form-header;

@@ -35,6 +35,12 @@
   }
 }
 
+.outlined-button-dark {
+  @extend .outlined-button;
+  border: 1px solid base.$inverse-on-surface-heading;
+  color: base.$inverse-on-surface-heading;
+}
+
 .underline-button {
   font-weight: base.$fw-semibold;
   color: base.$on-surface-body;

@@ -152,6 +152,10 @@ main {
   background-color: var.$surface;
 }
 
+.bg-inverse-surface-high {
+  background-color: var.$inverse-surface-high;
+}
+
 .button--hovered {
   transition: filter var.$an-sp-fast ease-out;
   &:hover {
