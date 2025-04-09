@@ -50,6 +50,7 @@ export default function FormProgress({
     case 0:
       return (
         <LoginOrSignupForm
+          onComplete={onComplete}
           handleSuccessEmail={handleSuccessEmail}
           previousValue={{ email: user.current.email, isRegistered }}
         />

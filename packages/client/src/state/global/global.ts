@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MOBILE_BREAKPOINT } from "../../data/css/breakpoints";
-import { createAsyncThunk } from "@reduxjs/toolkit";
 
 interface GlobalState {
   isMobile: boolean;

@@ -1,7 +1,6 @@
 export type ErrorResponse = {
   error: {
     code: number;
-    type: string;
     message: string;
   };
 };

@@ -1,8 +1,8 @@
 import styles from "./hr.module.scss";
 
-const Or = () => {
+const Or = ({ style }: { style?: React.CSSProperties }) => {
   return (
-    <div role="separator" className={styles.orSeparator}>
+    <div role="separator" style={style} className={styles.orSeparator}>
       <div></div>
       or
       <div></div>
