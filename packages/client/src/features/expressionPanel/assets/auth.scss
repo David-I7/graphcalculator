@@ -1,0 +1,152 @@
+@use "../../../assets/styles/base" as base;
+
+.auth-dialog {
+  @extend .font-body-sm;
+  padding: 1rem 0.5rem;
+  background-color: base.$inverse-surface-high;
+  text-align: center;
+  color: base.$inverse-on-surface-heading;
+  margin-bottom: 0.5rem;
+
+  > div:nth-child(1) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &-content {
+    @extend .font-body-m;
+    text-align: left;
+    max-height: calc(100vh - 4rem - 8px);
+
+    h2 {
+      color: base.$on-surface-heading;
+      font-weight: base.$fw-medium;
+      font-size: 1.5rem;
+    }
+
+    label {
+      @extend .font-body-sm;
+      color: base.$on-surface-body;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.email-form {
+  display: grid;
+  grid-template-rows: 3.5rem 1fr;
+  width: 25rem;
+  height: 320px;
+  max-height: inherit;
+
+  &-body {
+    overflow-y: auto;
+
+    &-content {
+      padding: 0 1rem 2.25rem;
+    }
+  }
+
+  &-header {
+    padding: 1rem 1rem;
+  }
+}
+
+.register-form {
+  @extend .email-form;
+  height: 21.25rem;
+
+  &-header {
+    padding-left: 0.25rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  &-body {
+    overflow-y: auto;
+
+    &-content {
+      padding: 0 1rem 1rem;
+
+      & > p {
+        @extend .font-body-sm;
+        color: base.$on-surface-body;
+        padding: 0.5rem 0 1.5rem;
+
+        & strong {
+          display: inline;
+        }
+      }
+    }
+  }
+
+  & form {
+    & > div:nth-child(1) {
+      display: flex;
+      justify-content: space-between;
+      gap: 4rem;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.auth-form {
+  @extend .email-form;
+  height: 12.75rem;
+
+  &-header {
+    @extend .register-form-header;
+  }
+
+  &-body {
+    overflow-y: auto;
+
+    &-content {
+      padding: 0 1rem 1rem;
+
+      & > p {
+        @extend .font-body-sm;
+        color: base.$on-surface-body;
+        padding: 0.5rem 0 1.5rem;
+
+        & strong {
+          display: inline;
+        }
+      }
+    }
+  }
+}
+
+.oauth2-flow {
+  margin-block: 0.5rem;
+  & > :nth-child(n) {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.oauth2-login-button {
+  @extend .flex-center;
+  @extend .font-body-m;
+  color: base.$on-surface-body;
+  justify-content: center;
+  border: 1px solid base.$border-high;
+  border-radius: base.$br-100;
+  height: 3rem;
+  width: 100%;
+  gap: 0.5rem;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &[aria-disabled="true"] {
+    pointer-events: none;
+    border: 1px solid base.$border-lowest;
+    color: base.$border-lowest;
+  }
+}

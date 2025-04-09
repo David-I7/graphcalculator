@@ -7,7 +7,6 @@ export class ApiErrorResponse {
       error: {
         message: err.message,
         code: err.code,
-        type: err.type,
       },
     };
   }

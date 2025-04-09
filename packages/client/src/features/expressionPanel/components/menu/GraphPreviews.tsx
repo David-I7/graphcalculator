@@ -115,9 +115,7 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
         <PreviewListItem
           item={currentGraph}
           image={
-            libGraph && currentGraph.isModified
-              ? libGraph.toDataURL()
-              : currentGraph.graphSnapshot.image
+            libGraph ? libGraph.toDataURL() : currentGraph.graphSnapshot.image
           }
           idx={0}
           body={

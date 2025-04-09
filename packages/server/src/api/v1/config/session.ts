@@ -4,10 +4,12 @@ import DB from "../db/index.js";
 import session from "express-session";
 import pgStore from "connect-pg-simple";
 import { cookieOptions } from "./cookies.js";
+import { Tokens } from "../services/oAuth/types.js";
 
 declare module "express-session" {
   interface SessionData {
     user: UserSessionData;
+    tokens: Tokens;
   }
 }
 

@@ -1,15 +1,21 @@
-import React, { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { CSS_VARIABLES } from "../../../../../data/css/variables";
 import FormInput from "../../../../../components/input/FormInput";
 import { verifyEmail } from "../../../../../state/api/actions";
-import { VerifyEmailResponse } from "../../../../../state/api/types";
+import {
+  UserSessionData,
+  VerifyEmailResponse,
+} from "../../../../../state/api/types";
 import Or from "../../../../../components/hr/Or";
 import { useLazyFetch } from "../../../../../hooks/api";
+import { Apple, Google } from "../../../../../components/svgs";
+import { OAuth2 } from "./OAuth2";
 
 type LoginOrSignupFormPorps = {
   previousValue: { email: string; isRegistered: boolean | null };
+  onComplete: (user: UserSessionData) => void;
   handleSuccessEmail: (
     email: string,
     data: VerifyEmailResponse["data"]
@@ -25,10 +31,14 @@ const LoginOrSignupForm = (props: LoginOrSignupFormPorps) => {
 
       <div className="email-form-body">
         <div className="email-form-body-content">
-          <button>google</button>
-          <button>apple</button>
-
-          <Or />
+          <OAuth2
+            onComplete={props.onComplete}
+            stategies={[
+              [<Google />, "Google"],
+              [<Apple />, "Apple"],
+            ]}
+          />
+          <Or style={{ marginBlock: "1rem" }} />
           <VerifyEmailForm {...props} />
         </div>
       </div>

@@ -79,7 +79,7 @@ function Form({
   const [trigger, { data, isLoading, isError, error }] = useLazyFetch(() =>
     registerUser(userData).then((res) => {
       if ("error" in res) throw new Error(res.error.message);
-      handleSuccess(res);
+      handleSuccess(res.data.user);
     })
   );
 

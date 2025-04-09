@@ -2,6 +2,7 @@ import { UserSessionData } from "../../../../state/api/types";
 import AuthDialog from "./auth/AuthDialog";
 import { AccountSettingsDropDown } from "./settings/AccountSettingsDropDown";
 import { DialogProvider } from "../../../../components/dialog/DialogContext";
+import "../../assets/auth.scss";
 
 const GraphMenuHeader = ({ user }: { user: UserSessionData | undefined }) => {
   return (

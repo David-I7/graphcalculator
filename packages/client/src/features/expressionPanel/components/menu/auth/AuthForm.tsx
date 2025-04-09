@@ -68,7 +68,6 @@ function Form({
   );
   const [trigger, { data, isLoading }] = useLazyFetch(() =>
     authenticateUser({ email, password }).then((res) => {
-      console.log(res);
       if ("error" in res) return setErrorMessage(res.error.message);
       handleSuccess(res);
     })

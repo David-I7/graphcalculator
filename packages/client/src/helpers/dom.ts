@@ -1,4 +1,5 @@
 import { MouseEvent } from "react";
+import { MOBILE_BREAKPOINT } from "../data/css/breakpoints";
 
 export function calculateTextWidth(text: string, className: string): number {
   const div = document.createElement("div");
@@ -49,4 +50,8 @@ export function isClickOutside(element: HTMLElement, e: MouseEvent) {
     e.clientY < contentRect.top ||
     e.clientY > contentRect.bottom
   );
+}
+
+export function isMobile(): boolean {
+  return window.innerWidth <= MOBILE_BREAKPOINT;
 }

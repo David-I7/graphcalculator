@@ -5,6 +5,7 @@ import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/utlis.js";
 import { PasswordService } from "../services/passwordService.js";
+import { OAuthStore } from "../services/oAuth/tokenStore.js";
 
 const handleEmailVerification = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -30,6 +31,27 @@ const handleEmailVerification = async (req: Request, res: Response) => {
 };
 
 const handleRegister = async (req: Request, res: Response) => {
+  const userDao = new UserDao();
+
+  const { token } = req.body;
+  if (OAuthStore.hasData(token)) {
+    const data = OAuthStore.getData(token)!;
+
+    const user = await userDao.createUserFromProvider({
+      email: data.payload.email || "",
+      first_name: data.payload.given_name || "",
+      last_name: data.payload.family_name || "",
+      email_is_verified: data.payload.email_verified || false,
+      provider: data.tokens.provider,
+    });
+
+    req.session.user = user;
+    req.session.tokens = data.tokens;
+
+    res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
+    return;
+  }
+
   const { email, first_name, last_name, password } = req.body;
   if (!email || !isEmail(email) || !first_name || !isValidPassword(password)) {
     res
@@ -45,7 +67,6 @@ const handleRegister = async (req: Request, res: Response) => {
     return;
   }
 
-  const userDao = new UserDao();
   const hashedPassword = await new PasswordService().hash(password);
 
   const user = await userDao.createUser({

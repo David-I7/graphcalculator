@@ -53,14 +53,21 @@ export async function authenticateUser(data: {
 
 export async function registerUser(
   user: RegisterUserData
-): Promise<UserSessionData | ApiErrorResponse> {
+): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse>;
+export async function registerUser(
+  token: string
+): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse>;
+
+export async function registerUser(
+  arg: RegisterUserData | string
+): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
   return await fetch(baseUrl + "/register", {
     method: "post",
     credentials: "include",
     headers: {
       "content-type": "application/json",
     },
-    body: JSON.stringify(user),
+    body: JSON.stringify(typeof arg === "string" ? { token: arg } : arg),
   }).then(handleApiResponse);
 }
 
