@@ -27,6 +27,19 @@ export class GoogleOAuth2Strategy implements OAuth2Strategy {
     return token.getPayload()!;
   }
 
+  async refreshAccessToken(refresh_token: string) {
+    this.client.setCredentials({ refresh_token });
+
+    try {
+      const { credentials } = await this.client.refreshAccessToken();
+      return { ...credentials, provider: this.providerCode } as Partial<Tokens>;
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.client.revokeCredentials();
+    }
+  }
+
   async revokeRefreshToken(refresh_token: string) {
     return this.client
       .revokeToken(refresh_token)
