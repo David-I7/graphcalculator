@@ -37,7 +37,7 @@ const handleRegister = async (req: Request, res: Response) => {
   if (OAuthStore.hasData(token)) {
     const data = OAuthStore.getData(token)!;
 
-    const user = await userDao.createUserFromProvider({
+    const user = await userDao.createOrReturnUserFromProvider({
       email: data.payload.email || "",
       first_name: data.payload.given_name || "",
       last_name: data.payload.family_name || "",
@@ -69,7 +69,7 @@ const handleRegister = async (req: Request, res: Response) => {
 
   const hashedPassword = await new PasswordService().hash(password);
 
-  const user = await userDao.createUser({
+  const user = await userDao.createOrReturnUser({
     email,
     first_name,
     last_name,
