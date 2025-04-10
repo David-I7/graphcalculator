@@ -13,6 +13,10 @@ export class OAuth2Client implements IOAuth2Client {
     return this.strategy.revokeRefreshToken(refresh_token);
   }
 
+  async getTokenPayload(id_token: string) {
+    return await this.strategy.verifyIdToken(id_token);
+  }
+
   async saveToStore(code: string): Promise<string> {
     const tokens = await this.strategy.getTokens(code);
 
@@ -38,5 +42,15 @@ export class OAuth2Client implements IOAuth2Client {
 
   generateAuthUrl(): string {
     return this.strategy.generateAuthUrl();
+  }
+
+  isExpiredAccessToken(expiry_date: number): boolean {
+    return new Date().getTime() > expiry_date;
+  }
+
+  refreshAccessToken(
+    refresh_token: string
+  ): ReturnType<OAuth2Strategy["refreshAccessToken"]> {
+    return this.strategy.refreshAccessToken(refresh_token);
   }
 }
