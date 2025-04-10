@@ -34,14 +34,14 @@ export class UserDao implements IUserDao {
       const res = await DB.query<User>(`Select * from users where email = $1`, [
         email,
       ]);
-      console.table(res.rows);
+
       return res.rowCount !== null ? res.rows[0] : undefined;
     } else {
       const res = await DB.query<Pick<User, T[number]>>(
         `Select ${fields.join()} from users where email = $1`,
         [email]
       );
-      console.table(res.rows);
+
       return res.rowCount !== null ? res.rows[0] : undefined;
     }
   }
@@ -50,7 +50,7 @@ export class UserDao implements IUserDao {
     const res = await DB.query<User>(`Select * from users where email = $1`, [
       email,
     ]);
-    console.table(res.rows);
+
     return res.rowCount !== null ? res.rows[0] : undefined;
   }
 
@@ -63,7 +63,6 @@ export class UserDao implements IUserDao {
       [user.email, user.first_name, user.last_name, user.password]
     );
 
-    console.table(res.rows);
     return res.rows[0];
   }
   async createOrReturnUserFromProvider(
@@ -81,7 +80,6 @@ export class UserDao implements IUserDao {
       ]
     );
 
-    console.table(res.rows);
     return res.rows[0];
   }
 }

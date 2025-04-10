@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import Dialog from "../../../../../components/dialog/Dialog";
 import OutlinedButton from "../../../../../components/buttons/common/OutlineButton";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
@@ -17,7 +16,7 @@ const AuthDialog = () => {
       apiSlice.util.upsertQueryData(
         "getUser",
         undefined,
-        //@ts-ignore
+        //@ts-expect-error
         res
       )
     );

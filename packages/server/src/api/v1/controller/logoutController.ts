@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { hasSession } from "../middleware/session.js";
 import { cookieOptions } from "../config/cookies.js";
-import { oAuth2Client } from "../services/oAuth/googleStrategy.js";
+import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
+import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
 
 const handleLogout = async (
   req: Request,
@@ -14,10 +15,9 @@ const handleLogout = async (
   }
 
   if (req.session.tokens) {
-    oAuth2Client
-      .revokeToken(req.session.tokens.refresh_token)
-      .then((res) => console.log("SUCCESS TOKEN REVOKE: ", res))
-      .catch((err) => console.log("FAIL TOKEN REVOKE: ", err));
+    const client = new OAuth2Client();
+    client.setStrategy(new GoogleOAuth2Strategy());
+    client.revokeRefreshToken(req.session.tokens.refresh_token);
   }
 
   req.session.destroy((err) => {
