@@ -11,7 +11,7 @@ import RegisterForm from "./RegisterForm";
 export default function FormProgress({
   onComplete,
 }: {
-  onComplete: (user: UserSessionData) => void;
+  onComplete: (res: { data: { user: UserSessionData } }) => void;
 }) {
   const [progress, setProgress] = useState<number>(0);
   const user = useRef<RegisterUserData>({

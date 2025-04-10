@@ -130,14 +130,7 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
     const payload = ticket.getPayload()!;
     console.log("\n\nPAYLOAD: ", payload);
 
-    try {
-      await Promise.all([
-        oAuth2Client.revokeToken(response.tokens.refresh_token!),
-      ]);
-    } catch (err) {}
-
     const token = randomUUID();
-
     OAuthStore.setData(token, {
       tokens: {
         access_token: response.tokens.access_token!,

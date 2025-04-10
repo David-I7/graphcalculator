@@ -15,7 +15,7 @@ import { OAuth2 } from "./OAuth2";
 
 type LoginOrSignupFormPorps = {
   previousValue: { email: string; isRegistered: boolean | null };
-  onComplete: (user: UserSessionData) => void;
+  onComplete: (res: { data: { user: UserSessionData } }) => void;
   handleSuccessEmail: (
     email: string,
     data: VerifyEmailResponse["data"]

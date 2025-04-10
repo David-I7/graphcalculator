@@ -15,7 +15,7 @@ import { CSS_VARIABLES } from "../../../../../data/css/variables";
 
 type RegisterFormProps = {
   credentials: RegisterUserData;
-  handleSuccess: (user: UserSessionData) => void;
+  handleSuccess: (res: { data: { user: UserSessionData } }) => void;
   handlePreviousStep: (
     data: Pick<RegisterUserData, "password" | "last_name" | "first_name">
   ) => void;
@@ -71,7 +71,7 @@ function Form({
 }: {
   userData: RegisterUserData;
   setUserData: React.Dispatch<SetStateAction<RegisterUserData>>;
-  handleSuccess: (user: UserSessionData) => void;
+  handleSuccess: (res: { data: { user: UserSessionData } }) => void;
 }) {
   const firstNameId = useId();
   const lastNameId = useId();
@@ -79,7 +79,7 @@ function Form({
   const [trigger, { data, isLoading, isError, error }] = useLazyFetch(() =>
     registerUser(userData).then((res) => {
       if ("error" in res) throw new Error(res.error.message);
-      handleSuccess(res.data.user);
+      handleSuccess(res);
     })
   );
 
