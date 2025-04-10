@@ -15,7 +15,7 @@ import { OAuth2 } from "./OAuth2";
 
 type LoginOrSignupFormPorps = {
   previousValue: { email: string; isRegistered: boolean | null };
-  onComplete: (user: UserSessionData) => void;
+  onComplete: (res: { data: { user: UserSessionData } }) => void;
   handleSuccessEmail: (
     email: string,
     data: VerifyEmailResponse["data"]
@@ -33,10 +33,7 @@ const LoginOrSignupForm = (props: LoginOrSignupFormPorps) => {
         <div className="email-form-body-content">
           <OAuth2
             onComplete={props.onComplete}
-            stategies={[
-              [<Google />, "Google"],
-              [<Apple />, "Apple"],
-            ]}
+            stategies={[[<Google />, "Google"]]}
           />
           <Or style={{ marginBlock: "1rem" }} />
           <VerifyEmailForm {...props} />

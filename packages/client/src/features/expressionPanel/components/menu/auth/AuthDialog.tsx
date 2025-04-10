@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import Dialog from "../../../../../components/dialog/Dialog";
 import OutlinedButton from "../../../../../components/buttons/common/OutlineButton";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
@@ -11,9 +10,16 @@ import { useDialogContext } from "../../../../../components/dialog/DialogContext
 const AuthDialog = () => {
   const { isOpen, setIsOpen, ref } = useDialogContext();
   const dispatch = useAppDispatch();
-  const onComplete = (user: UserSessionData) => {
+  const onComplete = (res: { data: { user: UserSessionData } }) => {
     setIsOpen(!isOpen);
-    dispatch(apiSlice.util.upsertQueryData("getUser", undefined, user));
+    dispatch(
+      apiSlice.util.upsertQueryData(
+        "getUser",
+        undefined,
+        //@ts-expect-error
+        res
+      )
+    );
   };
 
   return (

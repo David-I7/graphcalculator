@@ -6,11 +6,8 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/utlis.js";
 import { PasswordService } from "../services/passwordService.js";
 import { hasSession } from "../middleware/session.js";
-import { oAuth2Client } from "../services/oAuth/googleStrategy.js";
-import { OAuth2StrategyFactory } from "../services/oAuth/StrategyFactory.js";
-import { OAuthStore } from "../services/oAuth/tokenStore.js";
-import { randomUUID } from "node:crypto";
-import { provider } from "../constants.js";
+import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
+import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
   if (hasSession(req)) {
@@ -89,24 +86,11 @@ const handleAuth = async (req: Request, res: Response) => {
 };
 
 const handleOAuth2 = async (req: Request, res: Response) => {
-  // const strategy = req.query.strategy;
+  const client = new OAuth2Client();
+  client.setStrategy(new GoogleOAuth2Strategy());
 
-  // if (typeof strategy !== "string") {
-  //   res.sendStatus(400);
-  //   return;
-  // }
-
-  const url = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: ["profile", "email"],
-  });
+  const url = client.generateAuthUrl();
   res.redirect(url);
-
-  // const client = new OAuth2StrategyFactory().createStrategy(strategy);
-  // if(!client){
-  //   res.sendStatus(400);
-  //   return;
-  // }
 };
 
 const handleOAuth2Callback = async (req: Request, res: Response) => {
@@ -117,35 +101,32 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
     return;
   }
 
+  const client = new OAuth2Client();
+  client.setStrategy(new GoogleOAuth2Strategy());
+
   try {
-    const response = await oAuth2Client.getToken(code);
-    console.log("\n\nTOKENS: ", response.tokens);
-    response.tokens;
+    // const response = await oAuth2Client.getToken(code);
+    // console.log("\n\nTOKENS: ", response.tokens);
+    // response.tokens;
 
-    const ticket = await oAuth2Client.verifyIdToken({
-      idToken: response.tokens.id_token!,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    // const ticket = await oAuth2Client.verifyIdToken({
+    //   idToken: response.tokens.id_token!,
+    //   audience: process.env.GOOGLE_CLIENT_ID,
+    // });
 
-    const payload = ticket.getPayload()!;
-    console.log("\n\nPAYLOAD: ", payload);
+    // const payload = ticket.getPayload()!;
+    // console.log("\n\nPAYLOAD: ", payload);
 
-    try {
-      await Promise.all([
-        oAuth2Client.revokeToken(response.tokens.refresh_token!),
-      ]);
-    } catch (err) {}
-
-    const token = randomUUID();
-
-    OAuthStore.setData(token, {
-      tokens: {
-        access_token: response.tokens.access_token!,
-        refresh_token: response.tokens.refresh_token!,
-        provider: provider["google"],
-      },
-      payload,
-    });
+    // const token = randomUUID();
+    // OAuthStore.setData(token, {
+    //   tokens: {
+    //     access_token: response.tokens.access_token!,
+    //     refresh_token: response.tokens.refresh_token!,
+    //     provider: provider["google"],
+    //   },
+    //   payload,
+    // });
+    const token = await client.saveToStore(code);
 
     res.send(`
     <script>

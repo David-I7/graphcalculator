@@ -1,14 +1,16 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { UserSessionData } from "../../../../../state/api/types";
 import { registerUser } from "../../../../../state/api/actions";
+import { useAppSelector } from "../../../../../state/hooks";
 
 export function OAuth2({
   stategies,
   onComplete,
 }: {
   stategies: [ReactNode, string][];
-  onComplete: (user: UserSessionData) => void;
+  onComplete: (res: { data: { user: UserSessionData } }) => void;
 }) {
+  const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
   const popup = useRef<WindowProxy | null>(null);
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -27,16 +29,16 @@ export function OAuth2({
     window.addEventListener(
       "message",
       (e) => {
-        setIsOpen(false);
-
-        console.log(e.data);
         if (e.data.type === "oauth_success") {
           registerUser(e.data.token as string).then((res) => {
+            setIsOpen(false);
             if ("error" in res) {
               return;
             }
-            onComplete(res.data.user);
+            onComplete(res);
           });
+        } else {
+          setIsOpen(false);
         }
       },
       { signal: abortController.signal }
@@ -60,7 +62,7 @@ export function OAuth2({
             popup.current = window.open(
               `http://localhost:8080/api/auth/${stategy[1].toLowerCase()}`,
               "",
-              "popup,width=500px,height=500px"
+              isMobile ? "" : "popup,width=500px,height=500px"
             );
             setIsOpen(true);
           }}

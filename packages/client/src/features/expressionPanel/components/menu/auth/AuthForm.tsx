@@ -1,5 +1,4 @@
 import React, { SetStateAction, useId, useState } from "react";
-import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { useLazyFetch } from "../../../../../hooks/api";
 import { authenticateUser } from "../../../../../state/api/actions";
@@ -12,7 +11,7 @@ import { UserSessionData } from "../../../../../state/api/types";
 
 type AuthFormProps = {
   email: string;
-  handleSuccess: (user: UserSessionData) => void;
+  handleSuccess: (res: { data: { user: UserSessionData } }) => void;
   handlePreviousStep: (password: string) => void;
 };
 
@@ -60,7 +59,7 @@ function Form({
   email: string;
   password: string;
   setPassword: React.Dispatch<SetStateAction<string>>;
-  handleSuccess: (user: UserSessionData) => void;
+  handleSuccess: (res: { data: { user: UserSessionData } }) => void;
 }) {
   const id = useId();
   const [errorMessage, setErrorMessage] = useState<string | undefined>(

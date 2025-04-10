@@ -9,7 +9,7 @@ import { Tokens } from "../services/oAuth/types.js";
 declare module "express-session" {
   interface SessionData {
     user: UserSessionData;
-    tokens: Tokens;
+    tokens: Omit<Tokens, "id_token" | "scope">;
   }
 }
 

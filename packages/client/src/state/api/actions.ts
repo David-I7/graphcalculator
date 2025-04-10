@@ -42,7 +42,7 @@ export async function verifyEmail(
 export async function authenticateUser(data: {
   email: string;
   password: string;
-}): Promise<UserSessionData | ApiErrorResponse> {
+}): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
   return await fetch(baseUrl + "/auth", {
     method: "post",
     credentials: "include",
