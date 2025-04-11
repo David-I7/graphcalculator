@@ -14,7 +14,7 @@ const handleLogout = async (
     return;
   }
 
-  if (req.session.tokens) {
+  if (req.session.tokens && req.session.tokens.refresh_token) {
     const client = new OAuth2Client();
     client.setStrategy(new GoogleOAuth2Strategy());
     client.revokeRefreshToken(req.session.tokens.refresh_token);

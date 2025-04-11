@@ -1,5 +1,5 @@
 import { OAuth2Client } from "google-auth-library";
-import { OAuth2Strategy, Tokens } from "./types.js";
+import { OAuth2Strategy, Tokens, UserInfo } from "./types.js";
 
 export class GoogleOAuth2Strategy implements OAuth2Strategy {
   private providerCode: number = 1;
@@ -15,6 +15,16 @@ export class GoogleOAuth2Strategy implements OAuth2Strategy {
       access_type: "offline",
       scope: ["profile", "email"],
     });
+  }
+
+  async getUserInfo(access_token: string): Promise<UserInfo> {
+    return await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    })
+      .then((res) => res.json() as UserInfo)
+      .catch((err) => err);
   }
 
   async getTokens(code: string) {
@@ -36,7 +46,7 @@ export class GoogleOAuth2Strategy implements OAuth2Strategy {
     } catch (err) {
       console.log(err);
     } finally {
-      this.client.revokeCredentials();
+      this.client.setCredentials({});
     }
   }
 
