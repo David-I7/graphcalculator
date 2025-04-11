@@ -14,6 +14,11 @@ export interface IUserDao {
   createOrReturnUserFromProvider(
     user: Omit<User, "password" | "id">
   ): Promise<Pick<User, "id">>;
+  updateUserById<T extends (keyof User)[]>(
+    id: string,
+    fields: T,
+    values: User[T[number]][]
+  ): Promise<boolean>;
   deleteUser?(user: User): Promise<boolean>;
 }
 
@@ -26,20 +31,47 @@ export class UserDao implements IUserDao {
     return res.rows.length > 0;
   }
 
+  async updateUserById<T extends (keyof User)[]>(
+    id: string,
+    fields: T,
+    values: User[T[number]][]
+  ): Promise<boolean> {
+    if (fields.length !== values.length)
+      throw new Error("'Fields' length must match 'Values' length.");
+    const updateReq: string[] = [];
+
+    for (let i = 0; i < fields.length; i++) {
+      updateReq.push(fields[i]);
+      updateReq.push("=");
+      updateReq.push(`$${i + 1}${i === fields.length - 1 ? "" : ","}`);
+    }
+
+    values.push(id as User[T[number]]);
+    try {
+      await DB.query(
+        `Update users set ${updateReq.join("")} where id = $${values.length};`,
+        values
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
   async findUserByID<T extends (keyof User)[]>(
-    email: string,
+    id: string,
     fields: T | "*"
   ): Promise<Pick<User, T[number]> | undefined> {
     if (fields === "*") {
-      const res = await DB.query<User>(`Select * from users where email = $1`, [
-        email,
+      const res = await DB.query<User>(`Select * from users where id = $1`, [
+        id,
       ]);
 
       return res.rowCount !== null ? res.rows[0] : undefined;
     } else {
       const res = await DB.query<Pick<User, T[number]>>(
-        `Select ${fields.join()} from users where email = $1`,
-        [email]
+        `Select ${fields.join()} from users where id = $1`,
+        [id]
       );
 
       return res.rowCount !== null ? res.rows[0] : undefined;

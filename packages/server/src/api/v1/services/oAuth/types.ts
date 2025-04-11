@@ -9,14 +9,12 @@ export interface OAuth2Strategy {
   refreshAccessToken(
     refresh_token: string
   ): Promise<Partial<Tokens> | undefined>;
+  getUserInfo(access_token: string): Promise<UserInfo>;
 }
 
 export interface IOAuth2Client {
   setStrategy(strategy: OAuth2Strategy): void;
   generateAuthUrl(): string;
-  getTokenPayload(
-    id_token: string
-  ): ReturnType<OAuth2Strategy["verifyIdToken"]>;
   revokeRefreshToken(refresh_token: string): Promise<boolean>;
   saveToStore(code: string): Promise<string>;
   getFromStore(token: string): ReturnType<typeof OAuthStore.getData>;
@@ -24,6 +22,7 @@ export interface IOAuth2Client {
     refresh_token: string
   ): ReturnType<OAuth2Strategy["refreshAccessToken"]>;
   isExpiredAccessToken(expiry_date: number): boolean;
+  getUserInfo(access_token: string): Promise<UserInfo>;
 }
 
 type PROVIDER = "graphCalculator" | "google";
@@ -37,3 +36,8 @@ export type Tokens = {
   id_token: string;
   provider: number;
 };
+
+export type UserInfo = Pick<
+  TokenPayload,
+  "email" | "family_name" | "email_verified" | "given_name"
+>;

@@ -13,13 +13,13 @@ export class OAuth2Client implements IOAuth2Client {
     return this.strategy.revokeRefreshToken(refresh_token);
   }
 
-  async getTokenPayload(id_token: string) {
-    return await this.strategy.verifyIdToken(id_token);
+  async getUserInfo(access_token: string) {
+    return await this.strategy.getUserInfo(access_token);
   }
 
   async saveToStore(code: string): Promise<string> {
     const tokens = await this.strategy.getTokens(code);
-
+    console.log(tokens);
     const payload = await this.strategy.verifyIdToken(tokens.id_token!);
 
     const token = randomUUID();
