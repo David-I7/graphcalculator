@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import exampleGraphs from "../db/data/examples.json" with { type: "json" };
-import { UserDao } from "../db/dao/userDao.js";
+import { GraphDao } from "../db/dao/graphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
 
@@ -19,11 +19,20 @@ const handleGetSavedGraphs = async (req: Request, res: Response) => {
   } 
 
 
-  const userDao = new UserDao();
-  const savedGraphs = await userDao.getSavedGraphs(req.session.user!.id,data.page,data.limit)
+  const graphDao = new GraphDao();
+  const savedGraphs = await graphDao.getSavedGraphs(req.session.user!.id,data.page,data.limit)
 
     res.status(200).json(new ApiSuccessResponse().createResponse(savedGraphs))
    return
 }
 
-export default { handleExampleGraphs,handleGetSavedGraphs };
+const handlePutSavedGraphs = async (req: Request, res: Response) => {
+  const {graph} = req.body
+
+  
+
+
+   return
+}
+
+export default { handleExampleGraphs,handleGetSavedGraphs,handlePutSavedGraphs };

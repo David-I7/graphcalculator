@@ -14,12 +14,10 @@ import { AdjacencyList, SerializedAdjList } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
-  ExpressionSettings,
   GraphData,
   isExpression,
   Item,
   ItemData,
-  ItemType,
   Scope,
 } from "./types";
 import {
@@ -29,13 +27,16 @@ import {
 } from "../../features/graph/lib/mathjs/parse";
 
 import { restrictedVariables } from "../../features/graph/data/math";
-import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
+import {
+  ExpressionSettings,
+  GraphSnapshot,
+  ItemType,
+} from "@graphcalculator/types";
 
 export function createNewGraph(id: number = 1): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
     id: uuid(),
-    createdAt,
     modifiedAt: createdAt,
     graphSnapshot: {
       scales: {
