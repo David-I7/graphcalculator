@@ -1,3 +1,5 @@
+import { PredefinedColors } from "@graphcalculator/types";
+
 export const CSS_VARIABLES = {
   // TEXT || BUTTONS || ICONS
   primary: "#3d5cc2",
@@ -51,11 +53,11 @@ export const CSS_VARIABLES = {
   animationSpeedSlowest: 750,
 };
 
-export const PREDEFINED_COLORS = [
+export const PREDEFINED_COLORS: PredefinedColors = [
   `#c74440`, // red
   `#fa7e19`, // orange
   `#e5d438`, //yellow
   `hsl(144,50%,50%)`, //green
   `hsl(257,60%,65%)`, //purple
   `#000`, //black
-] as const;
+];
