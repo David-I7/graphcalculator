@@ -19,7 +19,6 @@ export class OAuth2Client implements IOAuth2Client {
 
   async saveToStore(code: string): Promise<string> {
     const tokens = await this.strategy.getTokens(code);
-    console.log(tokens);
     const payload = await this.strategy.verifyIdToken(tokens.id_token!);
 
     const token = randomUUID();

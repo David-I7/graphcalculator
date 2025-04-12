@@ -13,6 +13,9 @@ export class GoogleOAuth2Strategy implements OAuth2Strategy {
   generateAuthUrl(): string {
     return this.client.generateAuthUrl({
       access_type: "offline",
+      // must add in case session has expired and user has
+      // not logged out => token is not revoked but is dead form my apps pov (dead_token)
+      prompt: "consent",
       scope: ["profile", "email"],
     });
   }
@@ -42,7 +45,7 @@ export class GoogleOAuth2Strategy implements OAuth2Strategy {
 
     try {
       const { credentials } = await this.client.refreshAccessToken();
-      return { ...credentials, provider: this.providerCode } as Partial<Tokens>;
+      return credentials.access_token!;
     } catch (err) {
       console.log(err);
     } finally {

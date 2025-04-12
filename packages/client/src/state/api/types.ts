@@ -1,10 +1,4 @@
-export type UserSessionData = {
-  first_name: string;
-  last_name?: string;
-  email: string;
-  email_is_verified: boolean;
-  id: string;
-};
+import { UserSessionData } from "@graphcalculator/types";
 
 export type RegisterUserData = Omit<
   UserSessionData,

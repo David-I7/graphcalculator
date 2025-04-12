@@ -1,10 +1,6 @@
 import { throttle } from "../../../../helpers/performance";
 import { Graph } from "./graph";
-
-export type GraphSettingsState = {
-  offsetX: number;
-  offsetY: number;
-};
+import { GraphSettingsState } from "@graphcalculator/types";
 
 export class GraphSettings {
   MAX_TRANSLATE = 1000000;

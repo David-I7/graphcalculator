@@ -1,110 +1,16 @@
-import { PREDEFINED_COLORS } from "../../data/css/variables";
-import { GraphSnapshot } from "../../features/graph/lib/graph/graph";
+import type {
+  Expression,
+  GraphData,
+  Item,
+  ItemData,
+} from "@graphcalculator/types";
+export type {
+  Expression,
+  GraphData,
+  Item,
+  ItemData,
+} from "@graphcalculator/types";
 import { SerializedAdjList } from "../../helpers/dts";
-
-// API data
-
-export type GraphData = {
-  name: string;
-  id: string;
-  graphSnapshot: GraphSnapshot;
-  createdAt: string;
-  modifiedAt: string;
-  items: ItemServer[];
-};
-
-export type ExpressionSettings = {
-  point: {
-    color: (typeof PREDEFINED_COLORS)[number];
-    hidden: boolean;
-    strokeSize: number;
-    opacity: number;
-    pointType: PointType;
-  };
-  function: {
-    color: (typeof PREDEFINED_COLORS)[number];
-    hidden: boolean;
-    strokeSize: number;
-    lineType: "dotted" | "dashed" | "linear";
-    opacity: number;
-  };
-};
-
-export type PointType =
-  | "circle"
-  | "circleStroke"
-  | "diamond"
-  | "star"
-  | "x"
-  | "+";
-
-export type ItemServer<T extends keyof ItemData = ItemType> = {
-  id: number;
-  type: T;
-  data: ItemDataServer[T];
-};
-
-export type ItemDataServer = {
-  expression: ExpressionServer;
-  note: {
-    content: string;
-  };
-};
-
-export type Item<T extends keyof ItemData = ItemType> = {
-  id: number;
-  type: T;
-  data: ItemData[T];
-};
-
-export type ItemData = {
-  expression: Expression;
-  note: {
-    content: string;
-  };
-};
-
-export type ItemType = keyof ItemData;
-export type ExpressionType = "function" | "variable" | "point";
-export type ExpressionServer<T extends ExpressionType = ExpressionType> =
-  T extends "variable"
-    ? {
-        type: T;
-        content: string;
-      }
-    : T extends "function" | "point"
-    ? {
-        type: T;
-        content: string;
-        settings: ExpressionSettings[T];
-      }
-    : never;
-export type Expression<T extends ExpressionType = ExpressionType> =
-  T extends "variable"
-    ? {
-        type: T;
-        content: string;
-        parsedContent:
-          | { name: string; value: number; node: string; scopeDeps: string[] }
-          | undefined;
-      }
-    : T extends "point"
-    ? {
-        type: T;
-        content: string;
-        parsedContent:
-          | { x: number; y: number; node: string; scopeDeps: string[] }
-          | undefined;
-        settings: ExpressionSettings[T];
-      }
-    : {
-        type: T;
-        content: string;
-        parsedContent:
-          | { name: string; node: string; scopeDeps: string[] }
-          | undefined;
-        settings: ExpressionSettings["function"];
-      };
 
 // Client State
 

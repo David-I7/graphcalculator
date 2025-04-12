@@ -1,4 +1,4 @@
-import { User, UserSessionData } from "../entity/user.js";
+import { User, UserSessionData } from "@graphcalculator/types";
 import DB from "../index.js";
 
 export interface IUserDao {
@@ -19,6 +19,7 @@ export interface IUserDao {
     fields: T,
     values: User[T[number]][]
   ): Promise<boolean>;
+  //getSavedGraphs():Promise<void>
   deleteUser?(user: User): Promise<boolean>;
 }
 

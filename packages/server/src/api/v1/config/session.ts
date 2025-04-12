@@ -1,5 +1,5 @@
 import { SessionOptions } from "express-session";
-import { UserSessionData } from "../db/entity/user.js";
+import { UserSessionData } from "@graphcalculator/types";
 import DB from "../db/index.js";
 import session from "express-session";
 import pgStore from "connect-pg-simple";

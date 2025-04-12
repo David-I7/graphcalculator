@@ -7,14 +7,9 @@ import {
   MessageBus,
 } from "../../interfaces";
 import { CommandController } from "./commands";
-import { Scales, ScalesState } from "./scales";
-import { GraphSettings, GraphSettingsState } from "./settings";
-
-export type GraphSnapshot = {
-  settings: GraphSettingsState;
-  scales: ScalesState;
-  image: ReturnType<HTMLCanvasElement["toDataURL"]>;
-};
+import { Scales } from "./scales";
+import { GraphSettings } from "./settings";
+import { GraphSnapshot } from "@graphcalculator/types";
 
 export type LibGraph = Graph;
 

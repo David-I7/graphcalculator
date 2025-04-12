@@ -21,13 +21,13 @@
     "react-dom": "^19.0.0",
     "react-error-boundary": "^5.0.0",
     "react-redux": "^9.2.0",
-    "uuid": "*",
-    "@graphcalculator/server": "*"
+    "uuid": "*"
   },
   "devDependencies": {
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "@graphcalculator/types": "*",
     "sass": "^1.84.0",
     "vite": "^6.1.0",
     "eslint-plugin-react-hooks": "^5.0.0",

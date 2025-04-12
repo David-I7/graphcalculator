@@ -6,9 +6,7 @@ export interface OAuth2Strategy {
   revokeRefreshToken(refresh_token: string): Promise<boolean>;
   getTokens(code: string): Promise<Partial<Tokens>>;
   verifyIdToken(idToken: string): Promise<TokenPayload>;
-  refreshAccessToken(
-    refresh_token: string
-  ): Promise<Partial<Tokens> | undefined>;
+  refreshAccessToken(refresh_token: string): Promise<string | undefined>;
   getUserInfo(access_token: string): Promise<UserInfo>;
 }
 

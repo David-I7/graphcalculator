@@ -2,11 +2,7 @@ import { isTouchEnabled } from "../../../../helpers/dom";
 import { throttle } from "../../../../helpers/performance";
 import { ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
-
-export type ScalesState = {
-  zoom: number;
-  scalesIndex: number;
-};
+import { ScalesState } from "@graphcalculator/types";
 
 export class Scales {
   protected destroyController: AbortController = new AbortController();
