@@ -3,13 +3,9 @@ import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
   Expression,
-  ExpressionSettings,
-  ExpressionType,
   GraphData,
   isExpression,
   ItemData,
-  ItemType,
-  PointType,
 } from "./types";
 import {
   addDependencies,
@@ -24,7 +20,14 @@ import {
 } from "./controllers";
 import { restrictedVariables } from "../../features/graph/data/math";
 import { PREDEFINED_COLORS } from "../../data/css/variables";
-import { GraphSnapshot, LibGraph } from "../../features/graph/lib/graph/graph";
+import { LibGraph } from "../../features/graph/lib/graph/graph";
+import {
+  ExpressionSettings,
+  ExpressionType,
+  GraphSnapshot,
+  ItemType,
+  PointType,
+} from "@graphcalculator/types";
 
 interface GraphState {
   currentGraph: ClientGraphData;

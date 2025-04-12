@@ -3,7 +3,7 @@ import { UserDao } from "../db/dao/userDao.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
-import { isEmail, isValidPassword } from "../services/validation/utlis.js";
+import { isEmail, isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
 import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
 import { OAuth2Client } from "../services/oAuth/OAuthClient.js";

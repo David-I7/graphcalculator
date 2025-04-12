@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { GraphData } from "../graph/types";
-import { UserSessionData } from "./types";
+import { UserSessionData } from "@graphcalculator/types";
 import { baseUrl } from "./config";
 
 const apiSlice = createApi({
@@ -12,14 +12,14 @@ const apiSlice = createApi({
         url: "graphs/examples",
         credentials: "include",
       }),
-      transformResponse: (response: { graphs: GraphData[] }) => response.graphs,
+      transformResponse: (response: { data: GraphData[] }) => response.data,
     }),
     getSavedGraphs: build.query<GraphData[], void>({
       query: () => ({
         url: "graphs/saved",
         credentials: "include",
       }),
-      transformResponse: (response: { graphs: GraphData[] }) => response.graphs,
+      transformResponse: (response: { data: GraphData[] }) => response.data,
     }),
     getUser: build.query<UserSessionData, void>({
       query: () => ({
