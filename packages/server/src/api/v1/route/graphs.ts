@@ -7,6 +7,7 @@ const graphRouter = Router();
 graphRouter.get("/examples", graphController.handleExampleGraphs);
 graphRouter
   .route("/saved")
-  .get(validateSession, graphController.handleGetSavedGraphs);
+  .get(validateSession, graphController.handleGetSavedGraphs)
+  .put(validateSession, graphController.handlePutSavedGraphs);
 
 export default graphRouter;

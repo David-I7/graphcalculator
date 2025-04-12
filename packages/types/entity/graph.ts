@@ -2,7 +2,6 @@ export type GraphData = {
   name: string;
   id: string;
   graphSnapshot: GraphSnapshot;
-  createdAt: string;
   modifiedAt: string;
   items: ItemServer[];
 };

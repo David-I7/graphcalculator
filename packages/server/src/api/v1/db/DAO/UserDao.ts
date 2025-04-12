@@ -19,7 +19,6 @@ export interface IUserDao {
     fields: T,
     values: User[T[number]][]
   ): Promise<boolean>;
-  //getSavedGraphs():Promise<void>
   deleteUser?(user: User): Promise<boolean>;
 }
 
