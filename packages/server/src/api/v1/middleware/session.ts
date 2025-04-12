@@ -17,29 +17,28 @@ export async function rollingSession(
 ) {
   if (!hasSession(req)) {
     next();
+    return;
   }
-
-  //STORE REFRESH TOKEN IN USER TABLE SINCE GOOGLE WON'T ISSUE AN NEW REFRESH TOKEN IF
-  //USER HAS A REFRESH TOKEN ALREADY
 
   if (req.session.tokens) {
     const { expiry_date, refresh_token } = req.session.tokens;
     const client = new OAuth2Client();
-    client.setStrategy(
-      new OAuth2StrategyFactory().createStrategy(req.session.tokens.provider)
-    );
 
     if (!client.isExpiredAccessToken(expiry_date)) {
       next();
       return;
     }
 
-    try {
-      const tokens = await client.refreshAccessToken(refresh_token);
+    client.setStrategy(
+      new OAuth2StrategyFactory().createStrategy(req.session.tokens.provider)
+    );
 
-      if (!tokens) throw new Error("Invalid refresh token");
+    try {
+      const access_token = await client.refreshAccessToken(refresh_token);
+
+      if (!access_token) throw new Error("Invalid refresh token");
       else {
-        const userInfo = await client.getUserInfo(tokens.access_token!);
+        const userInfo = await client.getUserInfo(access_token);
 
         if (
           !valueCompare(
@@ -61,13 +60,25 @@ export async function rollingSession(
             ["last_name", "first_name", "email_is_verified"],
             [userInfo.family_name, userInfo.given_name, userInfo.email_verified]
           );
+
+          saveSession(
+            req,
+            res,
+            next,
+            {
+              ...req.session.user!,
+              last_name: userInfo.family_name,
+              first_name: userInfo.given_name!,
+              email_is_verified: userInfo.email_verified!,
+            },
+            { ...req.session.tokens, access_token }
+          );
+          return;
         }
 
         saveSession(req, res, next, undefined, {
-          access_token: tokens.access_token!,
-          refresh_token: tokens.refresh_token!,
-          provider: req.session.tokens.provider,
-          expiry_date: tokens.expiry_date!,
+          ...req.session.tokens,
+          access_token,
         });
       }
     } catch (err) {
@@ -96,16 +107,9 @@ function saveSession(
     req.session.tokens = tokens;
   }
 
-  req.session.save((err) => {
-    res.cookie("sid", req.cookies.sid, cookieOptions);
-    next();
-  });
-}
-
-export function verifySession(req: Request, res: Response, next: NextFunction) {
-  if (!hasSession(req)) {
-    res.sendStatus(401);
-    return;
-  }
+  // optimistic update, worst case the browser expiration will
+  // be greater than my db expiration which prompts a new login
+  req.session.save();
+  res.cookie("sid", req.cookies.sid, cookieOptions);
   next();
 }
