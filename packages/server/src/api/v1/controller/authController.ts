@@ -5,10 +5,10 @@ import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/utlis.js";
 import { PasswordService } from "../services/passwordService.js";
-import { hasSession } from "../middleware/session.js";
 import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
 import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
 import { OAuthReponseTemplate } from "../services/oAuth/ResponseTemplate.js";
+import { hasSession } from "../middleware/session.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
   if (hasSession(req)) {
@@ -24,20 +24,6 @@ const handleAuthStatus = (req: Request, res: Response) => {
 };
 
 const handleAuth = async (req: Request, res: Response) => {
-  if (hasSession(req)) {
-    res
-      .status(400)
-      .json(
-        new ApiErrorResponse().createResponse(
-          new SimpleErrorFactory().createClientError(
-            "auth",
-            "Already logged in."
-          )
-        )
-      );
-    return;
-  }
-
   const { email, password } = req.body;
   if (!email || !isEmail(email) || !isValidPassword(password)) {
     res
