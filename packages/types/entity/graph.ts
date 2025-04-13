@@ -56,7 +56,7 @@ export type PointType =
   | "x"
   | "+";
 
-export type ItemServer<T extends keyof ItemData = ItemType> = {
+export type ItemServer<T extends keyof ItemDataServer = ItemType> = {
   id: number;
   type: T;
   data: ItemDataServer[T];
@@ -69,20 +69,8 @@ export type ItemDataServer = {
   };
 };
 
-export type Item<T extends keyof ItemData = ItemType> = {
-  id: number;
-  type: T;
-  data: ItemData[T];
-};
+export type ItemType = keyof ItemDataServer;
 
-export type ItemData = {
-  expression: Expression;
-  note: {
-    content: string;
-  };
-};
-
-export type ItemType = keyof ItemData;
 export type ExpressionType = "function" | "variable" | "point";
 export type ExpressionServer<T extends ExpressionType = ExpressionType> =
   T extends "variable"
@@ -97,29 +85,3 @@ export type ExpressionServer<T extends ExpressionType = ExpressionType> =
         settings: ExpressionSettings[T];
       }
     : never;
-export type Expression<T extends ExpressionType = ExpressionType> =
-  T extends "variable"
-    ? {
-        type: T;
-        content: string;
-        parsedContent:
-          | { name: string; value: number; node: string; scopeDeps: string[] }
-          | undefined;
-      }
-    : T extends "point"
-    ? {
-        type: T;
-        content: string;
-        parsedContent:
-          | { x: number; y: number; node: string; scopeDeps: string[] }
-          | undefined;
-        settings: ExpressionSettings[T];
-      }
-    : {
-        type: T;
-        content: string;
-        parsedContent:
-          | { name: string; node: string; scopeDeps: string[] }
-          | undefined;
-        settings: ExpressionSettings["function"];
-      };

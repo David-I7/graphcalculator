@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import exampleGraphs from "../db/data/examples.json" with { type: "json" };
-import { GraphDao } from "../db/dao/graphDao.js";
+import { GraphDao } from "../db/dao/GraphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
 
