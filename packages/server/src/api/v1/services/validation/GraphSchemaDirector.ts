@@ -1,0 +1,124 @@
+import { ExpressionType, ItemDataServer } from "@graphcalculator/types";
+import z from "zod";
+
+export class GraphSchemaDirector {
+  private static cache: Map<string, any> = new Map();
+
+  buildGraphSchema() {
+    if (GraphSchemaDirector.cache.has("graph")) {
+      return GraphSchemaDirector.cache.get("graph") as typeof schema;
+    }
+
+    const schema = this.buildMetadataSchema().merge(
+      z.object({
+        items: this.buildItemsSchema(),
+      })
+    );
+
+    GraphSchemaDirector.cache.set("graph", schema);
+    return schema;
+  }
+
+  private buildMetadataSchema(): typeof schema {
+    const schema = z.object({
+      name: z.string(),
+      id: z.string(),
+      graphSnapshot: this.buildGraphSnapshotSchema(),
+      modifiedAt: z.string().datetime(),
+    });
+
+    return schema;
+  }
+
+  private buildGraphSnapshotSchema() {
+    return z.object({
+      settings: z.object({
+        offsetX: z.number(),
+        offsetY: z.number(),
+      }),
+      scales: z.object({
+        zoom: z.number(),
+        scalesIndex: z.number(),
+      }),
+      image: z.string(),
+    });
+  }
+
+  private buildItemsSchema() {
+    const schema = z.array(
+      z.object({
+        id: z.number(),
+        type: z.enum(["note", "expression"]),
+        data: z.union([
+          this.buildNoteSchema(),
+          this.buildExpressionSchema("function"),
+          this.buildExpressionSchema("point"),
+          this.buildExpressionSchema("variable"),
+        ]),
+      })
+    );
+
+    return schema;
+  }
+
+  private buildNoteSchema() {
+    return z.object({
+      content: z.string(),
+    });
+  }
+
+  private buildExpressionSchema(type: ExpressionType) {
+    switch (type) {
+      case "variable": {
+        const schema = z.object({
+          type: z.literal(type),
+          content: z.string(),
+        });
+
+        return schema;
+      }
+      case "point": {
+        const schema = z.object({
+          type: z.literal(type),
+          content: z.string(),
+          settings: this.buildBaseSettingsSchema().merge(
+            z.object({
+              pointType: z.enum([
+                "circle",
+                "circleStroke",
+                "diamond",
+                "star",
+                "x",
+                "+",
+              ]),
+            })
+          ),
+        });
+        return schema;
+      }
+      case "function": {
+        const schema = z.object({
+          type: z.literal(type),
+          content: z.string(),
+          settings: this.buildBaseSettingsSchema().merge(
+            z.object({
+              lineType: z.enum(["dotted", "dashed", "linear"]),
+            })
+          ),
+        });
+        return schema;
+      }
+      default:
+        return z.never();
+    }
+  }
+
+  private buildBaseSettingsSchema() {
+    return z.object({
+      color: z.string(),
+      hidden: z.boolean(),
+      strokeSize: z.number(),
+      opacity: z.number(),
+    });
+  }
+}

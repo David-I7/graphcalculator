@@ -1,5 +1,6 @@
 import { GraphData } from "@graphcalculator/types";
 import z from "zod";
+import { GraphSchemaDirector } from "./GraphSchemaDirector.js";
 
 export class GraphValidationService {
   validateGetSavedGraphs(
@@ -15,38 +16,10 @@ export class GraphValidationService {
     return data;
   }
 
-  validateFullGraph(graph: GraphData) {
-    const graphSchema = z.object({
-      name: z.string(),
-      id: z.string(),
-      graphSnapshot: z.object({
-        settings: z.object({
-          offsetX: z.number(),
-          offsetY: z.number(),
-        }),
-        scales: z.object({
-          zoom: z.number(),
-          scalesIndex: z.number(),
-        }),
-        image: z.string(),
-      }),
-      modifiedAt: z.string().datetime(),
-      items: z.array(
-        z.object({
-          id: z.number(),
-          type: z.string(),
-          data: z.union([
-            z.object({
-              expression: z.object({}),
-            }),
-            z.object({
-              note: z.object({
-                content: z.string(),
-              }),
-            }),
-          ]),
-        })
-      ),
-    });
+  validateGraph(graph: unknown) {
+    const schema = new GraphSchemaDirector().buildGraphSchema();
+
+    const { data } = schema.safeParse(graph);
+    return data;
   }
 }
