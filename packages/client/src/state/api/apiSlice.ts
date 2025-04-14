@@ -21,6 +21,16 @@ const apiSlice = createApi({
       }),
       transformResponse: (response: { data: GraphData[] }) => response.data,
     }),
+    upsertSavedGraph: build.mutation<string, GraphData>({
+      query: (graph) => ({
+        credentials: "include",
+        url: "graphs/saved",
+        method: "put",
+        body: { graph },
+        "content-type": "application/json",
+        responseHandler: "text",
+      }),
+    }),
     getUser: build.query<UserSessionData, void>({
       query: () => ({
         url: "auth/status",
@@ -36,5 +46,6 @@ export const {
   useGetExampleGraphsQuery,
   useGetUserQuery,
   useGetSavedGraphsQuery,
+  useUpsertSavedGraphMutation,
 } = apiSlice;
 export default apiSlice;

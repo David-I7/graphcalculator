@@ -3,10 +3,10 @@ import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
 import { OAuth2StrategyFactory } from "../services/oAuth/StrategyFactory.js";
 import { valueCompare } from "../helpers/objects.js";
 import { cookieOptions } from "../config/cookies.js";
-import { UserDao } from "../db/dao/userDao.js";
 import { SessionData } from "express-session";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
+import { UserDao } from "../db/dao/userDao.js";
 
 export function hasSession(req: Request) {
   return req?.session?.user !== undefined;

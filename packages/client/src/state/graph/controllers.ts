@@ -37,8 +37,8 @@ export function createNewGraph(id: number = 1): ClientGraphData {
   const createdAt = new Date().toJSON();
   return {
     id: uuid(),
-    modifiedAt: createdAt,
-    graphSnapshot: {
+    modified_at: createdAt,
+    graph_snapshot: {
       scales: {
         scalesIndex: 300,
         zoom: 1,
@@ -59,20 +59,6 @@ export function createNewGraph(id: number = 1): ClientGraphData {
       data: [createNewItem("expression", id)],
     },
   };
-}
-
-export function saveCurrentGraph(
-  currentGraph: ClientGraphData,
-  snapshot: GraphSnapshot
-): GraphData {
-  // apiReq to server in the background
-
-  return {
-    ...current(currentGraph),
-    modifiedAt: new Date().toJSON(),
-    graphSnapshot: snapshot,
-    items: current(currentGraph.items.data),
-  } as GraphData;
 }
 
 export function restoreSavedGraph(graph: GraphData): ClientGraphData {

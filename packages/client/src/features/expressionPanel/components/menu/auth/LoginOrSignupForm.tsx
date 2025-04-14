@@ -4,14 +4,12 @@ import FilledButton from "../../../../../components/buttons/common/FilledButton"
 import { CSS_VARIABLES } from "../../../../../data/css/variables";
 import FormInput from "../../../../../components/input/FormInput";
 import { verifyEmail } from "../../../../../state/api/actions";
-import {
-  UserSessionData,
-  VerifyEmailResponse,
-} from "../../../../../state/api/types";
+import { VerifyEmailResponse } from "../../../../../state/api/types";
 import Or from "../../../../../components/hr/Or";
 import { useLazyFetch } from "../../../../../hooks/api";
-import { Apple, Google } from "../../../../../components/svgs";
+import { Google } from "../../../../../components/svgs";
 import { OAuth2 } from "./OAuth2";
+import { UserSessionData } from "@graphcalculator/types";
 
 type LoginOrSignupFormPorps = {
   previousValue: { email: string; isRegistered: boolean | null };

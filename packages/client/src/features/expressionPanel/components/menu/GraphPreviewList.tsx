@@ -34,7 +34,7 @@ const GraphPreviewList = ({
           const graph = data[idx];
           if (graph.id !== id) return;
 
-          libGraph.restoreStateSnapshot(graph.graphSnapshot);
+          libGraph.restoreStateSnapshot(graph.graph_snapshot);
           dispatch(restoreGraph(graph));
           toggleMenu();
         }

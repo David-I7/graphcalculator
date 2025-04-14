@@ -23,8 +23,8 @@ export class GraphSchemaDirector {
     const schema = z.object({
       name: z.string(),
       id: z.string(),
-      graphSnapshot: this.buildGraphSnapshotSchema(),
-      modifiedAt: z.string().datetime(),
+      graph_snapshot: this.buildGraphSnapshotSchema(),
+      modified_at: z.string().datetime(),
     });
 
     return schema;

@@ -15,7 +15,6 @@ import {
   deleteScopeSync,
   removeDependencies,
   restoreSavedGraph,
-  saveCurrentGraph,
   updateScopeSync,
 } from "./controllers";
 import { restrictedVariables } from "../../features/graph/data/math";
@@ -45,37 +44,13 @@ const graphSlice = createSlice({
     restoreGraph: create.reducer((state, action: PayloadAction<GraphData>) => {
       state.currentGraph = restoreSavedGraph(action.payload);
     }),
-    saveGraph: create.preparedReducer(
-      (graph: LibGraph) => {
-        const snapshot = graph.getStateSnapshot();
-        return { payload: { ...snapshot, image: graph.toDataURL() } };
-      },
-      (state, action: PayloadAction<GraphSnapshot>) => {
-        let graphIdx: number | null = null;
-
-        // for (let i = 0; i < state.savedGraphs.length; i++) {
-        //   if (state.savedGraphs[i].id === state.currentGraph.id) {
-        //     graphIdx = i;
-        //   }
-        // }
-
-        const savedGraph = saveCurrentGraph(state.currentGraph, action.payload);
-
-        console.log(current(state.currentGraph));
-        console.log(savedGraph);
-        return;
-
-        // if (graphIdx === null) {
-        //   state.savedGraphs.unshift(savedGraph);
-        // } else {
-        //   state.savedGraphs[graphIdx] = savedGraph;
-        // }
-      }
-    ),
+    saveGraph: create.reducer((state) => {
+      state.currentGraph.isModified = false;
+    }),
     createBlankGraph: create.preparedReducer(
       (graph: LibGraph) => {
         const newGraph = createNewGraph();
-        graph.restoreStateSnapshot(newGraph.graphSnapshot);
+        graph.restoreStateSnapshot(newGraph.graph_snapshot);
 
         return {
           payload: newGraph,
@@ -96,6 +71,11 @@ const graphSlice = createSlice({
         state.currentGraph.isModified = true;
       }
     }),
+    upsertGraphSnapshot: create.reducer(
+      (state, action: PayloadAction<GraphSnapshot>) => {
+        state.currentGraph.graph_snapshot = action.payload;
+      }
+    ),
 
     // ITEM CASES
     createItem: create.reducer(
@@ -498,6 +478,7 @@ export const {
   saveGraph,
   createBlankGraph,
   changeGraphName,
+  upsertGraphSnapshot,
 
   // item
   createItem,

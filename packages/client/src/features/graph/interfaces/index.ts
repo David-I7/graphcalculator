@@ -67,6 +67,6 @@ export interface GraphCommandController {
   readonly commands: GraphCommand[];
   add(command: GraphCommand): void;
   remove(command: GraphCommand): void;
-  render(): void;
+  render(graph: Graph): void;
   clear(graph: Graph): void;
 }
