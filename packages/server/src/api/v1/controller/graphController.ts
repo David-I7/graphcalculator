@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import exampleGraphs from "../db/data/examples.json" with { type: "json" };
-import { GraphDao } from "../db/dao/GraphDao.js";
+import { GraphDao } from "../db/dao/graphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
+import fs from "fs"
+import { publicDirname } from "../constants.js";
 
 const handleExampleGraphs = (req: Request, res: Response) => {
   res.status(200).json(new ApiSuccessResponse().createResponse(exampleGraphs));
@@ -29,10 +31,31 @@ const handleGetSavedGraphs = async (req: Request, res: Response) => {
 const handlePutSavedGraphs = async (req: Request, res: Response) => {
   const {graph} = req.body
 
+  const data = new GraphValidationService().validateGraph(graph)
+  if (!data) {
+    res.sendStatus(400)
+    return
+  }
   
+  // fs.open(publicDirname + `/images/${data.name}.webp`,"w",(err,fd) =>{
+  //   if (err) {
+  //     res.sendStatus(500)
+  //     return
+  //   }
+    
+  //   fs.write(fd,data.graph_snapshot.image,(err,written,str)=>{
+  //     console.log(written,str)
+  //   })
 
+  //   res.sendStatus(400)
+  //   return
 
-   return
+  // })
+  //const graphDao = new GraphDao()
+  
+  res.sendStatus(200)
+  return 
+    
 }
 
 export default { handleExampleGraphs,handleGetSavedGraphs,handlePutSavedGraphs };

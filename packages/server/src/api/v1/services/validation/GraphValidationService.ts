@@ -19,7 +19,7 @@ export class GraphValidationService {
   validateGraph(graph: unknown) {
     const schema = new GraphSchemaDirector().buildGraphSchema();
 
-    const { data } = schema.safeParse(graph);
+    const { data, error } = schema.safeParse(graph);
     return data;
   }
 }

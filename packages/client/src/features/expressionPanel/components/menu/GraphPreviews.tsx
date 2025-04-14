@@ -3,10 +3,11 @@ import {
   useGetSavedGraphsQuery,
 } from "../../../../state/api/apiSlice";
 import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
-import { useAppSelector } from "../../../../state/hooks";
+import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { getElapsedTime } from "../../../../helpers/date";
-import React from "react";
+import React, { useEffect } from "react";
 import { useGraphContext } from "../../../graph/Graph";
+import { upsertGraphSnapshot } from "../../../../state/graph/graph";
 
 type GraphProps = {
   onClose: () => void;
@@ -18,18 +19,22 @@ type GraphPreviewsProps = {
   isOpen: boolean;
 };
 
-export default React.memo(function GraphPreviews({
-  onClose,
-  isAuthenticated,
-  isOpen,
-}: GraphPreviewsProps) {
-  return (
-    <>
-      {isAuthenticated && <UserGraphs isOpen={isOpen} onClose={onClose} />}
-      <ExampleGraphs isOpen={isOpen} onClose={onClose} />
-    </>
-  );
-});
+export default React.memo(
+  function GraphPreviews({
+    onClose,
+    isAuthenticated,
+    isOpen,
+  }: GraphPreviewsProps) {
+    return (
+      <>
+        {isAuthenticated && <UserGraphs isOpen={isOpen} onClose={onClose} />}
+        <ExampleGraphs isOpen={isOpen} onClose={onClose} />
+      </>
+    );
+  },
+  (prev, cur) =>
+    prev.isOpen === cur.isOpen && prev.isAuthenticated === cur.isAuthenticated
+);
 
 function ExampleGraphs({ isOpen, onClose }: GraphProps) {
   const { data, isLoading, isError } = useGetExampleGraphsQuery();
@@ -48,7 +53,7 @@ function ExampleGraphs({ isOpen, onClose }: GraphProps) {
           {data.map((item, idx) => {
             return (
               <PreviewListItem
-                image={item.graphSnapshot.image}
+                image={item.graph_snapshot.image}
                 idx={idx}
                 key={item.id}
                 body={"example"}
@@ -65,8 +70,8 @@ function ExampleGraphs({ isOpen, onClose }: GraphProps) {
 function UserGraphs({ isOpen, onClose }: GraphProps) {
   return (
     <>
-      <CurrentGraph isOpen onClose={onClose} />
-      <SavedGraphs isOpen onClose={onClose} />
+      <CurrentGraph isOpen={isOpen} onClose={onClose} />
+      <SavedGraphs isOpen={isOpen} onClose={onClose} />
     </>
   );
 }
@@ -89,8 +94,8 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
               <PreviewListItem
                 idx={idx}
                 key={item.id}
-                body={item.modifiedAt}
-                image={item.graphSnapshot.image}
+                body={item.modified_at}
+                image={item.graph_snapshot.image}
                 item={item}
               />
             );
@@ -101,8 +106,15 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
 }
 
 function CurrentGraph({ isOpen, onClose }: GraphProps) {
+  const dispatch = useAppDispatch();
   const currentGraph = useAppSelector((state) => state.graphSlice.currentGraph);
   const libGraph = useGraphContext();
+
+  useEffect(() => {
+    if (!isOpen || !libGraph) return;
+
+    dispatch(upsertGraphSnapshot(libGraph.takeGraphStateSnapshot()));
+  }, [isOpen]);
 
   if (!isOpen) return;
 
@@ -114,9 +126,7 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
       <div onClick={onClose}>
         <PreviewListItem
           item={currentGraph}
-          image={
-            libGraph ? libGraph.toDataURL() : currentGraph.graphSnapshot.image
-          }
+          image={currentGraph.graph_snapshot.image}
           idx={0}
           body={
             currentGraph.isModified ? "unsaved changes" : "no unsaved changes"

@@ -1,3 +1,4 @@
+import { url } from "node:inspector";
 import { eventMap } from "../../interfaces";
 import {
   BusEvent,
@@ -106,7 +107,7 @@ export class Graph implements MessageBus {
   }
 
   renderCommands() {
-    this.commandController.render();
+    this.commandController.render(this);
   }
 
   clearCommands() {
@@ -125,15 +126,25 @@ export class Graph implements MessageBus {
     this.scales.reset();
   }
 
-  getStateSnapshot(): Omit<GraphSnapshot, "image"> {
+  takeGraphStateSnapshot(): GraphSnapshot {
+    this.canvas.toBlob(
+      async (blob) => {
+        if (!blob) return;
+        console.log(blob);
+        URL.createObjectURL(blob);
+        console.log(await blob?.arrayBuffer());
+      },
+      "image/webp",
+      0.9
+    );
+
     return {
       settings: this.settings.getState(),
       scales: this.scales.getState(),
+      image: this.canvas.toDataURL("image/webp", 0.9),
     };
   }
-  toDataURL(): string {
-    return this.canvas.toDataURL("image/webp", 0.9);
-  }
+
   restoreStateSnapshot(snapshot: Omit<GraphSnapshot, "image">) {
     this.settings.restoreState(snapshot.settings);
     this.scales.restoreState(snapshot.scales);

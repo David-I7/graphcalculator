@@ -1,9 +1,8 @@
 [
   {
     "id": "1fd852a9-6663-4ca2-bba4-01feb7356cad",
-    "createdAt": "2025-03-23T07:37:16.999Z",
-    "modifiedAt": "2025-03-23T07:40:00.910Z",
-    "graphSnapshot": {
+    "modified_at": "2025-03-23T07:40:00.910Z",
+    "graph_snapshot": {
       "settings": {
         "offsetX": 0,
         "offsetY": 0
@@ -51,9 +50,8 @@
   },
   {
     "id": "ebdf93d5-da8c-41c8-ae2d-be352936e3ff",
-    "createdAt": "2025-03-23T08:50:51.519Z",
-    "modifiedAt": "2025-03-23T08:52:57.029Z",
-    "graphSnapshot": {
+    "modified_at": "2025-03-23T08:52:57.029Z",
+    "graph_snapshot": {
       "settings": {
         "offsetX": 0,
         "offsetY": 0
@@ -109,9 +107,8 @@
   },
   {
     "id": "8ab86e10-2943-4004-94a3-7101921d8103",
-    "createdAt": "2025-03-23T08:56:27.184Z",
-    "modifiedAt": "2025-03-23T08:57:40.840Z",
-    "graphSnapshot": {
+    "modified_at": "2025-03-23T08:57:40.840Z",
+    "graph_snapshot": {
       "settings": {
         "offsetX": 0,
         "offsetY": 0
@@ -182,9 +179,8 @@
   },
   {
     "id": "8ab86e10-2943-4004-94a3-7101921d8113",
-    "createdAt": "2025-03-23T08:56:27.184Z",
-    "modifiedAt": "2025-03-23T09:02:55.633Z",
-    "graphSnapshot": {
+    "modified_at": "2025-03-23T09:02:55.633Z",
+    "graph_snapshot": {
       "settings": {
         "offsetX": 0,
         "offsetY": 0

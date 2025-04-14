@@ -7,6 +7,7 @@ export const CSS_VARIABLES = {
   onPrimary: "#f0f0f0",
   onSecondary: "#f0f0f0",
   error: "#c74440",
+  onError: "#0f0f0f",
 
   // Inverse (contrasting effects)
   inverseSurface: "black",

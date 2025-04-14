@@ -1,10 +1,13 @@
-export type GraphData = {
-  name: string;
+export type Graph = {
   id: string;
-  graphSnapshot: GraphSnapshot;
-  modifiedAt: string;
+  user_id: string;
+  name: string;
+  modified_at: string;
+  graph_snapshot: GraphSnapshot;
   items: ItemServer[];
 };
+
+export type GraphData = Omit<Graph, "user_id">;
 
 export type GraphSnapshot = {
   settings: GraphSettingsState;

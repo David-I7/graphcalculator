@@ -1,5 +1,5 @@
 import "./config/dotenvConfig.js";
-import express from "express";
+import express, { urlencoded } from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 import cookieParser from "cookie-parser";
@@ -7,6 +7,7 @@ import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import router from "./route/index.js";
 import sesssion from "express-session";
 import sessionOptions from "./config/session.js";
+import { publicDirname } from "./constants.js";
 
 const app = express();
 
@@ -18,8 +19,10 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use("/assets", serveStaticGZIP);
+app.use("/public", express.static(publicDirname));
 app.use(sesssion(sessionOptions));
 app.use(express.json());
+app.use(urlencoded({ extended: false }));
 
 app.use(router);
 

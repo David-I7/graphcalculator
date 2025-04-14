@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { PointType } from "../../state/graph/types";
+import { PointType } from "@graphcalculator/types";
 
 export type SVGProps = React.SVGAttributes<SVGSVGElement>;
 
@@ -153,6 +153,21 @@ export const Close = (props: SVGProps) => {
     </svg>
   );
 };
+export const Check = (props: SVGProps) => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M8.99999 20.4199L2.78999 14.2099L5.61999 11.3799L8.99999 14.7699L18.88 4.87988L21.71 7.70988L8.99999 20.4199Z" />
+    </svg>
+  );
+};
+
 export const Menu = (props: SVGProps) => {
   return (
     <svg

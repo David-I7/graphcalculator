@@ -18,6 +18,7 @@ import {
   toScientificNotation,
 } from "./utils";
 import { Expression, ExpressionSettings } from "../../../../state/graph/types";
+import { GraphSettings } from "./settings";
 
 export class CommandController implements GraphCommandController {
   public commands: GraphCommand[] = [];
@@ -36,7 +37,17 @@ export class CommandController implements GraphCommandController {
     this.commands.push(command);
   }
 
-  render() {
+  render(graph: Graph) {
+    graph.ctx.save();
+    graph.ctx.fillStyle = "white";
+    graph.ctx.fillRect(
+      -graph.canvasCenterX - graph.offsetX,
+      -graph.canvasCenterY - graph.offsetY,
+      graph.canvas.width,
+      graph.canvas.height
+    );
+    graph.ctx.restore();
+
     this.commands.forEach((command) => {
       command.draw();
     });

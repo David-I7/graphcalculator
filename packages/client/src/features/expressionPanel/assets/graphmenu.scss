@@ -92,6 +92,7 @@
     &-left {
       background-color: white;
       height: 3rem;
+      overflow: hidden;
       border-radius: base.$br-200;
       & img {
         aspect-ratio: 1 / 1;
