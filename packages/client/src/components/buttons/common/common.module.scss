@@ -1,6 +1,8 @@
 @use "../../../assets/styles/base" as base;
 
 .filled-button {
+  @extend .flex-center;
+  gap: 0.25rem;
   height: 2.5rem;
   padding: 0 2rem;
   border-radius: base.$br-200;

@@ -36,13 +36,12 @@ const apiSlice = createApi({
         data: { graphs: GraphData[]; totalPages: number };
       }) => response.data,
     }),
-    upsertSavedGraph: build.mutation<string, GraphData>({
-      query: (graph) => ({
+    upsertSavedGraph: build.mutation<string, FormData>({
+      query: (formData) => ({
         credentials: "include",
         url: "graphs/saved",
         method: "put",
-        body: { graph },
-        "content-type": "application/json",
+        body: formData,
         responseHandler: "text",
       }),
     }),

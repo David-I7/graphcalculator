@@ -118,7 +118,7 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
     if (!isOpen || !libGraph) return;
 
     (async () => {
-      libGraph.revokeObjectUrl(currentGraph.image);
+      libGraph.revokeObjectUrl(currentGraph.image.client);
       const snapshot = await libGraph.takeImageSnapshot();
       dispatch(upsertImageSnapshot(snapshot.url));
     })();
@@ -134,7 +134,7 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
       <div onClick={onClose}>
         <PreviewListItem
           item={currentGraph}
-          image={currentGraph.image}
+          image={currentGraph.image.client}
           idx={0}
           body={
             currentGraph.isModified ? "unsaved changes" : "no unsaved changes"

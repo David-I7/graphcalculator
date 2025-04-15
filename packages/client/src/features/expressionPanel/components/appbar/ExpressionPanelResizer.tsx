@@ -7,7 +7,7 @@ import {
   ArrowUp,
 } from "../../../../components/svgs";
 import { createPortal } from "react-dom";
-import { throttle } from "../../../../helpers/performance";
+import { throttle } from "../../../../helpers/timing";
 import {
   AnimateSlideY,
   AnimateSlideX,

@@ -48,7 +48,10 @@ export function createNewGraph(id: number = 1): ClientGraphData {
         offsetY: 0,
       },
     },
-    image: "",
+    image: {
+      server: "",
+      client: "",
+    },
     isModified: false,
     name: "Untitled",
     items: {
@@ -87,6 +90,10 @@ export function restoreSavedGraph(graph: GraphData): ClientGraphData {
 
   return {
     ...graph,
+    image: {
+      server: graph.image,
+      client: graph.image,
+    },
     isModified: false,
     items: {
       scope,

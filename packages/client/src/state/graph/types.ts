@@ -75,8 +75,12 @@ export type InternalScope = {
   [index: string]: (() => number) | number;
 };
 
-export type ClientGraphData = Omit<GraphData, "items"> & {
+export type ClientGraphData = Omit<GraphData, "items" | "image"> & {
   isModified: boolean;
+  image: {
+    server: string;
+    client: string;
+  };
   items: {
     nextId: number;
     focusedId: number;

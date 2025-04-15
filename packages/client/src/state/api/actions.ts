@@ -1,3 +1,4 @@
+import { ClientGraphData } from "../graph/types";
 import { baseUrl } from "./config";
 import {
   ApiErrorResponse,

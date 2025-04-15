@@ -53,7 +53,7 @@ export const PreviewListItem = ({
   idx,
   image,
 }: {
-  item: Omit<GraphData, "items">;
+  item: Omit<GraphData, "items" | "image">;
   idx: number;
   body: string;
   image: string;

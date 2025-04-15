@@ -1,4 +1,4 @@
-import { throttle } from "../../../../helpers/performance";
+import { throttle } from "../../../../helpers/timing";
 import { Graph } from "./graph";
 import { GraphSettingsState } from "@graphcalculator/types";
 
