@@ -3,16 +3,20 @@ import FilledButton from "../../../../components/buttons/common/FilledButton";
 import Spinner from "../../../../components/Loading/Spinner/Spinner";
 import { Check, Close } from "../../../../components/svgs";
 import { CSS_VARIABLES } from "../../../../data/css/variables";
-import { useUpsertSavedGraphMutation } from "../../../../state/api/apiSlice";
+import apiSlice, {
+  useUpsertSavedGraphMutation,
+} from "../../../../state/api/apiSlice";
 import { saveGraph } from "../../../../state/graph/graph";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { useGraphContext } from "../../../graph/Graph";
 
 const ExpressionPanelSaveGraph = () => {
+  const [message, setMessage] = useState<string>("Save");
   const dispatch = useAppDispatch();
   const [trigger, { data, isLoading, isError, error, reset }] =
     useUpsertSavedGraphMutation();
-  const [message, setMessage] = useState<string>("Save");
+  const { data: userSession } =
+    apiSlice.endpoints.getUser.useQueryState(undefined);
   const currentGraph = useAppSelector((state) => state.graphSlice.currentGraph);
   const graph = useGraphContext();
 
@@ -29,14 +33,31 @@ const ExpressionPanelSaveGraph = () => {
     <>
       {!isLoading && !isError && !data ? (
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            if (!graph) return;
+            if (!graph || !userSession) return;
             if (currentGraph.isModified) {
               // trigger({ ...currentGraph, items: currentGraph.items.data });
             }
 
-            // fetch("http://localhost:8080/api/test",{method: "post",headers:{"content-type"}})
+            const image = await graph.takeImageSnapshot();
+            const formData = new FormData();
+
+            formData.append("id", currentGraph.id);
+            formData.append("name", currentGraph.name);
+            formData.append("modified_at", new Date().toJSON());
+            formData.append(
+              "graph_snapshot",
+              JSON.stringify(currentGraph.graph_snapshot)
+            );
+            formData.append("items", JSON.stringify(currentGraph.items.data));
+            formData.append("image", image.blob);
+
+            fetch("http://localhost:8080/api/test", {
+              method: "post",
+              credentials: "include",
+              body: formData,
+            });
           }}
         >
           <FilledButton

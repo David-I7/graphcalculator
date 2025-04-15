@@ -47,8 +47,8 @@ export function createNewGraph(id: number = 1): ClientGraphData {
         offsetX: 0,
         offsetY: 0,
       },
-      image: "",
     },
+    image: "",
     isModified: false,
     name: "Untitled",
     items: {

@@ -1,4 +1,4 @@
-import { createSlice, current, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { swap } from "../../helpers/dts";
 import {
   ClientGraphData,
@@ -23,7 +23,6 @@ import { LibGraph } from "../../features/graph/lib/graph/graph";
 import {
   ExpressionSettings,
   ExpressionType,
-  GraphSnapshot,
   ItemType,
   PointType,
 } from "@graphcalculator/types";
@@ -71,9 +70,9 @@ const graphSlice = createSlice({
         state.currentGraph.isModified = true;
       }
     }),
-    upsertGraphSnapshot: create.reducer(
-      (state, action: PayloadAction<GraphSnapshot>) => {
-        state.currentGraph.graph_snapshot = action.payload;
+    upsertImageSnapshot: create.reducer(
+      (state, action: PayloadAction<string>) => {
+        state.currentGraph.image = action.payload;
       }
     ),
 
@@ -478,7 +477,7 @@ export const {
   saveGraph,
   createBlankGraph,
   changeGraphName,
-  upsertGraphSnapshot,
+  upsertImageSnapshot,
 
   // item
   createItem,

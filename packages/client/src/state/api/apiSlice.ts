@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { GraphData } from "../graph/types";
 import { UserSessionData } from "@graphcalculator/types";
-import { baseUrl } from "./config";
+import { baseUrl, SAVED_GRAPHS_LIMIT } from "./config";
 
 const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl }),
+  tagTypes: [""],
   endpoints: (build) => ({
     getExampleGraphs: build.query<GraphData[], void>({
       query: () => ({
@@ -14,12 +15,26 @@ const apiSlice = createApi({
       }),
       transformResponse: (response: { data: GraphData[] }) => response.data,
     }),
-    getSavedGraphs: build.query<GraphData[], void>({
-      query: () => ({
-        url: "graphs/saved",
+    getSavedGraphs: build.infiniteQuery<
+      { graphs: GraphData[]; totalPages: number },
+      void,
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam(lastPage, allPages, lastPageParam, allPageParams) {
+          return lastPageParam < lastPage.totalPages
+            ? lastPageParam++
+            : undefined;
+        },
+      },
+      query: ({ pageParam }) => ({
+        url: `graphs/saved?page=${pageParam}&limit=${SAVED_GRAPHS_LIMIT}`,
         credentials: "include",
       }),
-      transformResponse: (response: { data: GraphData[] }) => response.data,
+      transformResponse: (response: {
+        data: { graphs: GraphData[]; totalPages: number };
+      }) => response.data,
     }),
     upsertSavedGraph: build.mutation<string, GraphData>({
       query: (graph) => ({
@@ -45,7 +60,7 @@ const apiSlice = createApi({
 export const {
   useGetExampleGraphsQuery,
   useGetUserQuery,
-  useGetSavedGraphsQuery,
+  useGetSavedGraphsInfiniteQuery,
   useUpsertSavedGraphMutation,
 } = apiSlice;
 export default apiSlice;

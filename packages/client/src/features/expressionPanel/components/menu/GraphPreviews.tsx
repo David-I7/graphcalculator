@@ -1,13 +1,13 @@
 import {
   useGetExampleGraphsQuery,
-  useGetSavedGraphsQuery,
+  useGetSavedGraphsInfiniteQuery,
 } from "../../../../state/api/apiSlice";
 import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { getElapsedTime } from "../../../../helpers/date";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useGraphContext } from "../../../graph/Graph";
-import { upsertGraphSnapshot } from "../../../../state/graph/graph";
+import { upsertImageSnapshot } from "../../../../state/graph/graph";
 
 type GraphProps = {
   onClose: () => void;
@@ -53,7 +53,7 @@ function ExampleGraphs({ isOpen, onClose }: GraphProps) {
           {data.map((item, idx) => {
             return (
               <PreviewListItem
-                image={item.graph_snapshot.image}
+                image={item.image}
                 idx={idx}
                 key={item.id}
                 body={"example"}
@@ -77,32 +77,36 @@ function UserGraphs({ isOpen, onClose }: GraphProps) {
 }
 
 function SavedGraphs({ isOpen, onClose }: GraphProps) {
-  const { data, isLoading, isError } = useGetSavedGraphsQuery();
+  const { data, isLoading, isError } = useGetSavedGraphsInfiniteQuery();
+  const allData = useMemo(() => {
+    if (!data || !data.pages[0].graphs.length) return;
+    return data.pages.flatMap(({ graphs }) => graphs);
+  }, [data]);
 
   if (!isOpen) return;
+  if (!allData) return;
 
-  if (data && data.length)
-    return (
-      <section>
-        <div className="section-separator">
-          <h2>Saved Graphs</h2>
-        </div>
+  return (
+    <section>
+      <div className="section-separator">
+        <h2>Saved Graphs</h2>
+      </div>
 
-        <GraphPreviewList toggleMenu={onClose} data={data}>
-          {data.map((item, idx) => {
-            return (
-              <PreviewListItem
-                idx={idx}
-                key={item.id}
-                body={item.modified_at}
-                image={item.graph_snapshot.image}
-                item={item}
-              />
-            );
-          })}
-        </GraphPreviewList>
-      </section>
-    );
+      <GraphPreviewList toggleMenu={onClose} data={allData}>
+        {allData.map((item, idx) => {
+          return (
+            <PreviewListItem
+              idx={idx}
+              key={item.id}
+              body={item.modified_at}
+              image={item.image}
+              item={item}
+            />
+          );
+        })}
+      </GraphPreviewList>
+    </section>
+  );
 }
 
 function CurrentGraph({ isOpen, onClose }: GraphProps) {
@@ -113,7 +117,11 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
   useEffect(() => {
     if (!isOpen || !libGraph) return;
 
-    dispatch(upsertGraphSnapshot(libGraph.takeGraphStateSnapshot()));
+    (async () => {
+      libGraph.revokeObjectUrl(currentGraph.image);
+      const snapshot = await libGraph.takeImageSnapshot();
+      dispatch(upsertImageSnapshot(snapshot.url));
+    })();
   }, [isOpen]);
 
   if (!isOpen) return;
@@ -126,7 +134,7 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
       <div onClick={onClose}>
         <PreviewListItem
           item={currentGraph}
-          image={currentGraph.graph_snapshot.image}
+          image={currentGraph.image}
           idx={0}
           body={
             currentGraph.isModified ? "unsaved changes" : "no unsaved changes"
