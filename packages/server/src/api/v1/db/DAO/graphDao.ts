@@ -4,9 +4,9 @@ import DB from "../index.js";
 interface IGraphDao {
   getSavedGraphs(
     id: string,
-    page?: number,
-    limit?: number
-  ): Promise<GraphData[]>;
+    page: number,
+    limit: number
+  ): Promise<{ graphs: GraphData[]; totalPages: number }>;
 
   putSavedGraph(id: string, graph: GraphData): Promise<boolean>;
 }
@@ -14,9 +14,9 @@ interface IGraphDao {
 export class GraphDao implements IGraphDao {
   async getSavedGraphs(
     id: string,
-    page: number = 1,
-    limit: number = 25
-  ): Promise<GraphData[]> {
+    page: number,
+    limit: number
+  ): Promise<{ graphs: GraphData[]; totalPages: number }> {
     try {
       // const res = await DB.query<GraphData>(
       //   `select value from users, jsonb_each(saved_graphs)
@@ -25,10 +25,10 @@ export class GraphDao implements IGraphDao {
       // );
       // console.log(res.rows);
       // return res.rows;
-      return [];
+      return { graphs: [], totalPages: 1 };
     } catch (err) {
       console.log(err);
-      return [];
+      return { graphs: [], totalPages: 1 };
     }
   }
 

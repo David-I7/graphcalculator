@@ -1,4 +1,3 @@
-import { Router } from "express";
 import multer from "multer";
 import { publicDirname } from "../constants.js";
 
@@ -15,12 +14,5 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
-const testRouter = Router();
 
-testRouter.post("/", upload.single("image"), async (req, res) => {
-  console.log(req.file, req.body);
-
-  res.sendStatus(200);
-});
-
-export default testRouter;
+export default upload;

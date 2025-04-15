@@ -25,6 +25,7 @@ export class GraphSchemaDirector {
       id: z.string(),
       graph_snapshot: this.buildGraphSnapshotSchema(),
       modified_at: z.string().datetime(),
+      image: z.string(),
     });
 
     return schema;
@@ -40,7 +41,6 @@ export class GraphSchemaDirector {
         zoom: z.number(),
         scalesIndex: z.number(),
       }),
-      image: z.string(),
     });
   }
 
