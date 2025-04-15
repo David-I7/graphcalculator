@@ -1,5 +1,5 @@
 import "./config/dotenvConfig.js";
-import express, { urlencoded } from "express";
+import express from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 import cookieParser from "cookie-parser";
@@ -22,7 +22,6 @@ app.use("/assets", serveStaticGZIP);
 app.use("/public", express.static(publicDirname));
 app.use(sesssion(sessionOptions));
 app.use(express.json());
-app.use(urlencoded({ extended: false }));
 
 app.use(router);
 

@@ -2,7 +2,7 @@ import { useAppSelector, useAppDispatch } from "../../../state/hooks";
 import { useEffect } from "react";
 import { updateIsMobile } from "../../../state/global/global";
 import { MOBILE_BREAKPOINT } from "../../../data/css/breakpoints";
-import { throttle } from "../../../helpers/performance";
+import { throttle } from "../../../helpers/timing";
 
 const MobileState = () => {
   const isMobile = useAppSelector((state) => state.globalSlice.isMobile);

@@ -1,10 +1,11 @@
+import { ClientGraphData } from "../graph/types";
 import { baseUrl } from "./config";
 import {
   ApiErrorResponse,
   RegisterUserData,
-  UserSessionData,
   VerifyEmailResponse,
 } from "./types";
+import { UserSessionData } from "@graphcalculator/types";
 
 function createFetchError(): ApiErrorResponse {
   return {

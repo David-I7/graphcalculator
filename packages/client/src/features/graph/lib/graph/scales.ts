@@ -1,5 +1,5 @@
 import { isTouchEnabled } from "../../../../helpers/dom";
-import { throttle } from "../../../../helpers/performance";
+import { throttle } from "../../../../helpers/timing";
 import { ScaleEventData } from "../../interfaces";
 import { Graph } from "./graph";
 import { ScalesState } from "@graphcalculator/types";

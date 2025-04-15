@@ -1,18 +1,18 @@
-export type Graph = {
+export type GraphEntity = {
   id: string;
   user_id: string;
   name: string;
   modified_at: string;
   graph_snapshot: GraphSnapshot;
+  image: string;
   items: ItemServer[];
 };
 
-export type GraphData = Omit<Graph, "user_id">;
+export type GraphData = Omit<GraphEntity, "user_id">;
 
 export type GraphSnapshot = {
   settings: GraphSettingsState;
   scales: ScalesState;
-  image: ReturnType<HTMLCanvasElement["toDataURL"]>;
 };
 
 export type ScalesState = {

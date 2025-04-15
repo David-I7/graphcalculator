@@ -126,26 +126,32 @@ export class Graph implements MessageBus {
     this.scales.reset();
   }
 
-  takeGraphStateSnapshot(): GraphSnapshot {
-    this.canvas.toBlob(
-      async (blob) => {
-        if (!blob) return;
-        console.log(blob);
-        URL.createObjectURL(blob);
-        console.log(await blob?.arrayBuffer());
-      },
-      "image/webp",
-      0.9
-    );
+  async takeImageSnapshot(): Promise<{ blob: Blob; url: string }> {
+    return new Promise((res, rej) => {
+      this.canvas.toBlob(
+        async (blob) => {
+          if (!blob) return rej();
 
+          res({ blob, url: URL.createObjectURL(blob) });
+        },
+        "image/webp",
+        0.9
+      );
+    });
+  }
+
+  takeStateSnapshot(): GraphSnapshot {
     return {
-      settings: this.settings.getState(),
       scales: this.scales.getState(),
-      image: this.canvas.toDataURL("image/webp", 0.9),
+      settings: this.settings.getState(),
     };
   }
 
-  restoreStateSnapshot(snapshot: Omit<GraphSnapshot, "image">) {
+  revokeObjectUrl(url: string) {
+    URL.revokeObjectURL(url);
+  }
+
+  restoreStateSnapshot(snapshot: GraphSnapshot) {
     this.settings.restoreState(snapshot.settings);
     this.scales.restoreState(snapshot.scales);
   }

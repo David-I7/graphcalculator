@@ -35,6 +35,7 @@ const GraphPreviewList = ({
           if (graph.id !== id) return;
 
           libGraph.restoreStateSnapshot(graph.graph_snapshot);
+          libGraph.revokeObjectUrl(graph.image);
           dispatch(restoreGraph(graph));
           toggleMenu();
         }
@@ -52,7 +53,7 @@ export const PreviewListItem = ({
   idx,
   image,
 }: {
-  item: Omit<GraphData, "items">;
+  item: Omit<GraphData, "items" | "image">;
   idx: number;
   body: string;
   image: string;
