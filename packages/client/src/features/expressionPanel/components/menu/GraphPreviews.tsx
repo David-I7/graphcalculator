@@ -85,6 +85,7 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
 
   if (!isOpen) return;
   if (!allData) return;
+  console.log(allData);
 
   return (
     <section>
@@ -119,8 +120,8 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
 
     (async () => {
       libGraph.revokeObjectUrl(currentGraph.image.client);
-      const snapshot = await libGraph.takeImageSnapshot();
-      dispatch(upsertImageSnapshot(snapshot.url));
+      const snapshot = await libGraph.takeImageSnapshot("url");
+      dispatch(upsertImageSnapshot(snapshot));
     })();
   }, [isOpen]);
 
