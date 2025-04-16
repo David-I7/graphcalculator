@@ -6,6 +6,7 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
 import { OAuthStore } from "../services/oAuth/tokenStore.js";
+import { SessionService } from "../services/SessionService.js";
 
 const handleEmailVerification = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -37,7 +38,7 @@ const handleRegister = async (req: Request, res: Response) => {
   if (OAuthStore.hasData(token)) {
     const data = OAuthStore.getData(token)!;
 
-    const user = await userDao.createOrReturnUserFromProvider({
+    const user = await userDao.createOrUpdateUserFromProvider({
       email: data.payload.email || "",
       first_name: data.payload.given_name || "",
       last_name: data.payload.family_name || "",
@@ -45,10 +46,16 @@ const handleRegister = async (req: Request, res: Response) => {
       provider: data.tokens.provider,
     });
 
-    req.session.user = user;
+    const sess = {
+      ...user,
+      session_token: await new SessionService().createSessionToken(),
+    };
+    req.session.user = sess;
     req.session.tokens = data.tokens;
 
-    res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
+    res
+      .status(200)
+      .json(new ApiSuccessResponse().createResponse({ user: sess }));
     return;
   }
 
@@ -69,15 +76,17 @@ const handleRegister = async (req: Request, res: Response) => {
 
   const hashedPassword = await new PasswordService().hash(password);
 
-  const user = await userDao.createOrReturnUser({
+  const user = await userDao.createOrUpdateUser({
     email,
     first_name,
     last_name,
     password: hashedPassword,
   });
 
-  req.session.user = user;
-
+  req.session.user = {
+    ...user,
+    session_token: await new SessionService().createSessionToken(),
+  };
   res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
 };
 

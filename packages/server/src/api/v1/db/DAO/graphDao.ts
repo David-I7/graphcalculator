@@ -18,14 +18,22 @@ export class GraphDao implements IGraphDao {
     limit: number
   ): Promise<{ graphs: GraphData[]; totalPages: number }> {
     try {
-      // const res = await DB.query<GraphData>(
-      //   `select value from users, jsonb_each(saved_graphs)
-      //    where id = $1 limit $2 offset $3`,
-      //   [id, limit, limit * (page - 1)]
-      // );
-      // console.log(res.rows);
-      // return res.rows;
-      return { graphs: [], totalPages: 1 };
+      const totalCount = DB.query<{ count: number }>(
+        `Select count(*)::int from users as u
+        join saved_graphs as sg on u.id = sg.user_id where u.id = $1;`,
+        [id]
+      );
+      const graphs = await DB.query<GraphData>(
+        `select sg.id, name, image,modified_at,graph_snapshot,items from users as u
+        join saved_graphs as sg on u.id = sg.user_id where u.id = $1
+        order by modified_at desc limit $2 offset $3;`,
+
+        [id, limit, limit * (page - 1)]
+      );
+
+      const totalPages = Math.ceil((await totalCount).rows[0].count / limit);
+      console.log(graphs.rows);
+      return { graphs: graphs.rows, totalPages };
     } catch (err) {
       console.log(err);
       return { graphs: [], totalPages: 1 };
@@ -34,15 +42,17 @@ export class GraphDao implements IGraphDao {
 
   async putSavedGraph(userId: string, graph: GraphData): Promise<boolean> {
     try {
-      const res = await DB.query(
-        `insert into saved_graphs values ($1,$2,$3,$4,$5,$6)`,
+      await DB.query(
+        `insert into saved_graphs values ($1,$2,$3,$4,$5,$6,$7) on conflict (id) 
+        do update set name=$3, modified_at=$4, graph_snapshot=$5, items=$6, image=$7;`,
         [
           graph.id,
           userId,
           graph.name,
           graph.modified_at,
-          graph.graph_snapshot,
-          graph.items,
+          JSON.stringify(graph.graph_snapshot),
+          JSON.stringify(graph.items),
+          graph.image,
         ]
       );
 

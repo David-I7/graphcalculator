@@ -126,13 +126,16 @@ export class Graph implements MessageBus {
     this.scales.reset();
   }
 
-  async takeImageSnapshot(): Promise<{ blob: Blob; url: string }> {
+  async takeImageSnapshot<T extends "blob" | "url">(
+    type: T
+  ): Promise<T extends "blob" ? Blob : string> {
     return new Promise((res, rej) => {
       this.canvas.toBlob(
         async (blob) => {
           if (!blob) return rej();
 
-          res({ blob, url: URL.createObjectURL(blob) });
+          if (type === "url") return res(URL.createObjectURL(blob) as any);
+          res(blob as any);
         },
         "image/webp",
         0.9

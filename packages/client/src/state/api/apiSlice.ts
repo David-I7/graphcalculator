@@ -42,8 +42,8 @@ const apiSlice = createApi({
         url: "graphs/saved",
         method: "put",
         body: formData,
-        responseHandler: "text",
       }),
+      transformResponse: (response: { data: string }) => response.data,
     }),
     getUser: build.query<UserSessionData, void>({
       query: () => ({

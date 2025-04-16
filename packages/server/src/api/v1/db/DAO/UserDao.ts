@@ -8,12 +8,12 @@ export interface IUserDao {
     fields: T | "*"
   ): Promise<Pick<User, T[number]> | undefined>;
   findUserByEmail(email: string): Promise<User | undefined>;
-  createOrReturnUser(
+  createOrUpdateUser(
     user: Omit<User, "email_is_verified" | "id" | "provider">
-  ): Promise<Pick<User, "id">>;
-  createOrReturnUserFromProvider(
+  ): Promise<Omit<UserSessionData, "session_token">>;
+  createOrUpdateUserFromProvider(
     user: Omit<User, "password" | "id">
-  ): Promise<Pick<User, "id">>;
+  ): Promise<Omit<UserSessionData, "session_token">>;
   updateUserById<T extends (keyof User)[]>(
     id: string,
     fields: T,
@@ -86,10 +86,10 @@ export class UserDao implements IUserDao {
     return res.rowCount !== null ? res.rows[0] : undefined;
   }
 
-  async createOrReturnUser(
+  async createOrUpdateUser(
     user: Omit<User, "email_is_verified" | "id" | "provider">
-  ): Promise<UserSessionData> {
-    const res = await DB.query<UserSessionData>(
+  ): Promise<Omit<UserSessionData, "session_token">> {
+    const res = await DB.query<Omit<UserSessionData, "session_token">>(
       `Insert into users (email,first_name,last_name,password) 
       values ($1,$2,$3,$4) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id;`,
       [user.email, user.first_name, user.last_name, user.password]
@@ -97,10 +97,10 @@ export class UserDao implements IUserDao {
 
     return res.rows[0];
   }
-  async createOrReturnUserFromProvider(
+  async createOrUpdateUserFromProvider(
     user: Omit<User, "password" | "id">
-  ): Promise<UserSessionData> {
-    const res = await DB.query<UserSessionData>(
+  ): Promise<Omit<UserSessionData, "session_token">> {
+    const res = await DB.query<Omit<UserSessionData, "session_token">>(
       `Insert into users (email,first_name,last_name,email_is_verified,provider) 
       values ($1,$2,$3,$4,$5) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id;`,
       [

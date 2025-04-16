@@ -10,6 +10,7 @@ import { saveGraph } from "../../../../state/graph/graph";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { useGraphContext } from "../../../graph/Graph";
 import { wait } from "../../../../helpers/timing";
+import { isExpression } from "../../../../state/graph/types";
 
 const ExpressionPanelSaveGraph = () => {
   const [message, setMessage] = useState<string>("Save");
@@ -28,23 +29,34 @@ const ExpressionPanelSaveGraph = () => {
             e.preventDefault();
             if (!graph || !userSession || !currentGraph.isModified) return;
 
-            const image = await graph.takeImageSnapshot();
-            const formData = new FormData();
+            const image = await graph.takeImageSnapshot("blob");
             const snapshot = graph.takeStateSnapshot();
+            const formData = new FormData();
 
             formData.append("id", currentGraph.id);
             formData.append("name", currentGraph.name);
             formData.append("modified_at", new Date().toJSON());
             formData.append("graph_snapshot", JSON.stringify(snapshot));
-            formData.append("items", JSON.stringify(currentGraph.items.data));
+            formData.append(
+              "items",
+              JSON.stringify(
+                currentGraph.items.data.map((item) => {
+                  if (isExpression(item)) {
+                    const { parsedContent, ...dataServer } = item.data;
+                    return { ...item, data: dataServer };
+                  }
+                  return item;
+                })
+              )
+            );
             formData.append("prevImage", currentGraph.image.server);
-            formData.append("image", image.blob);
+            formData.append("image", image);
 
             setMessage("");
             try {
-              await trigger(formData).unwrap();
-              graph.revokeObjectUrl(image.url);
-              dispatch(saveGraph({ image: image.url, snapshot }));
+              const fileUrl = await trigger(formData).unwrap();
+              graph.revokeObjectUrl(currentGraph.image.client);
+              dispatch(saveGraph({ image: fileUrl, snapshot }));
 
               await wait(5000);
               setMessage("Save");

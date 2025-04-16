@@ -62,50 +62,58 @@ export class GraphSchemaDirector {
   }
 
   private buildNoteSchema() {
-    return z.object({
-      content: z.string(),
-    });
+    return z
+      .object({
+        content: z.string(),
+      })
+      .strict();
   }
 
   private buildExpressionSchema(type: ExpressionType) {
     switch (type) {
       case "variable": {
-        const schema = z.object({
-          type: z.literal(type),
-          content: z.string(),
-        });
+        const schema = z
+          .object({
+            type: z.literal(type),
+            content: z.string(),
+          })
+          .strict();
 
         return schema;
       }
       case "point": {
-        const schema = z.object({
-          type: z.literal(type),
-          content: z.string(),
-          settings: this.buildBaseSettingsSchema().merge(
-            z.object({
-              pointType: z.enum([
-                "circle",
-                "circleStroke",
-                "diamond",
-                "star",
-                "x",
-                "+",
-              ]),
-            })
-          ),
-        });
+        const schema = z
+          .object({
+            type: z.literal(type),
+            content: z.string(),
+            settings: this.buildBaseSettingsSchema().merge(
+              z.object({
+                pointType: z.enum([
+                  "circle",
+                  "circleStroke",
+                  "diamond",
+                  "star",
+                  "x",
+                  "+",
+                ]),
+              })
+            ),
+          })
+          .strict();
         return schema;
       }
       case "function": {
-        const schema = z.object({
-          type: z.literal(type),
-          content: z.string(),
-          settings: this.buildBaseSettingsSchema().merge(
-            z.object({
-              lineType: z.enum(["dotted", "dashed", "linear"]),
-            })
-          ),
-        });
+        const schema = z
+          .object({
+            type: z.literal(type),
+            content: z.string(),
+            settings: this.buildBaseSettingsSchema().merge(
+              z.object({
+                lineType: z.enum(["dotted", "dashed", "linear"]),
+              })
+            ),
+          })
+          .strict();
         return schema;
       }
       default:
