@@ -1,4 +1,3 @@
-import { GraphData } from "@graphcalculator/types";
 import z from "zod";
 import { GraphSchemaDirector } from "./GraphSchemaDirector.js";
 

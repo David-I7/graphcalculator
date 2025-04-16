@@ -3,8 +3,8 @@ import exampleGraphs from "../db/data/examples.json" with { type: "json" };
 import { GraphDao } from "../db/dao/graphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
-import fs from "fs"
-import { publicDirname } from "../constants.js";
+import { deleteFromFs } from "../middleware/fileStorage.js";
+import { inspect } from "node:util";
 
 const handleExampleGraphs = (req: Request, res: Response) => {
   res.status(200).json(new ApiSuccessResponse().createResponse(exampleGraphs));
@@ -29,33 +29,29 @@ const handleGetSavedGraphs = async (req: Request, res: Response) => {
 }
 
 const handlePutSavedGraphs = async (req: Request, res: Response) => {
-  const {graph} = req.body
+  if (!req.file) res.sendStatus(400)
 
-  const data = new GraphValidationService().validateGraph(graph)
+  req.body.image = process.env.SERVER_ORIGIN!.concat("/public/images/",req.file!.filename)
+  req.body.graph_snapshot = JSON.parse(req.body.graph_snapshot)
+  req.body.items = JSON.parse(req.body.items)
+
+  const data = new GraphValidationService().validateGraph(req.body)
   if (!data) {
     res.sendStatus(400)
     return
   }
-  
-  // fs.open(publicDirname + `/images/${data.name}.webp`,"w",(err,fd) =>{
-  //   if (err) {
-  //     res.sendStatus(500)
-  //     return
-  //   }
-    
-  //   fs.write(fd,data.graph_snapshot.image,(err,written,str)=>{
-  //     console.log(written,str)
-  //   })
 
-  //   res.sendStatus(400)
-  //   return
-
-  // })
-  //const graphDao = new GraphDao()
+  const graphDao = new GraphDao()
   
-  res.sendStatus(200)
+  const isSuccess = await graphDao.putSavedGraph(req.session.user!.id,data)
+  if (!isSuccess) {
+    res.sendStatus(500)
+    return;
+  }
+  deleteFromFs(req.body.prevImage,req.file!.destination)
+
+  res.status(200).send(new ApiSuccessResponse().createResponse(data.image))
   return 
-    
 }
 
 export default { handleExampleGraphs,handleGetSavedGraphs,handlePutSavedGraphs };

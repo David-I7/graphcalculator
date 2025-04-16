@@ -8,19 +8,13 @@ import { PasswordService } from "../services/passwordService.js";
 import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
 import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
 import { OAuthReponseTemplate } from "../services/oAuth/ResponseTemplate.js";
-import { hasSession } from "../middleware/session.js";
+import { SessionService } from "../services/SessionService.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
-  if (hasSession(req)) {
-    res
-      .status(200)
-      .json(
-        new ApiSuccessResponse().createResponse({ user: req.session.user })
-      );
-    return;
-  }
-
-  res.sendStatus(401);
+  res
+    .status(200)
+    .json(new ApiSuccessResponse().createResponse({ user: req.session.user }));
+  return;
 };
 
 const handleAuth = async (req: Request, res: Response) => {
@@ -54,10 +48,14 @@ const handleAuth = async (req: Request, res: Response) => {
   }
 
   if (await new PasswordService().compare(password, user.password)) {
-    // @ts-ignore
-    delete user.password;
-    req.session.user = user;
-    res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
+    const { password, provider, ...userSessionData } = user;
+
+    const session_token = await new SessionService().createSessionToken();
+    const sess = { ...userSessionData, session_token };
+    req.session.user = sess;
+    res
+      .status(200)
+      .json(new ApiSuccessResponse().createResponse({ user: sess }));
   } else {
     res
       .status(403)

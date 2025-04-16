@@ -1,5 +1,8 @@
 import multer from "multer";
 import { publicDirname } from "../constants.js";
+import { NextFunction, Request, Response } from "express";
+import fs from "node:fs";
+import path from "node:path";
 
 const storage = multer.diskStorage({
   destination(req, file, callback) {
@@ -14,5 +17,14 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+
+export function deleteFromFs(prevImage: string, destination: string) {
+  if (!prevImage || !destination) {
+    return;
+  }
+
+  const filepath = destination.concat("\\", path.basename(prevImage));
+  fs.rm(filepath, () => {});
+}
 
 export default upload;
