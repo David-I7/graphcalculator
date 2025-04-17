@@ -2,7 +2,10 @@ import {
   useGetExampleGraphsQuery,
   useGetSavedGraphsInfiniteQuery,
 } from "../../../../state/api/apiSlice";
-import GraphPreviewList, { PreviewListItem } from "./GraphPreviewList";
+import GraphPreviewList, {
+  PreviewListItem,
+  PreviewListItemSaved,
+} from "./GraphPreviewList";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { getElapsedTime } from "../../../../helpers/date";
 import React, { useEffect, useMemo } from "react";
@@ -85,7 +88,6 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
 
   if (!isOpen) return;
   if (!allData) return;
-  console.log(allData);
 
   return (
     <section>
@@ -96,10 +98,10 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
       <GraphPreviewList toggleMenu={onClose} data={allData}>
         {allData.map((item, idx) => {
           return (
-            <PreviewListItem
+            <PreviewListItemSaved
               idx={idx}
               key={item.id}
-              body={item.modified_at}
+              body={getElapsedTime(item.modified_at)}
               image={item.image}
               item={item}
             />

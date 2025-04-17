@@ -50,12 +50,10 @@ const handleAuth = async (req: Request, res: Response) => {
   if (await new PasswordService().compare(password, user.password)) {
     const { password, provider, ...userSessionData } = user;
 
-    const session_token = await new SessionService().createSessionToken();
-    const sess = { ...userSessionData, session_token };
-    req.session.user = sess;
+    req.session.user = userSessionData;
     res
       .status(200)
-      .json(new ApiSuccessResponse().createResponse({ user: sess }));
+      .json(new ApiSuccessResponse().createResponse({ user: userSessionData }));
   } else {
     res
       .status(403)

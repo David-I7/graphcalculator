@@ -10,6 +10,7 @@ export const clientDirname = path.join(
   fileURLToPath(import.meta.url),
   "../../../../../client/dist"
 );
+export const ONE_YEAR = 1000 * 60 * 60 * 24 * 7 * 4 * 12;
 
 // export const provider = {
 //   graphCalculator: 0,

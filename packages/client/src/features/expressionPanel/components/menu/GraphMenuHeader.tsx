@@ -1,8 +1,8 @@
-import { UserSessionData } from "../../../../state/api/types";
-import AuthDialog from "./auth/AuthDialog";
 import { AccountSettingsDropDown } from "./settings/AccountSettingsDropDown";
 import { DialogProvider } from "../../../../components/dialog/DialogContext";
 import "../../assets/auth.scss";
+import AuthDialogMediator from "./auth/AuthDialogMediator";
+import { UserSessionData } from "@graphcalculator/types";
 
 const GraphMenuHeader = ({ user }: { user: UserSessionData | undefined }) => {
   return (
@@ -10,7 +10,7 @@ const GraphMenuHeader = ({ user }: { user: UserSessionData | undefined }) => {
       {!user && (
         <header>
           <DialogProvider>
-            <AuthDialog />
+            <AuthDialogMediator />
           </DialogProvider>
         </header>
       )}

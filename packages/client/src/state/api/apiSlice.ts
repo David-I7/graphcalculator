@@ -45,6 +45,15 @@ const apiSlice = createApi({
       }),
       transformResponse: (response: { data: string }) => response.data,
     }),
+    deleteSavedGraph: build.mutation<string, string>({
+      query: (graphId) => ({
+        credentials: "include",
+        url: "graphs/saved",
+        method: "delete",
+        body: { graphId },
+        responseHandler: "text",
+      }),
+    }),
     getUser: build.query<UserSessionData, void>({
       query: () => ({
         url: "auth/status",
@@ -61,5 +70,6 @@ export const {
   useGetUserQuery,
   useGetSavedGraphsInfiniteQuery,
   useUpsertSavedGraphMutation,
+  useDeleteSavedGraphMutation,
 } = apiSlice;
 export default apiSlice;

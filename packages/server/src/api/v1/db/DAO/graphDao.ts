@@ -9,6 +9,8 @@ interface IGraphDao {
   ): Promise<{ graphs: GraphData[]; totalPages: number }>;
 
   putSavedGraph(id: string, graph: GraphData): Promise<boolean>;
+
+  deleteSavedGraph(id: string, graphId: string): Promise<string | undefined>;
 }
 
 export class GraphDao implements IGraphDao {
@@ -60,6 +62,19 @@ export class GraphDao implements IGraphDao {
     } catch (err) {
       console.log(err);
       return false;
+    }
+  }
+
+  async deleteSavedGraph(graphId: string): Promise<string | undefined> {
+    try {
+      const res = await DB.query<{ image: string }>(
+        `delete from saved_graphs where id = $1 returning image;`,
+        [graphId]
+      );
+
+      return res.rows[0].image;
+    } catch (err) {
+      return;
     }
   }
 }

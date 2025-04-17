@@ -18,12 +18,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-export function deleteFromFs(prevImage: string, destination: string) {
-  if (!prevImage || !destination) {
+export function deleteFromFs(image: string, destination: string) {
+  if (!image || !destination) {
     return;
   }
 
-  const filepath = destination.concat("\\", path.basename(prevImage));
+  const filepath = destination.concat("\\", path.basename(image));
   fs.rm(filepath, () => {});
 }
 

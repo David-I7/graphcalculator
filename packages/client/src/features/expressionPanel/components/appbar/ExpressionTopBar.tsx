@@ -1,7 +1,7 @@
 import ExpressionPanelResizer from "./ExpressionPanelResizer";
 import GraphMenu from "../menu/GraphMenu";
 import ExpressionPanelNewItem from "./ExpressionPanelNewItem";
-import ExpressionPanelSaveGraph from "./ExpressionPanelSaveGraph";
+import ExpressionPanelSaveGraph from "./saveGraph/ExpressionPanelSaveGraph";
 import ExpressionPanelGraphName from "./ExpressionPanelGraphName";
 
 const ExpressionTopBar = () => {

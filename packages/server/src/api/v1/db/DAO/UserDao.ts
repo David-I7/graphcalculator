@@ -10,10 +10,10 @@ export interface IUserDao {
   findUserByEmail(email: string): Promise<User | undefined>;
   createOrUpdateUser(
     user: Omit<User, "email_is_verified" | "id" | "provider">
-  ): Promise<Omit<UserSessionData, "session_token">>;
+  ): Promise<UserSessionData>;
   createOrUpdateUserFromProvider(
     user: Omit<User, "password" | "id">
-  ): Promise<Omit<UserSessionData, "session_token">>;
+  ): Promise<UserSessionData>;
   updateUserById<T extends (keyof User)[]>(
     id: string,
     fields: T,
@@ -88,8 +88,8 @@ export class UserDao implements IUserDao {
 
   async createOrUpdateUser(
     user: Omit<User, "email_is_verified" | "id" | "provider">
-  ): Promise<Omit<UserSessionData, "session_token">> {
-    const res = await DB.query<Omit<UserSessionData, "session_token">>(
+  ): Promise<UserSessionData> {
+    const res = await DB.query<UserSessionData>(
       `Insert into users (email,first_name,last_name,password) 
       values ($1,$2,$3,$4) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id;`,
       [user.email, user.first_name, user.last_name, user.password]
@@ -99,8 +99,8 @@ export class UserDao implements IUserDao {
   }
   async createOrUpdateUserFromProvider(
     user: Omit<User, "password" | "id">
-  ): Promise<Omit<UserSessionData, "session_token">> {
-    const res = await DB.query<Omit<UserSessionData, "session_token">>(
+  ): Promise<UserSessionData> {
+    const res = await DB.query<UserSessionData>(
       `Insert into users (email,first_name,last_name,email_is_verified,provider) 
       values ($1,$2,$3,$4,$5) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id;`,
       [
