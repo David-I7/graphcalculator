@@ -7,19 +7,26 @@
   bottom: 0;
   z-index: 20;
   transform: translateX(-100%);
+  overflow-y: auto;
+  //overflow-x: hidden;
   width: 20rem;
   background-color: base.$inverse-surface;
   color: base.$inverse-on-surface-body;
 
   h2 {
-    @extend .font-body-xl;
+    @extend .font-body-sm;
     color: base.$inverse-on-surface-heading;
+    font-weight: base.$fw-regular;
   }
 
   h3 {
     @extend .font-body-m;
     color: base.$inverse-on-surface-heading;
     font-weight: base.$fw-medium;
+  }
+
+  section {
+    margin-bottom: 2rem;
   }
 }
 
@@ -31,7 +38,7 @@
   padding: 0.5rem;
   cursor: pointer;
   outline: none;
-  margin-bottom: 0.5rem;
+  margin-block: 1rem;
 
   &:hover {
     & button:nth-child(1) {
@@ -89,6 +96,11 @@
     background-color: base.$inverse-surface;
     @extend .inverse-button--hovered;
 
+    &-saved {
+      @extend .preview-list-item;
+      @extend .inverse-button--hovered;
+    }
+
     &-left {
       background-color: white;
       height: 3rem;
@@ -103,8 +115,35 @@
     &-right {
       overflow: hidden;
       @extend .font-body-sm;
+
       & h3 {
         text-overflow: ellipsis;
+        margin-bottom: 0.125rem;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+
+    &-right-saved {
+      position: relative;
+      overflow: hidden;
+      padding-right: 2.5rem;
+      @extend .font-body-sm;
+
+      & > button {
+        &:hover {
+          transition: filter base.$an-sp-fast ease-out;
+          filter: brightness(150%);
+        }
+
+        position: absolute;
+        top: -0.5rem;
+        right: 0;
+      }
+
+      & h3 {
+        text-overflow: ellipsis;
+        margin-bottom: 0.125rem;
         white-space: nowrap;
         overflow: hidden;
       }
@@ -114,6 +153,7 @@
 
 header:has(.account-settings-dropdown) {
   border-bottom: 1px solid base.$border-normal;
+  padding: 0 0.5rem;
 }
 
 header .account-settings-dropdown {

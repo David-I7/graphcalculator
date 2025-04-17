@@ -4,7 +4,7 @@ import { GraphDao } from "../db/dao/graphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
 import { deleteFromFs } from "../middleware/fileStorage.js";
-import { inspect } from "node:util";
+import { publicDirname } from "../constants.js";
 
 const handleExampleGraphs = (req: Request, res: Response) => {
   res.status(200).json(new ApiSuccessResponse().createResponse(exampleGraphs));
@@ -55,4 +55,26 @@ const handlePutSavedGraphs = async (req: Request, res: Response) => {
   return 
 }
 
-export default { handleExampleGraphs,handleGetSavedGraphs,handlePutSavedGraphs };
+const handelDeleteSavedGraph = async (req:Request,res:Response)=>{
+  const {graphId} = req.body
+  if (typeof graphId !== "string") {
+    res.sendStatus(400)
+    return
+  }
+
+ 
+
+  const graphDao = new GraphDao()
+  const image = await graphDao.deleteSavedGraph(graphId)
+  
+  if (!image){
+    res.sendStatus(400)
+    return
+  }
+
+  deleteFromFs(image,publicDirname + "\\images")
+  res.sendStatus(200)
+  return
+}
+
+export default { handleExampleGraphs,handleGetSavedGraphs,handlePutSavedGraphs,handelDeleteSavedGraph };

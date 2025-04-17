@@ -132,7 +132,7 @@ const GraphMenu = ({ children }: { children: ReactNode }) => {
 };
 
 GraphMenu.Toggle = function () {
-  const { ariaControlsId, menuRef, isOpen, rootRef, onOpen, onClose } =
+  const { ariaControlsId, isOpen, rootRef, onOpen, onClose } =
     useGraphMenuContext();
 
   const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
@@ -184,11 +184,13 @@ GraphMenu.Toggle = function () {
         )}
       {isOpen && (
         <Scrim
-          portal={{ container: menuRef.current! }}
+          portal={{ container: rootRef.current! }}
           style={{
-            left: "100%",
+            position: "fixed",
+            left: "320px",
             right: "auto",
             width: `calc(100vw - 17.625rem)`,
+            zIndex: 1000,
           }}
           onClose={onClose}
         />

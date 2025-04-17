@@ -16,6 +16,10 @@ graphRouter
     new SessionService().validateSession(),
     upload.single("image"),
     graphController.handlePutSavedGraphs
+  )
+  .delete(
+    new SessionService().validateSession(),
+    graphController.handelDeleteSavedGraph
   );
 
 export default graphRouter;
