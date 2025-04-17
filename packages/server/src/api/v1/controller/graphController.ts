@@ -37,6 +37,7 @@ const handlePutSavedGraphs = async (req: Request, res: Response) => {
 
   const data = new GraphValidationService().validateGraph(req.body)
   if (!data) {
+    deleteFromFs(req.file!.filename,req.file!.destination)
     res.sendStatus(400)
     return
   }

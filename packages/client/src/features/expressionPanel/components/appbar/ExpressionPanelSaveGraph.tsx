@@ -10,14 +10,79 @@ import { saveGraph } from "../../../../state/graph/graph";
 import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
 import { useGraphContext } from "../../../graph/Graph";
 import { wait } from "../../../../helpers/timing";
-import { isExpression } from "../../../../state/graph/types";
+import {
+  ClientGraphData,
+  GraphData,
+  isExpression,
+} from "../../../../state/graph/types";
+import { LibGraph } from "../../../graph/lib/graph/graph";
+import { current } from "@reduxjs/toolkit";
+
+async function buildGraphData(
+  graph: LibGraph,
+  currentGraph: ClientGraphData
+): Promise<Omit<GraphData, "image"> & { image: Blob | string }> {
+  const image = await graph.takeImageSnapshot("blob");
+  const snapshot = graph.takeStateSnapshot();
+
+  return {
+    id: currentGraph.id,
+    name: currentGraph.name,
+    modified_at: new Date().toJSON(),
+    graph_snapshot: snapshot,
+    items: currentGraph.items.data.map((item) => {
+      if (isExpression(item)) {
+        const { parsedContent, ...dataServer } = item.data;
+        return { ...item, data: dataServer };
+      }
+      return item;
+    }),
+    image,
+  };
+}
+
+function buildFormData(
+  graphData: Omit<GraphData, "image"> & { image: Blob | string },
+  prevImg: string
+) {
+  const formData = new FormData();
+
+  formData.append("id", graphData.id);
+  formData.append("name", graphData.name);
+  formData.append("modified_at", new Date().toJSON());
+  formData.append("graph_snapshot", JSON.stringify(graphData.graph_snapshot));
+  formData.append("items", JSON.stringify(graphData.items)),
+    formData.append("prevImage", prevImg);
+  formData.append("image", graphData.image);
+
+  return formData;
+}
 
 const ExpressionPanelSaveGraph = () => {
   const [message, setMessage] = useState<string>("Save");
   const dispatch = useAppDispatch();
+  const updateSavedGraph = (updatedGraph: GraphData) => {
+    dispatch(
+      apiSlice.util.updateQueryData("getSavedGraphs", undefined, (draft) => {
+        let isUpdated = false;
+        for (let i = 0; i < draft.pages.length; i++) {
+          if (isUpdated) break;
+          const graphs = draft.pages[i].graphs;
+          for (let j = 0; j < graphs.length; j++) {
+            if (graphs[j].id === updatedGraph.id) {
+              graphs.splice(j, 1);
+              isUpdated = true;
+              break;
+            }
+          }
+        }
+
+        draft.pages[0].graphs.unshift(updatedGraph);
+        console.log(current(draft.pages[0].graphs));
+      })
+    );
+  };
   const [trigger, { data, isLoading, isError }] = useUpsertSavedGraphMutation();
-  const { data: userSession } =
-    apiSlice.endpoints.getUser.useQueryState(undefined);
   const currentGraph = useAppSelector((state) => state.graphSlice.currentGraph);
   const graph = useGraphContext();
 
@@ -27,36 +92,26 @@ const ExpressionPanelSaveGraph = () => {
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            if (!graph || !userSession || !currentGraph.isModified) return;
+            if (!graph || !currentGraph.isModified) return;
 
-            const image = await graph.takeImageSnapshot("blob");
-            const snapshot = graph.takeStateSnapshot();
-            const formData = new FormData();
-
-            formData.append("id", currentGraph.id);
-            formData.append("name", currentGraph.name);
-            formData.append("modified_at", new Date().toJSON());
-            formData.append("graph_snapshot", JSON.stringify(snapshot));
-            formData.append(
-              "items",
-              JSON.stringify(
-                currentGraph.items.data.map((item) => {
-                  if (isExpression(item)) {
-                    const { parsedContent, ...dataServer } = item.data;
-                    return { ...item, data: dataServer };
-                  }
-                  return item;
-                })
-              )
+            const updatedGraph = await buildGraphData(graph, currentGraph);
+            const formData = buildFormData(
+              updatedGraph,
+              currentGraph.image.server
             );
-            formData.append("prevImage", currentGraph.image.server);
-            formData.append("image", image);
 
             setMessage("");
             try {
               const fileUrl = await trigger(formData).unwrap();
               graph.revokeObjectUrl(currentGraph.image.client);
-              dispatch(saveGraph({ image: fileUrl, snapshot }));
+              dispatch(
+                saveGraph({
+                  image: fileUrl,
+                  snapshot: updatedGraph.graph_snapshot,
+                })
+              );
+              updatedGraph.image = fileUrl;
+              updateSavedGraph(updatedGraph as GraphData);
 
               await wait(5000);
               setMessage("Save");

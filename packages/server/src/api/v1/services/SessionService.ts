@@ -7,8 +7,6 @@ import { SessionData } from "express-session";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { UserDao } from "../db/dao/userDao.js";
-import { randomBytes } from "node:crypto";
-import { CustomError } from "./error/types.js";
 
 export class SessionService {
   hasSession(req: Request) {
@@ -152,14 +150,5 @@ export class SessionService {
 
       next();
     };
-  }
-
-  async createSessionToken(): Promise<string> {
-    return new Promise((res, rej) => {
-      randomBytes(16, (err, buff) => {
-        if (err) return rej(err);
-        return res(buff.toString("hex"));
-      });
-    });
   }
 }

@@ -7,7 +7,7 @@ import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import router from "./route/index.js";
 import sesssion from "express-session";
 import sessionOptions from "./config/session.js";
-import { publicDirname } from "./constants.js";
+import { ONE_YEAR, publicDirname } from "./constants.js";
 
 const app = express();
 
@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use("/assets", serveStaticGZIP);
-app.use("/public", express.static(publicDirname));
+app.use("/public", express.static(publicDirname, { maxAge: ONE_YEAR }));
 app.use(sesssion(sessionOptions));
 app.use(express.json());
 

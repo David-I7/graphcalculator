@@ -46,16 +46,12 @@ const handleRegister = async (req: Request, res: Response) => {
       provider: data.tokens.provider,
     });
 
-    const sess = {
-      ...user,
-      session_token: await new SessionService().createSessionToken(),
-    };
-    req.session.user = sess;
+    req.session.user = user;
     req.session.tokens = data.tokens;
 
     res
       .status(200)
-      .json(new ApiSuccessResponse().createResponse({ user: sess }));
+      .json(new ApiSuccessResponse().createResponse({ user: user }));
     return;
   }
 
@@ -83,10 +79,7 @@ const handleRegister = async (req: Request, res: Response) => {
     password: hashedPassword,
   });
 
-  req.session.user = {
-    ...user,
-    session_token: await new SessionService().createSessionToken(),
-  };
+  req.session.user = user;
   res.status(200).json(new ApiSuccessResponse().createResponse({ user }));
 };
 

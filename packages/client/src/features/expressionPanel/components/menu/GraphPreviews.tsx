@@ -85,7 +85,6 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
 
   if (!isOpen) return;
   if (!allData) return;
-  console.log(allData);
 
   return (
     <section>
@@ -99,7 +98,7 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
             <PreviewListItem
               idx={idx}
               key={item.id}
-              body={item.modified_at}
+              body={getElapsedTime(item.modified_at)}
               image={item.image}
               item={item}
             />
