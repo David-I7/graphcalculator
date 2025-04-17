@@ -1,23 +1,21 @@
 import { useState } from "react";
-import FilledButton from "../../../../components/buttons/common/FilledButton";
-import Spinner from "../../../../components/Loading/Spinner/Spinner";
-import { Check, Close, Reload } from "../../../../components/svgs";
-import { CSS_VARIABLES } from "../../../../data/css/variables";
+import FilledButton from "../../../../../components/buttons/common/FilledButton";
+import Spinner from "../../../../../components/Loading/Spinner/Spinner";
+import { Check, Close, Reload } from "../../../../../components/svgs";
+import { CSS_VARIABLES } from "../../../../../data/css/variables";
 import apiSlice, {
   useUpsertSavedGraphMutation,
-} from "../../../../state/api/apiSlice";
-import { saveGraph } from "../../../../state/graph/graph";
-import { useAppDispatch, useAppSelector } from "../../../../state/hooks";
-import { useGraphContext } from "../../../graph/Graph";
-import { wait } from "../../../../helpers/timing";
+} from "../../../../../state/api/apiSlice";
+import { saveGraph } from "../../../../../state/graph/graph";
+import { useAppDispatch, useAppSelector } from "../../../../../state/hooks";
+import { useGraphContext } from "../../../../graph/Graph";
+import { wait } from "../../../../../helpers/timing";
 import {
   ClientGraphData,
   GraphData,
   isExpression,
-} from "../../../../state/graph/types";
-import { LibGraph } from "../../../graph/lib/graph/graph";
-import { current } from "@reduxjs/toolkit";
-
+} from "../../../../../state/graph/types";
+import { LibGraph } from "../../../../graph/lib/graph/graph";
 async function buildGraphData(
   graph: LibGraph,
   currentGraph: ClientGraphData
@@ -57,11 +55,10 @@ function buildFormData(
 
   return formData;
 }
-
-const ExpressionPanelSaveGraph = () => {
+const SaveGraphAuthorized = () => {
   const [message, setMessage] = useState<string>("Save");
   const dispatch = useAppDispatch();
-  const updateSavedGraph = (updatedGraph: GraphData) => {
+  const updateCacheEntries = (updatedGraph: GraphData) => {
     dispatch(
       apiSlice.util.updateQueryData("getSavedGraphs", undefined, (draft) => {
         let isUpdated = false;
@@ -78,7 +75,6 @@ const ExpressionPanelSaveGraph = () => {
         }
 
         draft.pages[0].graphs.unshift(updatedGraph);
-        console.log(current(draft.pages[0].graphs));
       })
     );
   };
@@ -111,7 +107,7 @@ const ExpressionPanelSaveGraph = () => {
                 })
               );
               updatedGraph.image = fileUrl;
-              updateSavedGraph(updatedGraph as GraphData);
+              updateCacheEntries(updatedGraph as GraphData);
 
               await wait(5000);
               setMessage("Save");
@@ -147,7 +143,7 @@ const ExpressionPanelSaveGraph = () => {
   );
 };
 
-export default ExpressionPanelSaveGraph;
+export default SaveGraphAuthorized;
 
 function SaveStatus<T extends any = any>({
   isError,
