@@ -11,6 +11,9 @@ import { getElapsedTime } from "../../../../helpers/date";
 import React, { useEffect, useMemo } from "react";
 import { useGraphContext } from "../../../graph/Graph";
 import { upsertImageSnapshot } from "../../../../state/graph/graph";
+import { useIntersectionObserver } from "../../../../hooks/dom";
+import Spinner from "../../../../components/Loading/Spinner/Spinner";
+import { CSS_VARIABLES } from "../../../../data/css/variables";
 
 type GraphProps = {
   onClose: () => void;
@@ -80,11 +83,29 @@ function UserGraphs({ isOpen, onClose }: GraphProps) {
 }
 
 function SavedGraphs({ isOpen, onClose }: GraphProps) {
-  const { data, isLoading, isError } = useGetSavedGraphsInfiniteQuery();
+  const { data, isFetching, fetchNextPage, hasNextPage } =
+    useGetSavedGraphsInfiniteQuery();
   const allData = useMemo(() => {
     if (!data || !data.pages[0].graphs.length) return;
     return data.pages.flatMap(({ graphs }) => graphs);
   }, [data]);
+
+  useIntersectionObserver(
+    () => document.querySelector(".preview-list-item-saved:last-child")!,
+    (entries, observer) => {
+      if (entries[0].isIntersecting) {
+        observer.unobserve(entries[0].target);
+        fetchNextPage();
+      }
+    },
+    {
+      enabled: isFetching || !hasNextPage ? false : isOpen,
+      intersectionObserverOpt: {
+        root: document.querySelector(".graph-menu"),
+        rootMargin: "0px 0px 100px 0px",
+      },
+    }
+  );
 
   if (!isOpen) return;
   if (!allData) return;
@@ -108,6 +129,16 @@ function SavedGraphs({ isOpen, onClose }: GraphProps) {
           );
         })}
       </GraphPreviewList>
+      {isFetching && (
+        <div className="grid-center" style={{ paddingTop: "1rem" }}>
+          <Spinner
+            style={{
+              borderColor: CSS_VARIABLES.inverseOnSurfaceHeading,
+              borderTopColor: "black",
+            }}
+          />
+        </div>
+      )}
     </section>
   );
 }
@@ -140,7 +171,11 @@ function CurrentGraph({ isOpen, onClose }: GraphProps) {
           image={currentGraph.image.client}
           idx={0}
           body={
-            currentGraph.isModified ? "unsaved changes" : "no unsaved changes"
+            currentGraph.isModified
+              ? currentGraph.image.server !== ""
+                ? `last saved: ${getElapsedTime(currentGraph.modified_at)}`
+                : "unsaved changes"
+              : "no unsaved changes"
           }
         />
       </div>

@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode } from "react";
+import { MouseEvent, ReactNode, useState } from "react";
 import { GraphData } from "../../../../state/graph/types";
 import { useAppDispatch } from "../../../../state/hooks";
 import { restoreGraph } from "../../../../state/graph/graph";
@@ -105,8 +105,8 @@ export const PreviewListItemSaved = ({
   body: string;
   image: string;
 }) => {
-  const [trigger, { data, isLoading, isError, reset }] =
-    useDeleteSavedGraphMutation();
+  const [trigger, { data, isLoading, isError }] = useDeleteSavedGraphMutation();
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const dispatch = useAppDispatch();
   const deleteSavedGraph = (graphId: string) => {
     dispatch(
@@ -131,7 +131,7 @@ export const PreviewListItemSaved = ({
       graph-idx={idx}
       className="preview-list-item-saved"
       onClick={
-        isLoading || isError
+        isInitialized
           ? (e) => {
               e.stopPropagation();
             }
@@ -147,30 +147,35 @@ export const PreviewListItemSaved = ({
 
         <ButtonTarget
           onClick={async (e) => {
-            if (isLoading) return;
+            if (isInitialized) return;
             e.stopPropagation();
+            setIsInitialized(true);
             try {
               await trigger(item.id).unwrap();
               deleteSavedGraph(item.id);
             } catch (err) {
               await wait(5000);
-              reset();
+              setIsInitialized(false);
             }
           }}
           className="delete-graph"
           title="Delete Graph"
         >
-          {isLoading ? (
+          {isInitialized && isLoading ? (
             <Spinner
               style={{
-                borderTopColor: "transparent",
+                borderTopColor: "black",
                 borderColor: CSS_VARIABLES.inverseOnSurfaceHeading,
               }}
             />
           ) : (
-            <Close color={isError ? CSS_VARIABLES.error : "currentColor"} />
+            <Close
+              color={
+                isInitialized && isError ? CSS_VARIABLES.error : "currentColor"
+              }
+            />
           )}
-          {data && (
+          {isInitialized && data && (
             <Check
               width={20}
               height={20}

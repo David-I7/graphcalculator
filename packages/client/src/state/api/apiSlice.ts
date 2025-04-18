@@ -24,7 +24,7 @@ const apiSlice = createApi({
         initialPageParam: 1,
         getNextPageParam(lastPage, allPages, lastPageParam, allPageParams) {
           return lastPageParam < lastPage.totalPages
-            ? lastPageParam++
+            ? lastPageParam + 1
             : undefined;
         },
       },

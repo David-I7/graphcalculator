@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { RefObject, useEffect } from "react";
 
 export const useClickOutside = <T extends HTMLElement | null>(
   enabled: boolean = true,
@@ -63,4 +63,42 @@ export function useFocus<T extends HTMLElement>(
       onBlur?.();
     }
   }, [toggle, onFocus]);
+}
+
+type IOHookOpt = {
+  enabled?: boolean;
+  intersectionObserverOpt?: IntersectionObserverInit;
+};
+
+export function useIntersectionObserver(
+  target: HTMLElement | (() => HTMLElement) | RefObject<HTMLElement | null>,
+  cb: (
+    entries: IntersectionObserverEntry[],
+    observer: IntersectionObserver
+  ) => void,
+  opt?: IOHookOpt
+) {
+  useEffect(
+    () => {
+      if (opt?.enabled !== undefined && !opt.enabled) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => cb(entries, observer),
+        opt?.intersectionObserverOpt
+      );
+
+      if (typeof target === "function") {
+        observer.observe(target());
+      } else if ("current" in target) {
+        observer.observe(target.current!);
+      } else {
+        observer.observe(target);
+      }
+
+      return () => {
+        observer.disconnect();
+      };
+    },
+    opt?.enabled === undefined ? [] : undefined
+  );
 }
