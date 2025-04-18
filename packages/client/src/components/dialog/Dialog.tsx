@@ -3,13 +3,14 @@ import styles from "./dialog.module.scss";
 import { Close } from "../svgs";
 import ButtonTarget from "../buttons/target/ButtonTarget";
 import { isClickOutside } from "../../helpers/dom";
+import { useDialogContext } from "./DialogContext";
 
 type DialogProps = DialogHTMLAttributes<HTMLDialogElement> & {
   children: ReactNode;
-  ref: RefObject<HTMLDialogElement | null>;
 };
 
-const Dialog = ({ children, ref, ...dialogAttr }: DialogProps) => {
+const Dialog = ({ children, ...dialogAttr }: DialogProps) => {
+  const { setIsOpen, ref } = useDialogContext();
   const mergedClassname = useMemo(() => {
     return dialogAttr.className
       ? dialogAttr.className + " " + styles.dialog
@@ -18,6 +19,7 @@ const Dialog = ({ children, ref, ...dialogAttr }: DialogProps) => {
 
   return (
     <dialog
+      onClose={(e) => setIsOpen(false)}
       onClick={(e) => {
         if (isClickOutside(e.currentTarget, e)) {
           ref.current?.close();

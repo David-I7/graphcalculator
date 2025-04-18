@@ -33,7 +33,7 @@ const LoginOrSignupForm = (props: LoginOrSignupFormPorps) => {
             onComplete={props.onComplete}
             stategies={[[<Google />, "Google"]]}
           />
-          <Or style={{ marginBlock: "1rem" }} />
+          <Or style={{ marginBlock: "1.5rem" }} />
           <VerifyEmailForm {...props} />
         </div>
       </div>

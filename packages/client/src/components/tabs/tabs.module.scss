@@ -1,0 +1,47 @@
+@use "../../assets/styles/base" as base;
+
+.tabs {
+  &-header {
+    display: flex;
+  }
+}
+
+.tab {
+  @extend .grid-center;
+  @extend .font-body-sm;
+  position: relative;
+  gap: 0.25rem;
+  height: 2rem;
+  padding: 1rem;
+  flex: 1;
+  font-weight: base.$fw-medium;
+  transition: color base.$an-sp-fast ease-out,
+    brightness base.$an-sp-fast ease-out;
+
+  @include base.beforeAbsolute("&") {
+    height: 2px;
+    bottom: 0;
+    top: unset;
+    background-color: base.$surface-container;
+  }
+
+  &:hover {
+    &::before {
+      filter: brightness(115%);
+    }
+    color: fade-out($color: base.$on-surface-body, $amount: 0.05);
+  }
+}
+
+.active-tab {
+  @extend .tab;
+  color: base.$primary;
+
+  &:hover {
+    color: base.$primary;
+  }
+
+  &::before {
+    background-color: base.$primary;
+  }
+}

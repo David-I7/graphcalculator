@@ -62,8 +62,6 @@ const handelDeleteSavedGraph = async (req:Request,res:Response)=>{
     return
   }
 
- 
-
   const graphDao = new GraphDao()
   const image = await graphDao.deleteSavedGraph(graphId)
   

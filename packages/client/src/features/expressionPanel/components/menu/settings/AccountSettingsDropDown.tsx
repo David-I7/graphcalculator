@@ -4,10 +4,9 @@ import Hr from "../../../../../components/hr/Hr";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../hooks/api";
 import { logoutUser } from "../../../../../state/api/actions";
-import { useGetUserQuery } from "../../../../../state/api/apiSlice";
-import { UserSessionData } from "../../../../../state/api/types";
 import { DialogProvider } from "../../../../../components/dialog/DialogContext";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
+import { UserSessionData } from "@graphcalculator/types";
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -17,18 +16,19 @@ export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
         <Dropdown.Chevron />
       </Dropdown.Button>
       <Dropdown.DialogMenu>
-        <AccountSettings />
+        <AccountSettings user={user} />
       </Dropdown.DialogMenu>
     </Dropdown>
   );
 }
 
-function AccountSettings({ toggle }: { toggle?: () => void }) {
-  const data = useGetUserQuery(undefined, {
-    selectFromResult({ data }) {
-      return { data };
-    },
-  }).data;
+function AccountSettings({
+  toggle,
+  user,
+}: {
+  toggle?: () => void;
+  user: UserSessionData;
+}) {
   const [trigger, { data: res, isLoading, isError, error }] = useLazyFetch(() =>
     logoutUser().then((res) => {
       if (res) throw new Error(res.error.message);
@@ -36,19 +36,17 @@ function AccountSettings({ toggle }: { toggle?: () => void }) {
     })
   );
 
-  if (!data) return null;
-
   return (
-    <div className="account-settings">
+    <div className="account-settings" onClick={(e) => e.stopPropagation()}>
       <div className="account-settings-credentials">
         <div>
-          {data.first_name} {data.last_name}
+          {user.first_name} {user.last_name}
         </div>
-        <div>{data.email}</div>
+        <div>{user.email}</div>
       </div>
 
       <DialogProvider>
-        <AccountSettingsDialog />
+        <AccountSettingsDialog user={user} />
       </DialogProvider>
 
       <Hr style={{ marginBottom: "1rem" }} />

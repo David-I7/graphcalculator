@@ -8,7 +8,6 @@
   z-index: 20;
   transform: translateX(-100%);
   overflow-y: auto;
-  //overflow-x: hidden;
   width: 20rem;
   background-color: base.$inverse-surface;
   color: base.$inverse-on-surface-body;
@@ -183,4 +182,23 @@ header .account-settings-dropdown {
 
 .account-settings-dialog-opener {
   margin-top: 1rem;
+
+  h2 {
+    color: base.$on-surface-heading;
+    font-weight: base.$fw-medium;
+    font-size: 1.5rem;
+  }
+}
+
+.account-settings-dialog {
+  &-header {
+    margin-block: 1.5rem;
+    padding-left: 1rem;
+  }
+
+  width: 500px;
+  height: 500px;
+}
+
+@media screen and (max-width: 500px) {
 }

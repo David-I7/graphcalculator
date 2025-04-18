@@ -38,9 +38,9 @@
 
 .email-form {
   display: grid;
-  grid-template-rows: 3.5rem 1fr;
+  grid-template-rows: 4.5rem 1fr;
   width: 25rem;
-  height: 264px;
+  height: 296px;
   max-height: inherit;
 
   &-body {
@@ -52,13 +52,14 @@
   }
 
   &-header {
-    padding: 1rem 1rem;
+    align-self: center;
+    padding-left: 1rem;
   }
 }
 
 .register-form {
   @extend .email-form;
-  height: 21.25rem;
+  height: 22.25rem;
 
   &-header {
     padding-left: 0.25rem;
@@ -148,5 +149,11 @@
     pointer-events: none;
     border: 1px solid base.$border-lowest;
     color: base.$border-lowest;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .email-form {
+    width: 100%;
   }
 }
