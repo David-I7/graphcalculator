@@ -6,7 +6,6 @@ import { baseUrl, SAVED_GRAPHS_LIMIT } from "./config";
 const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl }),
-  tagTypes: [""],
   endpoints: (build) => ({
     getExampleGraphs: build.query<GraphData[], void>({
       query: () => ({

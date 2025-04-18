@@ -6,7 +6,7 @@ import { useDialogContext } from "../../../../../components/dialog/DialogContext
 import { UserSessionData } from "@graphcalculator/types";
 
 const AuthDialog = () => {
-  const { isOpen, setIsOpen, ref } = useDialogContext();
+  const { isOpen, setIsOpen } = useDialogContext();
   const dispatch = useAppDispatch();
   const onComplete = (res: { data: { user: UserSessionData } }) => {
     setIsOpen(!isOpen);
@@ -22,8 +22,6 @@ const AuthDialog = () => {
 
   return (
     <Dialog
-      ref={ref}
-      onClose={(e) => setIsOpen(false)}
       onKeyDown={(e) => {
         e.stopPropagation();
       }}

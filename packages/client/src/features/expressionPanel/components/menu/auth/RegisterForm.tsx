@@ -1,10 +1,7 @@
 import React, { SetStateAction, useId, useState } from "react";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
-import {
-  RegisterUserData,
-  UserSessionData,
-} from "../../../../../state/api/types";
+import { RegisterUserData } from "../../../../../state/api/types";
 import FormInput from "../../../../../components/input/FormInput";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { useLazyFetch } from "../../../../../hooks/api";
@@ -12,6 +9,7 @@ import { registerUser } from "../../../../../state/api/actions";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import PasswordInput from "../../../../../components/input/PasswordInput";
 import { CSS_VARIABLES } from "../../../../../data/css/variables";
+import { UserSessionData } from "@graphcalculator/types";
 
 type RegisterFormProps = {
   credentials: RegisterUserData;
