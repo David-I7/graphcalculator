@@ -67,10 +67,8 @@ export class SessionService {
                 ]
               );
 
-              this.saveSession(
+              this.updateSession(
                 req,
-                res,
-                next,
                 {
                   ...req.session.user!,
                   last_name: userInfo.family_name,
@@ -79,13 +77,15 @@ export class SessionService {
                 },
                 { ...req.session.tokens, access_token }
               );
+              this.saveRollingSession(req, res, next);
               return;
             }
 
-            this.saveSession(req, res, next, undefined, {
+            this.updateSession(req, undefined, {
               ...req.session.tokens,
               access_token,
             });
+            this.saveRollingSession(req, res, next);
           }
         } catch (err) {
           // refresh_token has expired asumption => destroy session
@@ -95,15 +95,13 @@ export class SessionService {
           });
         }
       } else {
-        this.saveSession(req, res, next);
+        this.saveRollingSession(req, res, next);
       }
     };
   }
 
-  private saveSession(
+  updateSession(
     req: Request,
-    res: Response,
-    next: NextFunction,
     user?: SessionData["user"],
     tokens?: SessionData["tokens"]
   ) {
@@ -113,7 +111,10 @@ export class SessionService {
     if (tokens) {
       req.session.tokens = tokens;
     }
+  }
 
+  private saveRollingSession(req: Request, res: Response, next: NextFunction) {
+    // using save because touch does not work.
     // optimistic update, worst case the browser expiration will
     // be greater than my db expiration which prompts a new login
     req.session.save();

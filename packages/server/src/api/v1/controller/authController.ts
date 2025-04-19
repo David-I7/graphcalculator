@@ -48,7 +48,7 @@ const handleAuth = async (req: Request, res: Response) => {
   }
 
   if (await new PasswordService().compare(password, user.password)) {
-    const { password, provider, ...userSessionData } = user;
+    const { password, ...userSessionData } = user;
 
     req.session.user = userSessionData;
     res
