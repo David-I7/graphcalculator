@@ -1,14 +1,22 @@
 import { TokenPayload } from "google-auth-library";
 import { Tokens } from "./types.js";
 
+export type TSet = {
+  key: string;
+  tokens: Omit<Tokens, "id_token" | "scope">;
+  payload: TokenPayload;
+};
+
+export type TReturn = {
+  tokens: Omit<Tokens, "id_token" | "scope">;
+  payload: TokenPayload;
+  expires: number;
+};
+
 export class OAuthStore {
   private static cacheLifeTimeMs = 1000 * 60;
   private static cache: {
-    [token: string]: {
-      tokens: Omit<Tokens, "id_token" | "scope">;
-      payload: TokenPayload;
-      expires: number;
-    };
+    [token: string]: TReturn;
   } = {};
 
   static getData(token: string) {
@@ -28,8 +36,8 @@ export class OAuthStore {
   static setData(
     token: string,
     data: {
-      tokens: Omit<Tokens, "id_token" | "scope">;
-      payload: TokenPayload;
+      tokens: TSet["tokens"];
+      payload: TSet["payload"];
     }
   ) {
     OAuthStore.pruneStaleTokens();

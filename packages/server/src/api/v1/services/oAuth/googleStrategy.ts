@@ -1,7 +1,7 @@
 import { OAuth2Client } from "google-auth-library";
-import { OAuth2Strategy, Tokens, UserInfo } from "./types.js";
+import { OpenIDStrategy, Tokens, UserInfo } from "./types.js";
 
-export class GoogleOAuth2Strategy implements OAuth2Strategy {
+export class GoogleOpenIDStrategy implements OpenIDStrategy {
   private providerCode: number = 1;
 
   private client = new OAuth2Client({

@@ -6,7 +6,6 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
 import { OAuthStore } from "../services/oAuth/tokenStore.js";
-import { SessionService } from "../services/SessionService.js";
 
 const handleEmailVerification = async (req: Request, res: Response) => {
   const { email } = req.body;
