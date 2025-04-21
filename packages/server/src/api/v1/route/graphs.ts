@@ -1,7 +1,7 @@
 import { Router } from "express";
 import graphController from "../controller/graphController.js";
 import upload from "../middleware/fileStorage.js";
-import { SessionService } from "../services/SessionService.js";
+import { SessionService } from "../services/sessionService.js";
 
 const graphRouter = Router();
 

@@ -12,7 +12,7 @@ abstract class IOAuthReponseTemplate {
           <title>Document</title>
               <script>
                 window.opener.postMessage(${message}, '${origin}')
-                 window.close()
+                setTimeout(()=>window.close(),500)
               </script>
         </head>
         <body>
@@ -21,8 +21,13 @@ abstract class IOAuthReponseTemplate {
   `;
   }
 
+  getOrigin(): string {
+    return process.env.NODE_ENV === "development"
+      ? process.env.DEV_ORIGIN!
+      : process.env.SERVER_ORIGIN!;
+  }
+
   abstract createMessage(): string;
-  abstract getOrigin(): string;
 }
 
 export class OAuthReponseTemplate extends IOAuthReponseTemplate {
@@ -34,11 +39,5 @@ export class OAuthReponseTemplate extends IOAuthReponseTemplate {
 
   setMessage(message: Record<string, any>) {
     this.message = message;
-  }
-
-  getOrigin(): string {
-    return process.env.NODE_ENV === "development"
-      ? process.env.DEV_ORIGIN!
-      : process.env.SERVER_ORIGIN!;
   }
 }

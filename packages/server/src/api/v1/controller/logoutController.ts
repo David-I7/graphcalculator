@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { cookieOptions } from "../config/cookies.js";
-import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
-import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
+import { GoogleOpenIDStrategy } from "../services/oAuth/googleStrategy.js";
+import { OpenIDClient } from "../services/oAuth/OAuthClient.js";
 
 const handleLogout = async (
   req: Request,
@@ -9,8 +9,8 @@ const handleLogout = async (
   next: NextFunction
 ) => {
   if (req.session.tokens && req.session.tokens.refresh_token) {
-    const client = new OAuth2Client();
-    client.setStrategy(new GoogleOAuth2Strategy());
+    const client = new OpenIDClient();
+    client.setStrategy(new GoogleOpenIDStrategy());
     client.revokeRefreshToken(req.session.tokens.refresh_token);
   }
 

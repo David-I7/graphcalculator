@@ -1,11 +1,11 @@
 import { randomUUID } from "crypto";
-import { IOAuth2Client, OAuth2Strategy } from "./types.js";
+import { IOpenIDClient, OAuth2Strategy, OpenIDStrategy } from "./types.js";
 import { OAuthStore } from "./tokenStore.js";
 
-export class OAuth2Client implements IOAuth2Client {
-  private strategy!: OAuth2Strategy;
+export class OpenIDClient implements IOpenIDClient {
+  private strategy!: OpenIDStrategy;
 
-  setStrategy(strategy: OAuth2Strategy): void {
+  setStrategy(strategy: OpenIDStrategy): void {
     this.strategy = strategy;
   }
 
@@ -21,8 +21,8 @@ export class OAuth2Client implements IOAuth2Client {
     const tokens = await this.strategy.getTokens(code);
     const payload = await this.strategy.verifyIdToken(tokens.id_token!);
 
-    const token = randomUUID();
-    OAuthStore.setData(token, {
+    const key = randomUUID();
+    OAuthStore.setData(key, {
       tokens: {
         access_token: tokens.access_token!,
         refresh_token: tokens.refresh_token!,
@@ -32,7 +32,7 @@ export class OAuth2Client implements IOAuth2Client {
       payload,
     });
 
-    return token;
+    return key;
   }
 
   getFromStore(token: string) {

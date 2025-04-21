@@ -5,10 +5,10 @@ import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
-import { GoogleOAuth2Strategy } from "../services/oAuth/googleStrategy.js";
-import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
-import { OAuthReponseTemplate } from "../services/oAuth/ResponseTemplate.js";
-import { SessionService } from "../services/SessionService.js";
+import { GoogleOpenIDStrategy } from "../services/oAuth/googleStrategy.js";
+import { OpenIDClient } from "../services/oAuth/OAuthClient.js";
+import { OAuthReponseTemplate } from "../services/oAuth/responseTemplate.js";
+import { GoogleEmailService } from "../services/email/emailService.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
   res
@@ -69,8 +69,8 @@ const handleAuth = async (req: Request, res: Response) => {
 };
 
 const handleOAuth2 = async (req: Request, res: Response) => {
-  const client = new OAuth2Client();
-  client.setStrategy(new GoogleOAuth2Strategy());
+  const client = new OpenIDClient();
+  client.setStrategy(new GoogleOpenIDStrategy());
 
   const url = client.generateAuthUrl();
   res.redirect(url);
@@ -84,8 +84,8 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
     return;
   }
 
-  const client = new OAuth2Client();
-  client.setStrategy(new GoogleOAuth2Strategy());
+  const client = new OpenIDClient();
+  client.setStrategy(new GoogleOpenIDStrategy());
   const responseTemplate = new OAuthReponseTemplate();
 
   try {
@@ -99,9 +99,48 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
   }
 };
 
+const handleEmail = (req: Request, res: Response) => {
+  const emailService = new GoogleEmailService();
+
+  const url = emailService.generateAuthUrl();
+  res.redirect(url);
+};
+
+const handleEmailCallback = async (req: Request, res: Response) => {
+  const code = req.query.code;
+  if (typeof code !== "string") {
+    res.sendStatus(500);
+    return;
+  }
+
+  const emailService = new GoogleEmailService();
+  try {
+    await emailService.getTokens(code);
+    const message = emailService.getDefaultMessageBuilder();
+    message
+      .to("iosubdavid7@gmail.com")
+      .subject("Hello from gmail app")
+      .text("hello world");
+
+    await emailService.sendEmail(message);
+    await emailService.revokeRefreshToken();
+
+    const template = new OAuthReponseTemplate();
+    template.setMessage({ type: "email_success" });
+    res.send(template.createTemplate());
+  } catch (err) {
+    console.log(err);
+    const template = new OAuthReponseTemplate();
+    template.setMessage({ type: "email_error" });
+    res.send(template.createTemplate());
+  }
+};
+
 export default {
   handleAuthStatus,
   handleAuth,
   handleOAuth2,
   handleOAuth2Callback,
+  handleEmail,
+  handleEmailCallback,
 };

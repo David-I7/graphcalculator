@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import { OAuth2Client } from "../services/oAuth/OAuthClient.js";
-import { OAuth2StrategyFactory } from "../services/oAuth/StrategyFactory.js";
+import { OpenIDClient } from "./oAuth/OAuthClient.js";
+import { OpenIDStrategyFactory } from "./oAuth/strategyFactory.js";
 import { valueCompare } from "../helpers/objects.js";
 import { cookieOptions } from "../config/cookies.js";
 import { SessionData } from "express-session";
-import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
-import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
+import { ApiErrorResponse } from "./apiResponse/errorResponse.js";
+import { SimpleErrorFactory } from "./error/simpleErrorFactory.js";
 import { UserDao } from "../db/dao/userDao.js";
 
 export class SessionService {
@@ -22,7 +22,7 @@ export class SessionService {
 
       if (req.session.tokens) {
         const { expiry_date, refresh_token } = req.session.tokens;
-        const client = new OAuth2Client();
+        const client = new OpenIDClient();
 
         if (!client.isExpiredAccessToken(expiry_date)) {
           next();
@@ -30,7 +30,7 @@ export class SessionService {
         }
 
         client.setStrategy(
-          new OAuth2StrategyFactory().createStrategy(
+          new OpenIDStrategyFactory().createStrategy(
             req.session.tokens.provider
           )
         );

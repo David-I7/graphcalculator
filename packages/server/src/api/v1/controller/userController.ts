@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { UserDao } from "../db/dao/userDao.js";
 import { UserSessionData } from "@graphcalculator/types";
-import { SessionService } from "../services/SessionService.js";
+import { SessionService } from "../services/sessionService.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";

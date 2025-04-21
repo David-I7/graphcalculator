@@ -1,17 +1,20 @@
 import { TokenPayload } from "google-auth-library";
-import { OAuthStore } from "./tokenStore.js";
+import { OAuthStore, TReturn, TSet } from "./tokenStore.js";
 
 export interface OAuth2Strategy {
   generateAuthUrl(): string;
   revokeRefreshToken(refresh_token: string): Promise<boolean>;
   getTokens(code: string): Promise<Partial<Tokens>>;
-  verifyIdToken(idToken: string): Promise<TokenPayload>;
   refreshAccessToken(refresh_token: string): Promise<string | undefined>;
+}
+
+export interface OpenIDStrategy extends OAuth2Strategy {
+  verifyIdToken(idToken: string): Promise<TokenPayload>;
   getUserInfo(access_token: string): Promise<UserInfo>;
 }
 
-export interface IOAuth2Client {
-  setStrategy(strategy: OAuth2Strategy): void;
+export interface IOpenIDClient {
+  setStrategy(strategy: OpenIDStrategy): void;
   generateAuthUrl(): string;
   revokeRefreshToken(refresh_token: string): Promise<boolean>;
   saveToStore(code: string): Promise<string>;
