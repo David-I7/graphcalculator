@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { UserSessionData } from "../../../../../state/api/types";
 import { registerUser } from "../../../../../state/api/actions";
 import { useAppSelector } from "../../../../../state/hooks";
+import { UserSessionData } from "@graphcalculator/types";
 
 export function OAuth2({
   stategies,

@@ -1,4 +1,3 @@
-import { ClientGraphData } from "../graph/types";
 import { baseUrl } from "./config";
 import {
   ApiErrorResponse,
@@ -34,7 +33,7 @@ export async function verifyEmail(
   email: string
 ): Promise<ApiErrorResponse | VerifyEmailResponse> {
   return await fetch(baseUrl + "/register/verify", {
-    method: "post",
+    method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email }),
   }).then(handleApiResponse);
@@ -45,7 +44,7 @@ export async function authenticateUser(data: {
   password: string;
 }): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
   return await fetch(baseUrl + "/auth", {
-    method: "post",
+    method: "POST",
     credentials: "include",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(data),
@@ -63,7 +62,7 @@ export async function registerUser(
   arg: RegisterUserData | string
 ): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
   return await fetch(baseUrl + "/register", {
-    method: "post",
+    method: "POST",
     credentials: "include",
     headers: {
       "content-type": "application/json",
@@ -76,4 +75,16 @@ export async function logoutUser(): Promise<void | ApiErrorResponse> {
   return await fetch(baseUrl + "/logout", { credentials: "include" }).then(
     handleApiResponse
   );
+}
+
+export async function updateUserCredentials(credentials: {
+  first_name: string;
+  last_name: string;
+}): Promise<ApiErrorResponse | { data: { user: UserSessionData } }> {
+  return await fetch(baseUrl + "/user", {
+    credentials: "include",
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(credentials),
+  }).then(handleApiResponse);
 }

@@ -13,10 +13,10 @@ export class TokenFactory {
     if (!TokenFactory.fd) {
       TokenFactory.fd = fs.openSync(
         path.join(serverDirname, "/config/tokens.json"),
-        "w+"
+        "r+"
       );
       TokenFactory.tokens = JSON.parse(
-        fs.readFileSync(TokenFactory.fd).toString()
+        fs.readFileSync(TokenFactory.fd).toString() || "{}"
       );
     }
   }
@@ -24,13 +24,15 @@ export class TokenFactory {
   set(key: string, value: Token[string]) {
     TokenFactory.tokens[key] = value;
     fs.ftruncate(TokenFactory.fd, 0, (err) => {
+      if (err) throw err;
       fs.write(
         TokenFactory.fd,
         JSON.stringify(TokenFactory.tokens),
         0,
         "utf8",
-        (err) => {
+        (err, written, str) => {
           if (err) throw err;
+          console.log(written, str);
         }
       );
     });

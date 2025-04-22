@@ -178,26 +178,55 @@ header .account-settings-dropdown {
       @extend .font-body-sm;
     }
   }
+
+  &-dialog {
+    width: 500px;
+    height: 500px;
+
+    &-opener {
+      margin-top: 1rem;
+
+      h2 {
+        color: base.$on-surface-heading;
+        font-weight: base.$fw-medium;
+        font-size: 1.5rem;
+      }
+    }
+
+    &-header {
+      margin-block: 1.5rem;
+      padding-left: 1rem;
+    }
+
+    &-body {
+      padding: 0 1rem;
+    }
+  }
 }
 
-.account-settings-dialog-opener {
+.profile-tab {
   margin-top: 1rem;
 
-  h2 {
-    color: base.$on-surface-heading;
-    font-weight: base.$fw-medium;
-    font-size: 1.5rem;
-  }
-}
+  & form {
+    label {
+      @extend .font-body-sm;
+      color: base.$on-surface-body;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
 
-.account-settings-dialog {
-  &-header {
-    margin-block: 1.5rem;
-    padding-left: 1rem;
-  }
+    & > div {
+      display: flex;
+      gap: 4rem;
+    }
 
-  width: 500px;
-  height: 500px;
+    & > div:last-child {
+      justify-content: flex-end;
+      gap: 1rem;
+      align-items: center;
+      padding: 2rem 0 1rem;
+    }
+  }
 }
 
 @media screen and (max-width: 500px) {

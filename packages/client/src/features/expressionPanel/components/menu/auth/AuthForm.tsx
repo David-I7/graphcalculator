@@ -7,7 +7,7 @@ import { ArrowLeft } from "../../../../../components/svgs";
 import PasswordInput from "../../../../../components/input/PasswordInput";
 import { CSS_VARIABLES } from "../../../../../data/css/variables";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
-import { UserSessionData } from "../../../../../state/api/types";
+import { UserSessionData } from "@graphcalculator/types";
 
 type AuthFormProps = {
   email: string;
@@ -74,12 +74,6 @@ function Form({
 
   return (
     <form
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
       onSubmit={(e) => {
         e.preventDefault();
         if (isLoading) return;

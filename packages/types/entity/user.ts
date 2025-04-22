@@ -8,4 +8,4 @@ export interface User {
   provider: number;
 }
 
-export type UserSessionData = Omit<User, "password" | "provider">;
+export type UserSessionData = Omit<User, "password">;

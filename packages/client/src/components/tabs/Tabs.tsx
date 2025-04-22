@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import React, { ReactElement, useState } from "react";
 import { Tab } from "./Tab";
 import { TabButton } from "./TabButton";
 import styles from "./tabs.module.scss";

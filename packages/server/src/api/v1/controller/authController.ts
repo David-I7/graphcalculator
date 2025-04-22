@@ -107,6 +107,7 @@ const handleEmail = (req: Request, res: Response) => {
 };
 
 const handleEmailCallback = async (req: Request, res: Response) => {
+  debugger;
   const code = req.query.code;
   if (typeof code !== "string") {
     res.sendStatus(500);
@@ -120,7 +121,15 @@ const handleEmailCallback = async (req: Request, res: Response) => {
     message
       .to("iosubdavid7@gmail.com")
       .subject("Hello from gmail app")
-      .text("hello world");
+      .html(
+        `<html>
+        <body>
+          <p><b>Hello,</b></p>
+          <p>This is the <i>HTML</i> version of the message.</p>
+        </body>
+      </html>`
+      )
+      .text("hello world, this is some random message");
 
     await emailService.sendEmail(message);
     await emailService.revokeRefreshToken();

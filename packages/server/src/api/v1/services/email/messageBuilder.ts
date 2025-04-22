@@ -12,31 +12,33 @@ export class MessageBuilder {
   }
 
   from(from: string) {
-    this.message["from"] = from;
+    this.message.from = from;
     return this;
   }
 
   to(to: string) {
-    this.message["from"] = to;
+    this.message.to = to;
     return this;
   }
 
   subject(subject: string) {
-    this.message["subject"] = subject;
+    this.message.subject = subject;
     return this;
   }
 
   text(text: string) {
-    this.message["text"] = text;
+    this.message.text = text;
     return this;
   }
 
   html(html: string) {
-    this.message["html"] = html;
+    this.message.html = html;
     return this;
   }
 
   build(): string {
+    console.log(this);
+
     if (
       !this.message["from"] ||
       !this.message["to"] ||
@@ -46,7 +48,7 @@ export class MessageBuilder {
 
     let message: string = "";
 
-    message.concat(
+    message = message.concat(
       `From: Graph Calculator <${this.message["from"]}>\n`,
       `To: ${this.message["to"]}\n`,
       `Subject: ${this.message["subject"]}\n`
@@ -55,29 +57,29 @@ export class MessageBuilder {
     if (this.message["html"] && this.message["text"]) {
       const boundary = "--u024ihtiboundary2084thw09t";
 
-      message.concat(
+      message = message.concat(
         `Content-Type: multipart/alternative; boundary="${boundary.substring(
           2
-        )}"\n`,
+        )}"\n\n`,
         boundary,
         "\n",
-        `Content-Type: text/plain; charset="UTF-8"\n`,
-        `${this.message["text"]}\n`,
+        `Content-Type: text/plain; charset="UTF-8"\n\n`,
+        `${this.message.text}\n\n`,
         boundary,
         "\n",
-        `Content-Type: text/html; charset="UTF-8"\n`,
-        `${this.message["html"]}\n`,
+        `Content-Type: text/html; charset="UTF-8"\n\n`,
+        `${this.message.html}\n\n`,
         `${boundary}--`
       );
-    } else if (this.message["text"]) {
-      message.concat(
-        `Content-Type: text/plain; charset="UTF-8"\n`,
-        `${this.message["text"]}`
+    } else if (this.message.text) {
+      message = message.concat(
+        `Content-Type: text/plain; charset="UTF-8"\n\n`,
+        `${this.message.text}`
       );
     } else {
-      message.concat(
-        `Content-Type: text/html; charset="UTF-8"\n`,
-        `${this.message["html"]}`
+      message = message.concat(
+        `Content-Type: text/html; charset="UTF-8"\n\n`,
+        `${this.message.html}`
       );
     }
 

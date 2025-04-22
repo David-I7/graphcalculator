@@ -5,8 +5,14 @@ import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../hooks/api";
 import { logoutUser } from "../../../../../state/api/actions";
 import { DialogProvider } from "../../../../../components/dialog/DialogContext";
-import { AccountSettingsDialog } from "./AccountSettingsDialog";
 import { UserSessionData } from "@graphcalculator/types";
+import { lazy, Suspense } from "react";
+import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
+const AccountSettingsDialog = lazy(() =>
+  import("./AccountSettingsDialog").then((res) => ({
+    default: res.AccountSettingsDialog,
+  }))
+);
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -45,11 +51,27 @@ function AccountSettings({
         <div>{user.email}</div>
       </div>
 
-      <DialogProvider>
-        <AccountSettingsDialog user={user} />
-      </DialogProvider>
+      {user.provider === 0 && (
+        <DialogProvider>
+          <Suspense
+            fallback={
+              <UnderlineButton style={{ marginTop: "1rem" }}>
+                Account settings
+              </UnderlineButton>
+            }
+          >
+            <AccountSettingsDialog user={user} />
+          </Suspense>
+        </DialogProvider>
+      )}
 
-      <Hr style={{ marginBottom: "1rem" }} />
+      <Hr
+        style={
+          user.provider === 0
+            ? { marginBottom: "1rem" }
+            : { marginBlock: "1rem" }
+        }
+      />
       <div>
         <OutlinedButton
           className="button--hovered"
