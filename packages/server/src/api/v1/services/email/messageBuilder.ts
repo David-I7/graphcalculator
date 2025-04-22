@@ -37,8 +37,6 @@ export class MessageBuilder {
   }
 
   build(): string {
-    console.log(this);
-
     if (
       !this.message["from"] ||
       !this.message["to"] ||

@@ -117,22 +117,6 @@ const handleEmailCallback = async (req: Request, res: Response) => {
   const emailService = new GoogleEmailService();
   try {
     await emailService.getTokens(code);
-    const message = emailService.getDefaultMessageBuilder();
-    message
-      .to("iosubdavid7@gmail.com")
-      .subject("Hello from gmail app")
-      .html(
-        `<html>
-        <body>
-          <p><b>Hello,</b></p>
-          <p>This is the <i>HTML</i> version of the message.</p>
-        </body>
-      </html>`
-      )
-      .text("hello world, this is some random message");
-
-    await emailService.sendEmail(message);
-    await emailService.revokeRefreshToken();
 
     const template = new OAuthReponseTemplate();
     template.setMessage({ type: "email_success" });
