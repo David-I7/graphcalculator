@@ -204,30 +204,5 @@ header .account-settings-dropdown {
   }
 }
 
-.profile-tab {
-  margin-top: 1rem;
-
-  & form {
-    label {
-      @extend .font-body-sm;
-      color: base.$on-surface-body;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    & > div {
-      display: flex;
-      gap: 4rem;
-    }
-
-    & > div:last-child {
-      justify-content: flex-end;
-      gap: 1rem;
-      align-items: center;
-      padding: 2rem 0 1rem;
-    }
-  }
-}
-
 @media screen and (max-width: 500px) {
 }

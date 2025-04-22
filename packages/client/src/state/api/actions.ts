@@ -20,7 +20,9 @@ async function handleApiResponse(res: Response) {
   const contentType = res.headers.get("content-type");
   if (res.ok && contentType?.startsWith("application/json")) {
     return await res.json();
-  } else if (res.ok) return;
+  } else if (res.ok && contentType?.startsWith("text/plain"))
+    return await res.text();
+  else if (res.ok) return "Success";
 
   if (contentType?.startsWith("application/json")) {
     return await res.json();
@@ -86,5 +88,12 @@ export async function updateUserCredentials(credentials: {
     method: "PATCH",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(credentials),
+  }).then(handleApiResponse);
+}
+
+export async function revokeEmailTokens(): Promise<string | ApiErrorResponse> {
+  return await fetch(baseUrl + "/auth/email/token", {
+    method: "DELETE",
+    credentials: "include",
   }).then(handleApiResponse);
 }

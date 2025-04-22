@@ -51,7 +51,6 @@ export class GoogleEmailService
 
     const { tokens } = await this.client.getToken(code);
     this.tokens.set("email", tokens as Omit<Tokens, "id_token" | "provider">);
-    this.setTokens();
     return tokens as Partial<Tokens>;
   }
 
@@ -71,8 +70,11 @@ export class GoogleEmailService
   }
 
   async revokeRefreshToken(refresh_token?: string) {
+    if (!this.client.credentials.refresh_token) return false;
+
+    this.tokens.delete("email");
     return this.client
-      .revokeToken(this.client.credentials.refresh_token!)
+      .revokeToken(this.client.credentials.refresh_token)
       .then((res) => true)
       .catch((err) => false);
   }

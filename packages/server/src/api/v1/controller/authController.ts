@@ -83,7 +83,6 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
   if (typeof code !== "string") {
     responseTemplate.setMessage({
       type: "oauth-error",
-      source: "graph calculator",
     });
     res.status(403).send(responseTemplate.createTemplate());
     return;
@@ -97,14 +96,13 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
 
     responseTemplate.setMessage({
       type: "oauth_success",
-      source: "graph calculator",
+
       token,
     });
     res.send(responseTemplate.createTemplate());
   } catch (error) {
     responseTemplate.setMessage({
       type: "oauth_error",
-      source: "graph calculator",
     });
     res.send(responseTemplate.createTemplate());
   }
@@ -140,6 +138,22 @@ const handleEmailCallback = async (req: Request, res: Response) => {
   }
 };
 
+const handleDeleteEmailTokens = async (req: Request, res: Response) => {
+  const emailService = new GoogleEmailService();
+  try {
+    emailService.setTokens();
+    const result = await emailService.revokeRefreshToken();
+    if (!result) {
+      res.sendStatus(500);
+      return;
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+};
+
 export default {
   handleAuthStatus,
   handleAuth,
@@ -147,4 +161,5 @@ export default {
   handleOAuth2Callback,
   handleEmail,
   handleEmailCallback,
+  handleDeleteEmailTokens,
 };

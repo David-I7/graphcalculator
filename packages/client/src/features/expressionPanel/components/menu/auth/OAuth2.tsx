@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { registerUser } from "../../../../../state/api/actions";
 import { useAppSelector } from "../../../../../state/hooks";
 import { UserSessionData } from "@graphcalculator/types";
-import { ORIGINS } from "../../../../../state/api/config";
+import { baseUrl, ORIGINS } from "../../../../../state/api/config";
 
 export function OAuth2({
   stategies,
@@ -25,7 +25,7 @@ export function OAuth2({
       (e) => {
         console.log(e);
         if (!ORIGINS.includes(e.origin as any)) return;
-        if (!(e.data.source === "graph calculator")) return;
+        if (!(e.data?.source === "graph calculator")) return;
 
         setIsOpen(false);
         if (e.data.type === "oauth_success") {
@@ -58,7 +58,7 @@ export function OAuth2({
           className="oauth2-login-button"
           onClick={() => {
             popup.current = window.open(
-              `http://localhost:8080/api/auth/${stategy[1].toLowerCase()}`,
+              `${baseUrl}/api/auth/${stategy[1].toLowerCase()}`,
               "",
               isMobile ? "" : "popup,width=500px,height=500px"
             );

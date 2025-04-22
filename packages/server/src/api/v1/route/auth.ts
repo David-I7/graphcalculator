@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authController from "../controller/authController.js";
 import { SessionService } from "../services/sessionService.js";
+import { UserRolesEnum } from "@graphcalculator/types";
 
 const authRouter = Router();
 
@@ -17,6 +18,15 @@ authRouter.post(
 authRouter.get("/google", authController.handleOAuth2);
 authRouter.get("/google/callback", authController.handleOAuth2Callback);
 authRouter.get("/email/callback", authController.handleEmailCallback);
-authRouter.get("/email", authController.handleEmail);
+authRouter.get(
+  "/email",
+  new SessionService().verifyRoles(UserRolesEnum.ADMIN),
+  authController.handleEmail
+);
+authRouter.delete(
+  "/email/token",
+  new SessionService().verifyRoles(UserRolesEnum.ADMIN),
+  authController.handleDeleteEmailTokens
+);
 
 export default authRouter;

@@ -7,6 +7,7 @@ import { Tab } from "../../../../../components/tabs/Tab";
 import { ProfileTabContent } from "./tabs/ProfileTabContent";
 import { PasswordTabContent } from "./tabs/PasswordTabContent";
 import { AdminTabContent } from "./tabs/AdminTabContent";
+import "../../../assets/tabs.scss";
 
 export function AccountSettingsDialog({ user }: { user: UserSessionData }) {
   const { isOpen, setIsOpen } = useDialogContext();
