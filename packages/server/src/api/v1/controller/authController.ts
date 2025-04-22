@@ -78,23 +78,32 @@ const handleOAuth2 = async (req: Request, res: Response) => {
 
 const handleOAuth2Callback = async (req: Request, res: Response) => {
   const code = req.query.code;
+  const responseTemplate = new OAuthReponseTemplate();
 
   if (typeof code !== "string") {
-    res.sendStatus(500);
+    responseTemplate.setMessage({
+      type: "oauth-error",
+    });
+    res.status(403).send(responseTemplate.createTemplate());
     return;
   }
 
   const client = new OpenIDClient();
   client.setStrategy(new GoogleOpenIDStrategy());
-  const responseTemplate = new OAuthReponseTemplate();
 
   try {
     const token = await client.saveToStore(code);
 
-    responseTemplate.setMessage({ type: "oauth_success", token });
+    responseTemplate.setMessage({
+      type: "oauth_success",
+
+      token,
+    });
     res.send(responseTemplate.createTemplate());
   } catch (error) {
-    responseTemplate.setMessage({ type: "oauth_error" });
+    responseTemplate.setMessage({
+      type: "oauth_error",
+    });
     res.send(responseTemplate.createTemplate());
   }
 };
@@ -107,6 +116,7 @@ const handleEmail = (req: Request, res: Response) => {
 };
 
 const handleEmailCallback = async (req: Request, res: Response) => {
+  debugger;
   const code = req.query.code;
   if (typeof code !== "string") {
     res.sendStatus(500);
@@ -116,14 +126,6 @@ const handleEmailCallback = async (req: Request, res: Response) => {
   const emailService = new GoogleEmailService();
   try {
     await emailService.getTokens(code);
-    const message = emailService.getDefaultMessageBuilder();
-    message
-      .to("iosubdavid7@gmail.com")
-      .subject("Hello from gmail app")
-      .text("hello world");
-
-    await emailService.sendEmail(message);
-    await emailService.revokeRefreshToken();
 
     const template = new OAuthReponseTemplate();
     template.setMessage({ type: "email_success" });
@@ -136,6 +138,22 @@ const handleEmailCallback = async (req: Request, res: Response) => {
   }
 };
 
+const handleDeleteEmailTokens = async (req: Request, res: Response) => {
+  const emailService = new GoogleEmailService();
+  try {
+    emailService.setTokens();
+    const result = await emailService.revokeRefreshToken();
+    if (!result) {
+      res.sendStatus(500);
+      return;
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+};
+
 export default {
   handleAuthStatus,
   handleAuth,
@@ -143,4 +161,5 @@ export default {
   handleOAuth2Callback,
   handleEmail,
   handleEmailCallback,
+  handleDeleteEmailTokens,
 };

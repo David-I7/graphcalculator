@@ -1,10 +1,10 @@
-import { ReactElement, useState } from "react";
+import React, { ReactElement, useState } from "react";
 import { Tab } from "./Tab";
 import { TabButton } from "./TabButton";
 import styles from "./tabs.module.scss";
 
 type TabProps = {
-  children: ReactElement<any, typeof Tab>[];
+  children: (ReactElement<any, typeof Tab> | null | undefined)[];
   initialActiveTab?: number;
 };
 
@@ -12,6 +12,7 @@ const Tabs = ({ children, initialActiveTab = 0 }: TabProps) => {
   const [activeTab, setActiveTab] = useState<number>(initialActiveTab);
 
   const header = children.map((child, idx) => {
+    if (!child) return;
     if (child.type !== Tab) throw new Error("Children must be Tab instances");
 
     return (
@@ -29,7 +30,7 @@ const Tabs = ({ children, initialActiveTab = 0 }: TabProps) => {
   return (
     <div className={styles.tabs}>
       <div className={styles.tabsHeader}>{header}</div>
-      {children[activeTab].props.content}
+      {children[activeTab]?.props.content}
     </div>
   );
 };

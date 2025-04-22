@@ -26,9 +26,6 @@ export interface IOpenIDClient {
   getUserInfo(access_token: string): Promise<UserInfo>;
 }
 
-type PROVIDER = "graphCalculator" | "google";
-export type Provider = Record<PROVIDER, number>;
-
 export type Tokens = {
   access_token: string;
   refresh_token: string;

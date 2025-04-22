@@ -5,18 +5,35 @@ import { TokenFactory } from "../config/tokenFactory.js";
 import { GoogleEmailClient } from "./emailClient.js";
 import { MessageBuilder } from "./messageBuilder.js";
 
-export class GoogleEmailService implements OAuth2Strategy {
+abstract class IEmailService {
+  protected email: string;
+
+  constructor(email: string) {
+    this.email = email;
+  }
+
+  getDefaultMessageBuilder(): MessageBuilder {
+    return new MessageBuilder().from(this.email);
+  }
+
+  abstract sendEmail(message: MessageBuilder): Promise<boolean>;
+}
+
+export class GoogleEmailService
+  extends IEmailService
+  implements OAuth2Strategy
+{
   private client: OAuth2Client;
-  private cache = new TokenFactory();
-  private email: string;
+  private tokens = new TokenFactory();
 
   constructor() {
     const factory = new CredentialsFactory();
     const credentials = factory.getCredentials("google", "email");
-    this.email = factory.getEmail();
+    super(factory.getEmail());
+
     this.client = new OAuth2Client(credentials);
-    if (this.cache.get("email")) {
-      this.client.setCredentials(this.cache.get("email")!);
+    if (this.tokens.get("email")) {
+      this.client.setCredentials(this.tokens.get("email")!);
     }
   }
 
@@ -28,16 +45,19 @@ export class GoogleEmailService implements OAuth2Strategy {
   }
 
   async getTokens(code: string): Promise<Partial<Tokens>> {
-    if (this.cache.get("email") != undefined) {
-      return this.cache.get("email")! satisfies Partial<Tokens>;
+    if (this.tokens.get("email") != undefined) {
+      return this.tokens.get("email")! satisfies Partial<Tokens>;
     }
 
     const { tokens } = await this.client.getToken(code);
-    new TokenFactory().set(
-      "email",
-      tokens as Omit<Tokens, "id_token" | "provider">
-    );
+    this.tokens.set("email", tokens as Omit<Tokens, "id_token" | "provider">);
     return tokens as Partial<Tokens>;
+  }
+
+  setTokens() {
+    const tokens = this.tokens.get("email");
+    if (!tokens) throw new Error("Tokens have not been fetch yet.");
+    this.client.setCredentials(tokens);
   }
 
   async refreshAccessToken(refresh_token?: string) {
@@ -50,8 +70,11 @@ export class GoogleEmailService implements OAuth2Strategy {
   }
 
   async revokeRefreshToken(refresh_token?: string) {
+    if (!this.client.credentials.refresh_token) return false;
+
+    this.tokens.delete("email");
     return this.client
-      .revokeToken(this.client.credentials.refresh_token!)
+      .revokeToken(this.client.credentials.refresh_token)
       .then((res) => true)
       .catch((err) => false);
   }
@@ -60,11 +83,7 @@ export class GoogleEmailService implements OAuth2Strategy {
     return new Date().getTime() > expiry_date;
   }
 
-  getDefaultMessageBuilder(): MessageBuilder {
-    return new MessageBuilder().from(this.email);
-  }
-
-  async sendEmail(message: MessageBuilder): Promise<Boolean> {
+  async sendEmail(message: MessageBuilder): Promise<boolean> {
     if (this.isExpiredAccessToken(this.client.credentials.expiry_date!)) {
       await this.refreshAccessToken("");
     }

@@ -1,12 +1,17 @@
-import { UserSessionData } from "@graphcalculator/types";
+import { UserRolesEnum, UserSessionData } from "@graphcalculator/types";
 import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
 import Dialog from "../../../../../components/dialog/Dialog";
 import { useDialogContext } from "../../../../../components/dialog/DialogContext";
 import Tabs from "../../../../../components/tabs/Tabs";
 import { Tab } from "../../../../../components/tabs/Tab";
+import { ProfileTabContent } from "./tabs/ProfileTabContent";
+import { PasswordTabContent } from "./tabs/PasswordTabContent";
+import { AdminTabContent } from "./tabs/AdminTabContent";
+import "../../../assets/tabs.scss";
 
 export function AccountSettingsDialog({ user }: { user: UserSessionData }) {
-  const { ref, isOpen, setIsOpen } = useDialogContext();
+  const { isOpen, setIsOpen } = useDialogContext();
+  const closeDialog = () => setIsOpen(false);
 
   return (
     <div className="account-settings-dialog-opener">
@@ -18,22 +23,42 @@ export function AccountSettingsDialog({ user }: { user: UserSessionData }) {
       >
         Account settings
       </UnderlineButton>
-      <Dialog>{isOpen && <DialogContent />}</Dialog>
+      <Dialog
+        onKeyDown={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        {isOpen && <DialogContent closeDialog={closeDialog} user={user} />}
+      </Dialog>
     </div>
   );
 }
 
-function DialogContent() {
+function DialogContent({
+  closeDialog,
+  user,
+}: {
+  closeDialog: () => void;
+  user: UserSessionData;
+}) {
   return (
     <div className="account-settings-dialog">
       <div className="account-settings-dialog-header">
         <h2>Account Settings</h2>
-        <div className="account-settings-dialog-body">
-          <Tabs>
-            <Tab content={<div>Tab Content 1</div>} label="Profile" />
-            <Tab content={<div>Tab Content 2</div>} label="Password" />
-          </Tabs>
-        </div>
+      </div>
+      <div className="account-settings-dialog-body">
+        <Tabs>
+          <Tab
+            content={
+              <ProfileTabContent closeDialog={closeDialog} user={user} />
+            }
+            label="Profile"
+          />
+          <Tab content={<PasswordTabContent />} label="Password" />
+          {user.role === UserRolesEnum.ADMIN ? (
+            <Tab content={<AdminTabContent />} label="Admin" />
+          ) : null}
+        </Tabs>
       </div>
     </div>
   );

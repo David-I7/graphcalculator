@@ -34,6 +34,7 @@ export class OAuthReponseTemplate extends IOAuthReponseTemplate {
   private message: Record<string, any> = {};
 
   createMessage(): string {
+    this.message["source"] = "graph calculator";
     return JSON.stringify(this.message);
   }
 

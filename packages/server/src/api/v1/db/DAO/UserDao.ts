@@ -9,10 +9,10 @@ export interface IUserDao {
   ): Promise<Pick<User, T[number]> | undefined>;
   findUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(
-    user: Omit<User, "email_is_verified" | "id" | "provider">
+    user: Omit<User, "email_is_verified" | "id" | "provider" | "role">
   ): Promise<UserSessionData>;
   upsertUserFromProvider(
-    user: Omit<User, "password" | "id">
+    user: Omit<User, "password" | "id" | "role">
   ): Promise<UserSessionData>;
   updateUserById<T extends (keyof User)[]>(
     id: string,
@@ -87,22 +87,22 @@ export class UserDao implements IUserDao {
   }
 
   async upsertUser(
-    user: Omit<User, "email_is_verified" | "id" | "provider">
+    user: Omit<User, "email_is_verified" | "id" | "provider" | "role">
   ): Promise<UserSessionData> {
     const res = await DB.query<UserSessionData>(
       `Insert into users (email,first_name,last_name,password) 
-      values ($1,$2,$3,$4) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id,provider;`,
+      values ($1,$2,$3,$4) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id,provider,role;`,
       [user.email, user.first_name, user.last_name, user.password]
     );
 
     return res.rows[0];
   }
   async upsertUserFromProvider(
-    user: Omit<User, "password" | "id">
+    user: Omit<User, "password" | "id" | "role">
   ): Promise<UserSessionData> {
     const res = await DB.query<UserSessionData>(
       `Insert into users (email,first_name,last_name,email_is_verified,provider) 
-      values ($1,$2,$3,$4,$5) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id,provider;`,
+      values ($1,$2,$3,$4,$5) on conflict (email) do update set email = users.email returning email,first_name,last_name,email_is_verified,id,provider,role;`,
       [
         user.email,
         user.first_name,

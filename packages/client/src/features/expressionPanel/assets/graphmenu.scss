@@ -178,26 +178,30 @@ header .account-settings-dropdown {
       @extend .font-body-sm;
     }
   }
-}
 
-.account-settings-dialog-opener {
-  margin-top: 1rem;
+  &-dialog {
+    width: 500px;
+    height: 500px;
 
-  h2 {
-    color: base.$on-surface-heading;
-    font-weight: base.$fw-medium;
-    font-size: 1.5rem;
+    &-opener {
+      margin-top: 1rem;
+
+      h2 {
+        color: base.$on-surface-heading;
+        font-weight: base.$fw-medium;
+        font-size: 1.5rem;
+      }
+    }
+
+    &-header {
+      margin-block: 1.5rem;
+      padding-left: 1rem;
+    }
+
+    &-body {
+      padding: 0 1rem;
+    }
   }
-}
-
-.account-settings-dialog {
-  &-header {
-    margin-block: 1.5rem;
-    padding-left: 1rem;
-  }
-
-  width: 500px;
-  height: 500px;
 }
 
 @media screen and (max-width: 500px) {

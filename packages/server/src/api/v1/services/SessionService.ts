@@ -7,6 +7,7 @@ import { SessionData } from "express-session";
 import { ApiErrorResponse } from "./apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "./error/simpleErrorFactory.js";
 import { UserDao } from "../db/dao/userDao.js";
+import { UserRolesEnum } from "@graphcalculator/types";
 
 export class SessionService {
   hasSession(req: Request) {
@@ -143,6 +144,29 @@ export class SessionService {
               new SimpleErrorFactory().createClientError(
                 "auth",
                 "Already logged in."
+              )
+            )
+          );
+        return;
+      }
+
+      next();
+    };
+  }
+
+  verifyRoles(...allowedRoles: UserRolesEnum[]) {
+    return (req: Request, res: Response, next: NextFunction) => {
+      if (
+        !this.hasSession(req) ||
+        !allowedRoles.includes(req.session.user?.role as any)
+      ) {
+        res
+          .status(403)
+          .json(
+            new ApiErrorResponse().createResponse(
+              new SimpleErrorFactory().createClientError(
+                "auth",
+                "You do not have the required permissions to access this resource"
               )
             )
           );

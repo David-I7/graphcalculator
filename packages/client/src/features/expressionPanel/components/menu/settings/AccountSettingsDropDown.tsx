@@ -5,8 +5,10 @@ import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../hooks/api";
 import { logoutUser } from "../../../../../state/api/actions";
 import { DialogProvider } from "../../../../../components/dialog/DialogContext";
-import { AccountSettingsDialog } from "./AccountSettingsDialog";
 import { UserSessionData } from "@graphcalculator/types";
+import { Suspense } from "react";
+import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
+import { AccountSettingsDialog } from "./AccountSettingsDialog";
 
 export function AccountSettingsDropDown({ user }: { user: UserSessionData }) {
   return (
@@ -46,7 +48,15 @@ function AccountSettings({
       </div>
 
       <DialogProvider>
-        <AccountSettingsDialog user={user} />
+        <Suspense
+          fallback={
+            <UnderlineButton style={{ marginTop: "1rem" }}>
+              Account settings
+            </UnderlineButton>
+          }
+        >
+          <AccountSettingsDialog user={user} />
+        </Suspense>
       </DialogProvider>
 
       <Hr style={{ marginBottom: "1rem" }} />

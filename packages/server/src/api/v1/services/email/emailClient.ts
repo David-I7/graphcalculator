@@ -18,8 +18,6 @@ export class GoogleEmailClient extends EmailClient {
   }
 
   async send(message: string) {
-    console.log(message);
-
     const gm = gmail({ version: "v1", auth: this.client });
     return await gm.users.messages
       .send({
@@ -29,7 +27,6 @@ export class GoogleEmailClient extends EmailClient {
         },
       })
       .then((res) => {
-        console.log(res);
         return true;
       });
   }

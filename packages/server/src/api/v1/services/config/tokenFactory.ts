@@ -13,27 +13,42 @@ export class TokenFactory {
     if (!TokenFactory.fd) {
       TokenFactory.fd = fs.openSync(
         path.join(serverDirname, "/config/tokens.json"),
-        "w+"
+        "r+"
       );
       TokenFactory.tokens = JSON.parse(
-        fs.readFileSync(TokenFactory.fd).toString()
+        fs.readFileSync(TokenFactory.fd).toString() || "{}"
       );
     }
   }
 
-  set(key: string, value: Token[string]) {
+  async set(key: string, value: Token[string]) {
     TokenFactory.tokens[key] = value;
-    fs.ftruncate(TokenFactory.fd, 0, (err) => {
-      fs.write(
-        TokenFactory.fd,
-        JSON.stringify(TokenFactory.tokens),
-        0,
-        "utf8",
-        (err) => {
-          if (err) throw err;
-        }
-      );
-    });
+    return this.save();
+  }
+
+  private async save(): Promise<boolean> {
+    return new Promise((res, rej) =>
+      fs.ftruncate(TokenFactory.fd, 0, (err) => {
+        if (err) rej(err);
+        fs.write(
+          TokenFactory.fd,
+          JSON.stringify(TokenFactory.tokens),
+          0,
+          "utf8",
+          (err) => {
+            if (err) rej(err);
+            res(true);
+          }
+        );
+      })
+    );
+  }
+
+  async delete(key: string): Promise<boolean> {
+    console.log(TokenFactory.tokens);
+    if (!(key in TokenFactory.tokens)) return false;
+    delete TokenFactory.tokens[key];
+    return this.save();
   }
 
   get(key: string): Token[string] | undefined {

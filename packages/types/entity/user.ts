@@ -6,6 +6,13 @@ export interface User {
   email_is_verified: boolean;
   password: Buffer<ArrayBufferLike>;
   provider: number;
+  role: UserRolesEnum;
 }
 
-export type UserSessionData = Omit<User, "password" | "provider">;
+export type UserSessionData = Omit<User, "password">;
+
+export type UserRoles = "USER" | "ADMIN";
+export enum UserRolesEnum {
+  "USER" = 2093,
+  "ADMIN" = 1443,
+}
