@@ -78,23 +78,34 @@ const handleOAuth2 = async (req: Request, res: Response) => {
 
 const handleOAuth2Callback = async (req: Request, res: Response) => {
   const code = req.query.code;
+  const responseTemplate = new OAuthReponseTemplate();
 
   if (typeof code !== "string") {
-    res.sendStatus(500);
+    responseTemplate.setMessage({
+      type: "oauth-error",
+      source: "graph calculator",
+    });
+    res.status(403).send(responseTemplate.createTemplate());
     return;
   }
 
   const client = new OpenIDClient();
   client.setStrategy(new GoogleOpenIDStrategy());
-  const responseTemplate = new OAuthReponseTemplate();
 
   try {
     const token = await client.saveToStore(code);
 
-    responseTemplate.setMessage({ type: "oauth_success", token });
+    responseTemplate.setMessage({
+      type: "oauth_success",
+      source: "graph calculator",
+      token,
+    });
     res.send(responseTemplate.createTemplate());
   } catch (error) {
-    responseTemplate.setMessage({ type: "oauth_error" });
+    responseTemplate.setMessage({
+      type: "oauth_error",
+      source: "graph calculator",
+    });
     res.send(responseTemplate.createTemplate());
   }
 };

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { serverDirname } from "../../constants.js";
-import { Provider } from "../oAuth/types.js";
 import fs from "node:fs";
+import { PROVIDERS } from "@graphcalculator/types";
 
 type Credentials = {
   clientId: string;
@@ -9,7 +9,7 @@ type Credentials = {
   redirectUri: string;
 };
 
-type CredentialsProvider = keyof Omit<Provider, "graphCalculator">;
+type CredentialsProvider = keyof Omit<PROVIDERS, "graphCalculator">;
 type RedirectUri = "email" | "auth";
 
 export class CredentialsFactory {
@@ -25,10 +25,7 @@ export class CredentialsFactory {
     );
   }
 
-  getCredentials(
-    provider: CredentialsProvider,
-    endpoint: RedirectUri
-  ): Credentials {
+  getCredentials(provider: PROVIDERS, endpoint: RedirectUri): Credentials {
     const redirectUri = CredentialsFactory.credentials[provider]["redirect"][
       endpoint
     ] as string;

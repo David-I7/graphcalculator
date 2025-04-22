@@ -1,11 +1,12 @@
-import { UserSessionData } from "@graphcalculator/types";
+import { UserRolesEnum, UserSessionData } from "@graphcalculator/types";
 import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
 import Dialog from "../../../../../components/dialog/Dialog";
 import { useDialogContext } from "../../../../../components/dialog/DialogContext";
 import Tabs from "../../../../../components/tabs/Tabs";
 import { Tab } from "../../../../../components/tabs/Tab";
 import { ProfileTabContent } from "./tabs/ProfileTabContent";
-import { renderToString } from "react-dom/server";
+import { PasswordTabContent } from "./tabs/PasswordTabContent";
+import { AdminTabContent } from "./tabs/AdminTabContent";
 
 export function AccountSettingsDialog({ user }: { user: UserSessionData }) {
   const { isOpen, setIsOpen } = useDialogContext();
@@ -53,14 +54,11 @@ function DialogContent({
             label="Profile"
           />
           <Tab content={<PasswordTabContent />} label="Password" />
+          {user.role === UserRolesEnum.ADMIN ? (
+            <Tab content={<AdminTabContent />} label="Admin" />
+          ) : null}
         </Tabs>
       </div>
     </div>
   );
-}
-
-function PasswordTabContent() {
-  console.log("running");
-  const hello = 1;
-  return <div>{hello}</div>;
 }

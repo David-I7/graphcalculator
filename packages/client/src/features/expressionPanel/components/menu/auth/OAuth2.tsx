@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { registerUser } from "../../../../../state/api/actions";
 import { useAppSelector } from "../../../../../state/hooks";
 import { UserSessionData } from "@graphcalculator/types";
+import { ORIGINS } from "../../../../../state/api/config";
 
 export function OAuth2({
   stategies,
@@ -19,26 +20,22 @@ export function OAuth2({
 
     const abortController = new AbortController();
 
-    const interval = setInterval(() => {
-      // triggered if user closes tab
-      if (popup.current && popup.current.closed) {
-        setIsOpen(false);
-      }
-    }, 500);
-
     window.addEventListener(
       "message",
       (e) => {
+        console.log(e);
+        if (!ORIGINS.includes(e.origin as any)) return;
+        if (!(e.data.source === "graph calculator")) return;
+
+        setIsOpen(false);
         if (e.data.type === "oauth_success") {
           registerUser(e.data.token as string).then((res) => {
-            setIsOpen(false);
+            console.log(res);
             if ("error" in res) {
               return;
             }
             onComplete(res);
           });
-        } else {
-          setIsOpen(false);
         }
       },
       { signal: abortController.signal }
@@ -46,8 +43,9 @@ export function OAuth2({
 
     return () => {
       abortController.abort();
-      clearInterval(interval);
-      popup.current = null;
+      if (isOpen) {
+        popup.current = null;
+      }
     };
   }, [isOpen]);
 
