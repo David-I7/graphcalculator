@@ -17,13 +17,38 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-export function deleteFromFs(image: string, destination: string) {
-  if (!image || !destination) {
-    return;
-  }
-
-  const filepath = path.join(destination, `/${path.basename(image)}`);
-  fs.rm(filepath, () => {});
+export async function deleteFromFs(path: string): Promise<boolean> {
+  return new Promise((res, rej) =>
+    fs.rm(path, (err) => {
+      if (err) rej(err);
+      res(true);
+    })
+  );
 }
 
 export default upload;
+
+export function createPathFromUrl(urls: string[], dir: string): string[] {
+  return urls.map((url) => path.join(dir, `/${path.basename(url)}`));
+}
+
+export async function deleteFiles(paths: string[], concurrency: number = 4) {
+  const queue = paths;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (queue.length) {
+      const filePath = queue.pop()!;
+      try {
+        await new Promise<boolean>((res, rej) => {
+          fs.unlink(filePath, (err) => {
+            if (err) rej(err);
+            else res(true);
+          });
+        });
+      } catch (err) {
+        return false;
+      }
+    }
+    return true;
+  });
+  return Promise.all(workers);
+}
