@@ -9,11 +9,33 @@ interface IGraphDao {
   ): Promise<{ graphs: GraphData[]; totalPages: number }>;
 
   putSavedGraph(id: string, graph: GraphData): Promise<boolean>;
-
+  getSavedImages(userIds: string[]): Promise<{ image: string }[] | null>;
   deleteSavedGraph(id: string, graphId: string): Promise<string | undefined>;
 }
 
 export class GraphDao implements IGraphDao {
+  async getSavedImages(userIds: string[]) {
+    if (!userIds.length) throw new Error("Must specify at least one userId");
+
+    let where: string[] = [];
+    for (let i = 1; i <= userIds.length; i++) {
+      where.push(`$${i}`);
+    }
+
+    try {
+      const savedImage = await DB.query<{ image: string }>(
+        `select image from users as u join saved_graphs as sg on sg.user_id= u.id 
+        where u.id in (${where.join()})`,
+        userIds
+      );
+
+      return savedImage.rows;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
+  }
+
   async getSavedGraphs(
     id: string,
     page: number,
@@ -34,7 +56,6 @@ export class GraphDao implements IGraphDao {
       );
 
       const totalPages = Math.ceil((await totalCount).rows[0].count / limit);
-      console.log(graphs.rows);
       return { graphs: graphs.rows, totalPages };
     } catch (err) {
       console.log(err);

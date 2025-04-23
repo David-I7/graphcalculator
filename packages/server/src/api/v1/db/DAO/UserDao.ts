@@ -19,10 +19,42 @@ export interface IUserDao {
     fields: T,
     values: User[T[number]][]
   ): Promise<boolean>;
-  deleteUser?(user: User): Promise<boolean>;
+  deleteUsers(userIds: string[]): Promise<boolean>;
 }
 
 export class UserDao implements IUserDao {
+  async deleteUsers(userIds: string[]): Promise<boolean> {
+    if (userIds.length < 1) throw new Error("Must specify at least one userId");
+
+    let where: string[] = [];
+    for (let i = 1; i <= userIds.length; i++) {
+      where.push(`$${i}`);
+    }
+
+    try {
+      const res = await DB.query<{ id: string }>(
+        `delete from users where id in (${where.join()}) returning id;`,
+        userIds
+      );
+
+      if (res.rows.length !== userIds.length) {
+        const failed = res.rows.filter((obj) => {
+          return userIds.includes(obj.id);
+        });
+
+        failed.forEach((user) =>
+          console.log("Failed to delete userId: ", user.id)
+        );
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  }
+
   async existsEmail(email: string): Promise<boolean> {
     const res = await DB.query<Pick<User, "email">>(
       "Select email from users where email = $1",

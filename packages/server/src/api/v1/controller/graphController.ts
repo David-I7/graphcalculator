@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import exampleGraphs from "../db/data/examples.json" with { type: "json" };
+import exampleGraphs from "../../../../public/examples.json" with { type: "json" };
 import { GraphDao } from "../db/dao/graphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
-import { deleteFromFs } from "../middleware/fileStorage.js";
+import { createPathFromUrl, deleteFromFs } from "../middleware/fileStorage.js";
 import { publicDirname } from "../constants.js";
+import path from "path";
 
 const handleExampleGraphs = (req: Request, res: Response) => {
   res.status(200).json(new ApiSuccessResponse().createResponse(exampleGraphs));
@@ -37,7 +38,8 @@ const handlePutSavedGraphs = async (req: Request, res: Response) => {
 
   const data = new GraphValidationService().validateGraph(req.body)
   if (!data) {
-    deleteFromFs(req.file!.filename,req.file!.destination)
+    
+    deleteFromFs(createPathFromUrl([req.file!.filename],req.file!.destination)[0])
     res.sendStatus(400)
     return
   }
@@ -49,7 +51,9 @@ const handlePutSavedGraphs = async (req: Request, res: Response) => {
     res.sendStatus(500)
     return;
   }
-  deleteFromFs(req.body.prevImage,req.file!.destination)
+
+  deleteFromFs(
+    createPathFromUrl([req.body.prevImage],req.file!.destination)[0])
 
   res.status(200).send(new ApiSuccessResponse().createResponse(data.image))
   return 
@@ -70,7 +74,7 @@ const handelDeleteSavedGraph = async (req:Request,res:Response)=>{
     return
   }
 
-  deleteFromFs(image,publicDirname + "\\images")
+  deleteFromFs(createPathFromUrl([image],path.join(publicDirname,"/images"))[0])
   res.sendStatus(200)
   return
 }
