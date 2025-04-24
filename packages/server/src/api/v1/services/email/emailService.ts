@@ -40,6 +40,7 @@ export class GoogleEmailService
   generateAuthUrl(): string {
     return this.client.generateAuthUrl({
       access_type: "offline",
+      prompt: "consent",
       scope: ["https://www.googleapis.com/auth/gmail.send"],
     });
   }

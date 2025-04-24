@@ -4,13 +4,22 @@ import styles from "./common.module.scss";
 type FilledButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   ref?: RefObject<HTMLButtonElement | null>;
+  buttonType?: "regular" | "danger";
 };
 
-const FilledButton = ({ children, ref, ...props }: FilledButtonProps) => {
+const FilledButton = ({
+  children,
+  ref,
+  buttonType = "regular",
+  ...props
+}: FilledButtonProps) => {
   const mergedClassname = useMemo(() => {
-    return props.className
-      ? props.className + " " + styles.filledButton
-      : styles.filledButton;
+    const base =
+      buttonType === "regular"
+        ? styles.filledButton
+        : styles.filledButtonDanger;
+
+    return props.className ? props.className + " " + base : base;
   }, [props.className]);
 
   return (

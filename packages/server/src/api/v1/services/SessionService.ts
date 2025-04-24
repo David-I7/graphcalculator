@@ -7,11 +7,82 @@ import { SessionData } from "express-session";
 import { ApiErrorResponse } from "./apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "./error/simpleErrorFactory.js";
 import { UserDao } from "../db/dao/userDao.js";
-import { UserRolesEnum } from "@graphcalculator/types";
+import { Provider, UserRolesEnum } from "@graphcalculator/types";
+import { Session } from "express-session";
+import DB from "../db/index.js";
+
+type SessionObject = Session & Partial<SessionData>;
 
 export class SessionService {
   hasSession(req: Request) {
     return req?.session?.user !== undefined;
+  }
+
+  private async revokeRefreshToken(provider: Provider, refresh_token: string) {
+    const client = new OpenIDClient();
+    client.setStrategy(new OpenIDStrategyFactory().createStrategy(provider));
+    return await client.revokeRefreshToken(refresh_token);
+  }
+
+  async deleteSession(
+    session: SessionObject,
+    onDelete: () => void
+  ): Promise<boolean> {
+    return new Promise(async (resolve, rej) => {
+      if (session.tokens && session.tokens.refresh_token) {
+        const res = await this.revokeRefreshToken(
+          session.tokens.provider,
+          session.tokens.refresh_token
+        );
+        if (!res) rej(false);
+      }
+
+      session.destroy((err) => {
+        if (err) {
+          rej(false);
+          return;
+        }
+        onDelete();
+        return resolve(true);
+      });
+    });
+  }
+
+  async deleteSessionRecursive(userId: string): Promise<boolean> {
+    try {
+      const sessions = (
+        await DB.query<{ refresh_token: string; provider: number }>(
+          `delete from session where sess#>>'{user,id}' = $1
+          returning sess#>>'{tokens,refresh_token}' as refresh_token, (sess#>>'{tokens,provider}')::int as provider`,
+          [userId]
+        )
+      ).rows;
+
+      const queue = sessions.filter((sess) => {
+        return sess.provider !== Provider.graphCalulator;
+      });
+
+      const requests = Array.from({ length: 4 }, async () => {
+        while (queue.length) {
+          const credentials = queue.pop()!;
+          try {
+            await this.revokeRefreshToken(
+              credentials.provider,
+              credentials.refresh_token
+            );
+          } catch (err) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      await Promise.allSettled(requests);
+
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
   rollingSession() {

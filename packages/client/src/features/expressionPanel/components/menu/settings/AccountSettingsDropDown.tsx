@@ -31,13 +31,6 @@ function AccountSettings({
   toggle?: () => void;
   user: UserSessionData;
 }) {
-  const [trigger, { data: res, isLoading, isError, error }] = useLazyFetch(() =>
-    logoutUser().then((res) => {
-      if (res) throw new Error(res.error.message);
-      window.location.reload();
-    })
-  );
-
   return (
     <div className="account-settings" onClick={(e) => e.stopPropagation()}>
       <div className="account-settings-credentials">
@@ -60,21 +53,33 @@ function AccountSettings({
       </DialogProvider>
 
       <Hr style={{ marginBottom: "1rem" }} />
-      <div>
-        <OutlinedButton
-          className="button--hovered"
-          style={{ backgroundColor: "white" }}
-          onClick={trigger}
-        >
-          {isLoading ? (
-            <div className="grid-center" style={{ width: "45px" }}>
-              <Spinner />
-            </div>
-          ) : (
-            "Logout"
-          )}
-        </OutlinedButton>
-      </div>
+      <LogoutUser />
+    </div>
+  );
+}
+
+function LogoutUser() {
+  const [trigger, { isLoading }] = useLazyFetch(() =>
+    logoutUser().then((res) => {
+      if (!(typeof res === "string")) throw new Error(res.error.message);
+      window.location.reload();
+    })
+  );
+  return (
+    <div>
+      <OutlinedButton
+        className="button--hovered"
+        style={{ backgroundColor: "white" }}
+        onClick={trigger}
+      >
+        {isLoading ? (
+          <div className="grid-center" style={{ width: "45px" }}>
+            <Spinner />
+          </div>
+        ) : (
+          "Logout"
+        )}
+      </OutlinedButton>
     </div>
   );
 }
