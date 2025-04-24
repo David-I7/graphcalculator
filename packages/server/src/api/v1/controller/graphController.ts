@@ -52,8 +52,11 @@ const handlePutSavedGraphs = async (req: Request, res: Response) => {
     return;
   }
 
+  if (req.body.prevImage){
   deleteFromFs(
     createPathFromUrl([req.body.prevImage],req.file!.destination)[0])
+  }
+    
 
   res.status(200).send(new ApiSuccessResponse().createResponse(data.image))
   return 

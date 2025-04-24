@@ -55,3 +55,18 @@ export function isClickOutside(element: HTMLElement, e: MouseEvent) {
 export function isMobile(): boolean {
   return window.innerWidth <= MOBILE_BREAKPOINT;
 }
+
+export function pollPopupClose(
+  popup: WindowProxy,
+  onPopupClose: () => void,
+  interval: number = 500
+) {
+  const id = setInterval(() => {
+    if (popup.closed) {
+      clearInterval(id);
+      onPopupClose();
+    }
+  }, interval);
+
+  return { clearPollRequest: () => clearInterval(id) };
+}

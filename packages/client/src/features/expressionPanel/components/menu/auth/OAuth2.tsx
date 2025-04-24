@@ -3,6 +3,7 @@ import { registerUser } from "../../../../../state/api/actions";
 import { useAppSelector } from "../../../../../state/hooks";
 import { UserSessionData } from "@graphcalculator/types";
 import { baseUrl, ORIGINS } from "../../../../../state/api/config";
+import { pollPopupClose } from "../../../../../helpers/dom";
 
 export function OAuth2({
   stategies,
@@ -16,21 +17,23 @@ export function OAuth2({
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !popup.current) return;
 
     const abortController = new AbortController();
-
+    const cleanup = pollPopupClose(popup.current, () => {
+      popup.current = null;
+      setIsOpen(false);
+    });
     window.addEventListener(
       "message",
       (e) => {
-        console.log(e);
         if (!ORIGINS.includes(e.origin as any)) return;
         if (!(e.data?.source === "graph calculator")) return;
 
         setIsOpen(false);
+        popup.current = null;
         if (e.data.type === "oauth_success") {
           registerUser(e.data.token as string).then((res) => {
-            console.log(res);
             if ("error" in res) {
               return;
             }
@@ -43,9 +46,7 @@ export function OAuth2({
 
     return () => {
       abortController.abort();
-      if (isOpen) {
-        popup.current = null;
-      }
+      cleanup.clearPollRequest();
     };
   }, [isOpen]);
 
@@ -58,7 +59,7 @@ export function OAuth2({
           className="oauth2-login-button"
           onClick={() => {
             popup.current = window.open(
-              `${baseUrl}/api/auth/${stategy[1].toLowerCase()}`,
+              `${baseUrl}/auth/${stategy[1].toLowerCase()}`,
               "",
               isMobile ? "" : "popup,width=500px,height=500px"
             );

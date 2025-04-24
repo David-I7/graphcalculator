@@ -1,14 +1,19 @@
 import { OAuth2Client } from "google-auth-library";
 import { OpenIDStrategy, Tokens, UserInfo } from "./types.js";
+import { CredentialsFactory } from "../config/credentialsFactory.js";
+import { Provider } from "@graphcalculator/types";
 
 export class GoogleOpenIDStrategy implements OpenIDStrategy {
-  private providerCode: number = 1;
+  private providerCode: Provider = Provider.google;
+  private credentials: CredentialsFactory = new CredentialsFactory();
 
-  private client = new OAuth2Client({
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    redirectUri: "http://localhost:8080/api/auth/google/callback",
-  });
+  private client: OAuth2Client;
+
+  constructor() {
+    this.client = new OAuth2Client(
+      this.credentials.getCredentials("google", "auth")
+    );
+  }
 
   generateAuthUrl(): string {
     return this.client.generateAuthUrl({

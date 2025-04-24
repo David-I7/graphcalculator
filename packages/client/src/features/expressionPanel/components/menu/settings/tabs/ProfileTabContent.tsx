@@ -8,6 +8,7 @@ import { useLazyFetch } from "../../../../../../hooks/api";
 import { updateUserCredentials } from "../../../../../../state/api/actions";
 import apiSlice from "../../../../../../state/api/apiSlice";
 import { useAppDispatch } from "../../../../../../state/hooks";
+import DeleteAccount from "../deleteAccount/DeleteAccount";
 
 export function ProfileTabContent({
   user,
@@ -19,6 +20,7 @@ export function ProfileTabContent({
   return (
     <div className="profile-tab">
       <ChangeCredentialsForm closeDialog={closeDialog} user={user} />
+      <DeleteAccount user={user} />
     </div>
   );
 }

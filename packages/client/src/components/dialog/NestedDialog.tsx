@@ -1,14 +1,14 @@
 import { DialogHTMLAttributes, ReactNode, useMemo } from "react";
-import styles from "./dialog.module.scss";
 import { isClickOutside } from "../../helpers/dom";
-import { useDialogContext } from "./DialogContext";
 import { CloseDialog } from "./CloseDialog";
+import { useDialogContext } from "./DialogContext";
+import styles from "./dialog.module.scss";
 
 type DialogProps = DialogHTMLAttributes<HTMLDialogElement> & {
   children: ReactNode;
 };
 
-const Dialog = ({ children, ...dialogAttr }: DialogProps) => {
+export const NestedDialog = ({ children, ...dialogAttr }: DialogProps) => {
   const { setIsOpen, ref } = useDialogContext();
   const mergedClassname = useMemo(() => {
     return dialogAttr.className
@@ -19,8 +19,12 @@ const Dialog = ({ children, ...dialogAttr }: DialogProps) => {
   return (
     <dialog
       ref={ref}
-      onClose={(e) => setIsOpen(false)}
+      onClose={(e) => {
+        setIsOpen(false);
+        e.stopPropagation();
+      }}
       onClick={(e) => {
+        e.stopPropagation();
         if (isClickOutside(e.currentTarget, e)) {
           ref.current?.close();
         }
@@ -33,5 +37,3 @@ const Dialog = ({ children, ...dialogAttr }: DialogProps) => {
     </dialog>
   );
 };
-
-export default Dialog;

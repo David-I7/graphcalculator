@@ -14,6 +14,36 @@ export class SessionService {
     return req?.session?.user !== undefined;
   }
 
+  async deleteSession(req: Request, res: Response): Promise<boolean> {
+    return new Promise(async (resolve, rej) => {
+      if (req.session.tokens && req.session.tokens.refresh_token) {
+        const client = new OpenIDClient();
+        client.setStrategy(
+          new OpenIDStrategyFactory().createStrategy(req.session.user!.provider)
+        );
+        const res = await client.revokeRefreshToken(
+          req.session.tokens.refresh_token
+        );
+        if (!res) rej(false);
+      }
+
+      req.session.destroy((err) => {
+        if (err) {
+          rej(false);
+          return;
+        }
+
+        res.clearCookie("sid", {
+          ...cookieOptions,
+          maxAge: 0,
+          expires: undefined,
+        });
+
+        return resolve(true);
+      });
+    });
+  }
+
   rollingSession() {
     return async (req: Request, res: Response, next: NextFunction) => {
       if (!this.hasSession(req)) {

@@ -8,7 +8,7 @@ import path from "path";
 import testRouter from "./test.js";
 import registerRouter from "./register.js";
 import logoutRouter from "./logout.js";
-import userRouter from "./userRouter.js";
+import userRouter from "./user.js";
 import { SessionService } from "../services/sessionService.js";
 
 const router = Router();

@@ -25,6 +25,12 @@
   }
 }
 
+.filled-button-danger {
+  @extend .filled-button;
+  background-color: base.$error;
+  color: base.$onError;
+}
+
 .outlined-button {
   @extend .filled-button;
   background-color: transparent;

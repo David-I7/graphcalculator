@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { UserDao } from "../db/dao/userDao.js";
-import { UserSessionData } from "@graphcalculator/types";
+import { Provider, UserSessionData } from "@graphcalculator/types";
 import { SessionService } from "../services/sessionService.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
+import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
-  if (req.session.user?.provider !== 0) {
+  if (req.session.user?.provider !== Provider.graphCalulator) {
     res.sendStatus(400);
     return;
   }
@@ -52,4 +53,19 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   return;
 };
 
-export default { handleUpdateUserCredentials };
+const handleDelete = async (req: Request, res: Response) => {
+  const deletedUserDao = new DeletedUsersDao();
+
+  const isScheduled = await deletedUserDao.scheduleDelete(req.session.user!.id);
+  if (!isScheduled) {
+    res.sendStatus(500);
+    return;
+  }
+
+  const sessionService = new SessionService();
+  const isDeleted = await sessionService.deleteSession(req, res);
+
+  isDeleted ? res.sendStatus(200) : res.sendStatus(500);
+};
+
+export default { handleUpdateUserCredentials, handleDelete };
