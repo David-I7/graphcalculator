@@ -22,7 +22,8 @@ export class DeletedUsersDao implements IDeletedUsersDao {
   }
 
   async scheduleDelete(userId: string): Promise<boolean> {
-    const schedule_date = new Date().getTime() * 1e-3;
+    const schedule_date =
+      (new Date().getTime() + this.SCHEDULE_DEADLINE) * 1e-3;
     try {
       await DB.query(
         `insert into deleted_users values (to_timestamp(${schedule_date}),$1)`,

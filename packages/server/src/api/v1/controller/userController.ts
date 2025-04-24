@@ -63,7 +63,9 @@ const handleDelete = async (req: Request, res: Response) => {
   }
 
   const sessionService = new SessionService();
-  const isDeleted = await sessionService.deleteSession(req, res);
+  const isDeleted = await sessionService.deleteSessionRecursive(
+    req.session.user!.id
+  );
 
   isDeleted ? res.sendStatus(200) : res.sendStatus(500);
 };
