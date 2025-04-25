@@ -116,7 +116,6 @@ const handleEmail = (req: Request, res: Response) => {
 };
 
 const handleEmailCallback = async (req: Request, res: Response) => {
-  debugger;
   const code = req.query.code;
   if (typeof code !== "string") {
     res.sendStatus(500);

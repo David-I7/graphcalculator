@@ -4,9 +4,10 @@ import { Provider, UserSessionData } from "@graphcalculator/types";
 import { SessionService } from "../services/sessionService.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
-import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
+import { TmpCodeService } from "../services/tempCodeService.js";
+import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -80,12 +81,10 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 
   const emailService = new GoogleEmailService();
-  const sessionService = new SessionService();
   try {
-    const code = sessionService.generateSessionCode();
-    sessionService.updateSession(req.session, {
-      tmp: { ...req.session.tmp, [req.session.user!.id]: { code } },
-    });
+    const codeService = new TmpCodeService();
+    const code = codeService.generate();
+    codeService.save(code, req.session);
     const message = emailService.getDefaultMessageBuilder();
     message
       .to(email)
@@ -118,4 +117,48 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
-export default { handleUpdateUserCredentials, handleDelete, verifyEmail };
+export const verifyCode = async (req: Request, res: Response) => {
+  const { sessionCode } = req.body;
+  console.log(sessionCode, req.session.tmp);
+  if (typeof sessionCode != "string" || sessionCode.length !== 6) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const error = new TmpCodeService().validate(sessionCode, req.session);
+
+  if (error) {
+    res.status(401).json(new ApiErrorResponse().createResponse(error));
+  } else {
+    const userDao = new UserDao();
+
+    const updated = await userDao.updateUserById(
+      req.session.user!.id,
+      ["email_is_verified"],
+      [true]
+    );
+    if (!updated) {
+      res.sendStatus(500);
+      return;
+    }
+
+    const sessionService = new SessionService();
+    const userSessionData: UserSessionData = {
+      ...req.session.user!,
+      email_is_verified: true,
+    };
+    sessionService.updateSession(req.session, { user: userSessionData });
+
+    res
+      .status(200)
+      .json(new ApiSuccessResponse().createResponse({ user: userSessionData }));
+    return;
+  }
+};
+
+export default {
+  handleUpdateUserCredentials,
+  handleDelete,
+  verifyEmail,
+  verifyCode,
+};

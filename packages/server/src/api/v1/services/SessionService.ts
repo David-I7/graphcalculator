@@ -10,7 +10,7 @@ import { Provider, UserRolesEnum } from "@graphcalculator/types";
 import { Session, SessionData } from "express-session";
 import DB from "../db/index.js";
 
-type SessionObject = Session & Partial<SessionData>;
+export type SessionObject = Session & Partial<SessionData>;
 
 export class SessionService {
   hasSession(req: Request) {
@@ -94,12 +94,9 @@ export class SessionService {
         const client = new OpenIDClient();
 
         if (!client.isExpiredAccessToken(expiry_date)) {
-          console.log("not expired user session: ", req.session);
           next();
           return;
         }
-
-        console.log("expired user session: ", req.session);
 
         client.setStrategy(
           new OpenIDStrategyFactory().createStrategy(
@@ -254,11 +251,5 @@ export class SessionService {
 
       next();
     };
-  }
-
-  generateSessionCode(): string {
-    return Array.from({ length: 6 }, () => Math.floor(Math.random() * 9)).join(
-      ""
-    );
   }
 }

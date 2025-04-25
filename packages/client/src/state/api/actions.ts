@@ -105,4 +105,19 @@ export async function deleteUserAccount(): Promise<string | ApiErrorResponse> {
   }).then(handleApiResponse);
 }
 
-export async function verifyEmail() {}
+export async function verifyEmailAddress(): Promise<string | ApiErrorResponse> {
+  return await fetch(baseUrl + "/user/verify/email", {
+    credentials: "include",
+  }).then(handleApiResponse);
+}
+
+export async function verifyCode(
+  code: string
+): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
+  return await fetch(baseUrl + "/user/verify/email", {
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    method: "post",
+    body: JSON.stringify({ code }),
+  }).then(handleApiResponse);
+}

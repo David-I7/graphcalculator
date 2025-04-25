@@ -20,7 +20,7 @@ export class OpenIDClient implements IOpenIDClient {
   async saveToStore(code: string): Promise<string> {
     const tokens = await this.strategy.getTokens(code);
     const payload = await this.strategy.verifyIdToken(tokens.id_token!);
-    console.log(tokens, payload);
+
     const key = randomUUID();
     OAuthStore.setData(key, {
       tokens: {
