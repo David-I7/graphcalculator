@@ -55,16 +55,20 @@ export class GoogleEmailService
     return tokens as Partial<Tokens>;
   }
 
-  setTokens() {
-    const tokens = this.tokens.get("email");
-    if (!tokens) throw new Error("Tokens have not been fetch yet.");
+  setTokens(tokens: Omit<Tokens, "id_token" | "provider">) {
+    this.tokens.set("email", tokens);
     this.client.setCredentials(tokens);
   }
 
-  async refreshAccessToken(refresh_token?: string) {
+  async refreshAccessToken(
+    refresh_token?: string
+  ): Promise<{ expiry_date: number; access_token: string } | undefined> {
     try {
       const { credentials } = await this.client.refreshAccessToken();
-      return credentials.access_token!;
+      return {
+        access_token: credentials.access_token!,
+        expiry_date: credentials.expiry_date!,
+      };
     } catch (err) {
       console.log(err);
     }
@@ -86,7 +90,9 @@ export class GoogleEmailService
 
   async sendEmail(message: MessageBuilder): Promise<boolean> {
     if (this.isExpiredAccessToken(this.client.credentials.expiry_date!)) {
-      await this.refreshAccessToken("");
+      const refreshed = await this.refreshAccessToken();
+      if (!refreshed) return false;
+      this.setTokens({ ...this.tokens.get("email")!, ...refreshed });
     }
 
     const service = new GoogleEmailClient(this.client);

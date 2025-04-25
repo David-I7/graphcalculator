@@ -6,6 +6,7 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
+import { GoogleEmailService } from "../services/email/emailService.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -46,7 +47,7 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
     last_name,
   };
 
-  new SessionService().updateSession(req, newSessionData);
+  new SessionService().updateSession(req.session, { user: newSessionData });
   res
     .status(200)
     .json(new ApiSuccessResponse().createResponse({ user: newSessionData }));
@@ -70,4 +71,51 @@ const handleDelete = async (req: Request, res: Response) => {
   isDeleted ? res.sendStatus(200) : res.sendStatus(500);
 };
 
-export default { handleUpdateUserCredentials, handleDelete };
+const verifyEmail = async (req: Request, res: Response) => {
+  const { email_is_verified, email } = req.session.user!;
+
+  if (email_is_verified) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const emailService = new GoogleEmailService();
+  const sessionService = new SessionService();
+  try {
+    const code = sessionService.generateSessionCode();
+    sessionService.updateSession(req.session, {
+      tmp: { ...req.session.tmp, [req.session.user!.id]: { code } },
+    });
+    const message = emailService.getDefaultMessageBuilder();
+    message
+      .to(email)
+      .subject("Verify your email address")
+      .html(
+        `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Verify your email address</title>
+        </head>
+        <body>
+          <h1>Verification code</h1>
+          <b>${code}</b>
+        </body>
+        </html>
+      `
+      );
+
+    const sent = await emailService.sendEmail(message);
+    if (!sent) {
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+};
+
+export default { handleUpdateUserCredentials, handleDelete, verifyEmail };

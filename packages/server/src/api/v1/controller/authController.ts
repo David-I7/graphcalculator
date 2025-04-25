@@ -141,7 +141,6 @@ const handleEmailCallback = async (req: Request, res: Response) => {
 const handleDeleteEmailTokens = async (req: Request, res: Response) => {
   const emailService = new GoogleEmailService();
   try {
-    emailService.setTokens();
     const result = await emailService.revokeRefreshToken();
     if (!result) {
       res.sendStatus(500);

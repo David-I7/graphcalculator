@@ -3,12 +3,11 @@ import { OpenIDClient } from "./oAuth/OAuthClient.js";
 import { OpenIDStrategyFactory } from "./oAuth/strategyFactory.js";
 import { valueCompare } from "../helpers/objects.js";
 import { cookieOptions } from "../config/cookies.js";
-import { SessionData } from "express-session";
 import { ApiErrorResponse } from "./apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "./error/simpleErrorFactory.js";
 import { UserDao } from "../db/dao/userDao.js";
 import { Provider, UserRolesEnum } from "@graphcalculator/types";
-import { Session } from "express-session";
+import { Session, SessionData } from "express-session";
 import DB from "../db/index.js";
 
 type SessionObject = Session & Partial<SessionData>;
@@ -29,12 +28,10 @@ export class SessionService {
     onDelete: () => void
   ): Promise<boolean> {
     return new Promise(async (resolve, rej) => {
-      if (session.tokens && session.tokens.refresh_token) {
-        const res = await this.revokeRefreshToken(
-          session.tokens.provider,
-          session.tokens.refresh_token
+      if (session.tokens) {
+        throw new Error(
+          "Sessions from other providers must be all deleted recursively since all tokens will get invalidated"
         );
-        if (!res) rej(false);
       }
 
       session.destroy((err) => {
@@ -143,23 +140,24 @@ export class SessionService {
                 ]
               );
 
-              this.updateSession(
-                req,
-                {
+              this.updateSession(req.session, {
+                user: {
                   ...req.session.user!,
                   last_name: userInfo.family_name,
                   first_name: userInfo.given_name!,
                   email_is_verified: userInfo.email_verified!,
                 },
-                { ...req.session.tokens, ...refreshed }
-              );
+                tokens: { ...req.session.tokens, ...refreshed },
+              });
               this.saveRollingSession(req, res, next);
               return;
             }
 
-            this.updateSession(req, undefined, {
-              ...req.session.tokens,
-              ...refreshed,
+            this.updateSession(req.session, {
+              tokens: {
+                ...req.session.tokens,
+                ...refreshed,
+              },
             });
             this.saveRollingSession(req, res, next);
           }
@@ -177,15 +175,21 @@ export class SessionService {
   }
 
   updateSession(
-    req: Request,
-    user?: SessionData["user"],
-    tokens?: SessionData["tokens"]
-  ) {
-    if (user) {
-      req.session.user = user;
+    session: SessionObject,
+    updated: {
+      user?: SessionData["user"];
+      tokens?: SessionData["tokens"];
+      tmp?: SessionData["tmp"];
     }
-    if (tokens) {
-      req.session.tokens = tokens;
+  ) {
+    if (updated.user) {
+      session.user = updated.user;
+    }
+    if (updated.tokens) {
+      session.tokens = updated.tokens;
+    }
+    if (updated.tmp) {
+      session.tmp = updated.tmp;
     }
   }
 
@@ -250,5 +254,11 @@ export class SessionService {
 
       next();
     };
+  }
+
+  generateSessionCode(): string {
+    return Array.from({ length: 6 }, () => Math.floor(Math.random() * 9)).join(
+      ""
+    );
   }
 }
