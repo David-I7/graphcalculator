@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { isClientError } from "../services/error/clientError.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 
-export const errorController = (
+export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,

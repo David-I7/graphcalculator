@@ -2,7 +2,6 @@ import { Router } from "express";
 import rootController from "../controller/rootController.js";
 import graphRouter from "./graphs.js";
 import authRouter from "./auth.js";
-import { errorController } from "../controller/errorController.js";
 import { serverDirname } from "../constants.js";
 import path from "path";
 import testRouter from "./test.js";
@@ -10,6 +9,7 @@ import registerRouter from "./register.js";
 import logoutRouter from "./logout.js";
 import userRouter from "./user.js";
 import { SessionService } from "../services/sessionService.js";
+import { errorHandler } from "../middleware/errorHandler.js";
 
 const router = Router();
 
@@ -23,6 +23,6 @@ router.use("/api/test", testRouter);
 router.all("*", (req, res) => {
   res.sendFile(path.join(serverDirname, "/view/notFound.html"));
 });
-router.use(errorController);
+router.use(errorHandler);
 
 export default router;
