@@ -97,9 +97,12 @@ export class SessionService {
         const client = new OpenIDClient();
 
         if (!client.isExpiredAccessToken(expiry_date)) {
+          console.log("not expired user session: ", req.session);
           next();
           return;
         }
+
+        console.log("expired user session: ", req.session);
 
         client.setStrategy(
           new OpenIDStrategyFactory().createStrategy(
@@ -108,11 +111,12 @@ export class SessionService {
         );
 
         try {
-          const access_token = await client.refreshAccessToken(refresh_token);
+          const refreshed = await client.refreshAccessToken(refresh_token);
 
-          if (!access_token) throw new Error("Invalid refresh token");
+          if (!refreshed || !refreshed.access_token)
+            throw new Error("Invalid refresh token");
           else {
-            const userInfo = await client.getUserInfo(access_token);
+            const userInfo = await client.getUserInfo(refreshed.access_token);
 
             if (
               !valueCompare(
@@ -147,7 +151,7 @@ export class SessionService {
                   first_name: userInfo.given_name!,
                   email_is_verified: userInfo.email_verified!,
                 },
-                { ...req.session.tokens, access_token }
+                { ...req.session.tokens, ...refreshed }
               );
               this.saveRollingSession(req, res, next);
               return;
@@ -155,7 +159,7 @@ export class SessionService {
 
             this.updateSession(req, undefined, {
               ...req.session.tokens,
-              access_token,
+              ...refreshed,
             });
             this.saveRollingSession(req, res, next);
           }

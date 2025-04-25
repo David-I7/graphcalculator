@@ -1,11 +1,13 @@
 import { TokenPayload } from "google-auth-library";
-import { OAuthStore, TReturn, TSet } from "./tokenStore.js";
+import { OAuthStore } from "./tokenStore.js";
 
 export interface OAuth2Strategy {
   generateAuthUrl(): string;
   revokeRefreshToken(refresh_token: string): Promise<boolean>;
   getTokens(code: string): Promise<Partial<Tokens>>;
-  refreshAccessToken(refresh_token: string): Promise<string | undefined>;
+  refreshAccessToken(
+    refresh_token: string
+  ): Promise<{ expiry_date: number; access_token: string } | undefined>;
 }
 
 export interface OpenIDStrategy extends OAuth2Strategy {

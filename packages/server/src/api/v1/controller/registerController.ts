@@ -24,10 +24,16 @@ const handleEmailVerification = async (req: Request, res: Response) => {
   }
 
   const userDao = new UserDao();
-  const isRegistered = await userDao.existsEmail(email);
+  const user = await userDao.findUserByColumnName("email", email, ["provider"]);
   res
     .status(200)
-    .json(new ApiSuccessResponse().createResponse({ isRegistered }));
+    .json(
+      new ApiSuccessResponse().createResponse(
+        user
+          ? { isRegistered: true, provider: user.provider }
+          : { isRegistered: false }
+      )
+    );
 };
 
 const handleRegister = async (req: Request, res: Response) => {

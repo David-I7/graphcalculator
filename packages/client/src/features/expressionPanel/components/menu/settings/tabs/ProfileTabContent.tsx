@@ -9,6 +9,7 @@ import { updateUserCredentials } from "../../../../../../state/api/actions";
 import apiSlice from "../../../../../../state/api/apiSlice";
 import { useAppDispatch } from "../../../../../../state/hooks";
 import DeleteAccount from "../deleteAccount/DeleteAccount";
+import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
 
 export function ProfileTabContent({
   user,
@@ -20,6 +21,18 @@ export function ProfileTabContent({
   return (
     <div className="profile-tab">
       <ChangeCredentialsForm closeDialog={closeDialog} user={user} />
+      <div>
+        <dl>
+          <dt>Email</dt>
+          <dd>{user.email}</dd>
+        </dl>
+        {!user.email_is_verified && (
+          <UnderlineButton buttonType="link">
+            Verify email address
+          </UnderlineButton>
+        )}
+      </div>
+
       <DeleteAccount user={user} />
     </div>
   );

@@ -34,7 +34,7 @@ const handleAuth = async (req: Request, res: Response) => {
   }
 
   const userDao = new UserDao();
-  const user = await userDao.findUserByEmail(email);
+  const user = await userDao.findUserByColumnName("email", email, "*");
 
   if (!user) {
     res

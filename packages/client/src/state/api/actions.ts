@@ -31,7 +31,7 @@ async function handleApiResponse(res: Response) {
   }
 }
 
-export async function verifyEmail(
+export async function verifyIsRegistered(
   email: string
 ): Promise<ApiErrorResponse | VerifyEmailResponse> {
   return await fetch(baseUrl + "/register/verify", {
@@ -104,3 +104,5 @@ export async function deleteUserAccount(): Promise<string | ApiErrorResponse> {
     credentials: "include",
   }).then(handleApiResponse);
 }
+
+export async function verifyEmail() {}

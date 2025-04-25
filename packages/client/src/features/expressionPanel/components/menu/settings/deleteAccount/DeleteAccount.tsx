@@ -10,7 +10,7 @@ import { useLazyFetch } from "../../../../../../hooks/api";
 import { deleteUserAccount } from "../../../../../../state/api/actions";
 import OutlinedButton from "../../../../../../components/buttons/common/OutlineButton";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
-import VerifyEmailDialog from "./VerifyEmailDialog";
+import VerifyEmailDialog from "../emailVerification/VerifyEmailDialog";
 import { NestedDialog } from "../../../../../../components/dialog/NestedDialog";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useEffect } from "react";

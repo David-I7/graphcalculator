@@ -3,11 +3,14 @@ import DB from "../index.js";
 
 export interface IUserDao {
   existsEmail(email: string): Promise<boolean>;
-  findUserByID<T extends (keyof User)[]>(
-    email: string,
-    fields: T | "*"
-  ): Promise<Pick<User, T[number]> | undefined>;
-  findUserByEmail(email: string): Promise<User | undefined>;
+  findUserByColumnName<
+    Column extends keyof User,
+    ReturnFields extends (keyof User)[]
+  >(
+    column: Column,
+    columnValue: User[Column],
+    fields: ReturnFields | "*"
+  ): Promise<Pick<User, ReturnFields[number]> | undefined>;
   upsertUser(
     user: Omit<User, "email_is_verified" | "id" | "provider" | "role">
   ): Promise<UserSessionData>;
@@ -90,32 +93,33 @@ export class UserDao implements IUserDao {
     }
   }
 
-  async findUserByID<T extends (keyof User)[]>(
-    id: string,
-    fields: T | "*"
-  ): Promise<Pick<User, T[number]> | undefined> {
-    if (fields === "*") {
-      const res = await DB.query<User>(`Select * from users where id = $1`, [
-        id,
-      ]);
+  async findUserByColumnName<
+    Column extends keyof User,
+    ReturnFields extends (keyof User)[]
+  >(
+    column: Column,
+    columnValue: User[Column],
+    fields: ReturnFields | "*"
+  ): Promise<Pick<User, ReturnFields[number]> | undefined> {
+    try {
+      if (fields === "*") {
+        const res = await DB.query<User>(
+          `Select * from users where ${column} = $1`,
+          [columnValue]
+        );
 
-      return res.rowCount !== null ? res.rows[0] : undefined;
-    } else {
-      const res = await DB.query<Pick<User, T[number]>>(
-        `Select ${fields.join()} from users where id = $1`,
-        [id]
-      );
+        return res.rows.length ? res.rows[0] : undefined;
+      } else {
+        const res = await DB.query<User>(
+          `Select ${fields.join()} from users where ${column} = $1`,
+          [columnValue]
+        );
 
-      return res.rowCount !== null ? res.rows[0] : undefined;
+        return res.rows.length ? res.rows[0] : undefined;
+      }
+    } catch (err) {
+      return undefined;
     }
-  }
-
-  async findUserByEmail(email: string): Promise<User | undefined> {
-    const res = await DB.query<User>(`Select * from users where email = $1`, [
-      email,
-    ]);
-
-    return res.rowCount !== null ? res.rows[0] : undefined;
   }
 
   async upsertUser(

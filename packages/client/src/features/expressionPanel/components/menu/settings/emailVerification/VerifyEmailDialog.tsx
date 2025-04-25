@@ -3,6 +3,7 @@ import OutlinedButton from "../../../../../../components/buttons/common/OutlineB
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
 import { useDialogContext } from "../../../../../../components/dialog/DialogContext";
 import { NestedDialog } from "../../../../../../components/dialog/NestedDialog";
+import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
 
 const VerifyEmailDialog = ({ email }: { email: UserSessionData["email"] }) => {
   const { setIsOpen } = useDialogContext();
@@ -27,3 +28,27 @@ const VerifyEmailDialog = ({ email }: { email: UserSessionData["email"] }) => {
 };
 
 export default VerifyEmailDialog;
+
+const VerifyEmailDialogFR = ({
+  email,
+}: {
+  email: UserSessionData["email"];
+}) => {
+  const { setIsOpen } = useDialogContext();
+
+  return (
+    <NestedDialog>
+      <div>
+        <h2>We've sent an email to ({email}).</h2>
+        <p>
+          Click the link recevived in your inbox to verify your account. The
+          link expires in 5 minutes
+        </p>
+        <p>
+          Did not receive an email?
+          <UnderlineButton>Resend</UnderlineButton>
+        </p>
+      </div>
+    </NestedDialog>
+  );
+};
