@@ -1,14 +1,18 @@
 import { UserSessionData } from "@graphcalculator/types";
 import FormInput from "../../../../../../components/input/FormInput";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
 import { CSS_VARIABLES } from "../../../../../../data/css/variables";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../../hooks/api";
-import { updateUserCredentials } from "../../../../../../state/api/actions";
+import {
+  updateUserCredentials,
+  verifyEmailAddress,
+} from "../../../../../../state/api/actions";
 import apiSlice from "../../../../../../state/api/apiSlice";
 import { useAppDispatch } from "../../../../../../state/hooks";
 import DeleteAccount from "../deleteAccount/DeleteAccount";
+import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
 
 export function ProfileTabContent({
   user,
@@ -20,6 +24,18 @@ export function ProfileTabContent({
   return (
     <div className="profile-tab">
       <ChangeCredentialsForm closeDialog={closeDialog} user={user} />
+      <div>
+        <dl>
+          <dt>Email</dt>
+          <dd>{user.email}</dd>
+        </dl>
+        {!user.email_is_verified && (
+          <UnderlineButton buttonType="link">
+            Verify email address
+          </UnderlineButton>
+        )}
+      </div>
+
       <DeleteAccount user={user} />
     </div>
   );
@@ -122,4 +138,44 @@ function ChangeCredentialsForm({
       </div>
     </form>
   );
+}
+
+function VerifyEmailAddress() {
+  const [trigger, { data, error, isLoading, reset }] =
+    useLazyFetch(verifyEmailAddress);
+  const [progress, setProgress] = useState<number>(0);
+
+  useEffect(() => {
+    if (!data && !error) return;
+
+    if (typeof data === "string") {
+      setProgress(1);
+    } else {
+      reset();
+    }
+  }, [data, error]);
+
+  switch (progress) {
+    case 0:
+      return (
+        <UnderlineButton buttonType="link">
+          Verify email address
+        </UnderlineButton>
+      );
+    case 1:
+      return (
+        <div>
+          <form>
+            <div>
+              <div>
+                <label>Enter 6 digit code</label>
+                <FormInput type="number" min={6} max={6} />
+              </div>
+              <FilledButton>Send</FilledButton>
+              <UnderlineButton>Resend</UnderlineButton>
+            </div>
+          </form>
+        </div>
+      );
+  }
 }

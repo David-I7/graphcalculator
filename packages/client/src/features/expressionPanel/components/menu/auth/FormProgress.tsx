@@ -1,12 +1,12 @@
 import { useRef, useState } from "react";
 import {
   RegisterUserData,
-  UserSessionData,
   VerifyEmailResponse,
 } from "../../../../../state/api/types";
 import LoginOrSignupForm from "./LoginOrSignupForm";
 import AuthForm from "./AuthForm";
 import RegisterForm from "./RegisterForm";
+import { UserSessionData } from "@graphcalculator/types";
 
 export default function FormProgress({
   onComplete,

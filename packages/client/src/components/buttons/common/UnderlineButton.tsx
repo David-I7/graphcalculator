@@ -4,13 +4,21 @@ import styles from "./common.module.scss";
 type UnderlineButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   ref?: RefObject<HTMLButtonElement | null>;
+  buttonType?: "link" | "button";
 };
 
-const UnderlineButton = ({ children, ref, ...props }: UnderlineButtonProps) => {
+const UnderlineButton = ({
+  children,
+  ref,
+  buttonType = "button",
+  ...props
+}: UnderlineButtonProps) => {
   const mergedClassname = useMemo(() => {
-    return props.className
-      ? props.className + " " + styles.underlineButton
-      : styles.underlineButton;
+    const base =
+      buttonType === "button"
+        ? styles.underlineButton
+        : styles.underlineButtonLink;
+    return props.className ? props.className + " " + base : base;
   }, [props.className]);
 
   return (

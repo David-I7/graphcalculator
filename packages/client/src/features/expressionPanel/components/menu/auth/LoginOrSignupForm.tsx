@@ -3,7 +3,7 @@ import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { CSS_VARIABLES } from "../../../../../data/css/variables";
 import FormInput from "../../../../../components/input/FormInput";
-import { verifyEmail } from "../../../../../state/api/actions";
+import { verifyIsRegistered } from "../../../../../state/api/actions";
 import { VerifyEmailResponse } from "../../../../../state/api/types";
 import Or from "../../../../../components/hr/Or";
 import { useLazyFetch } from "../../../../../hooks/api";
@@ -51,7 +51,7 @@ function VerifyEmailForm({
   );
   const inputId = useId();
   const [trigger, { data, isLoading }] = useLazyFetch(() =>
-    verifyEmail(input.trim())
+    verifyIsRegistered(input.trim())
   );
 
   useEffect(() => {

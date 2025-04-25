@@ -1,24 +1,11 @@
 import { Router } from "express";
-import multer from "multer";
-import { publicDirname } from "../constants.js";
 
-const storage = multer.diskStorage({
-  destination(req, file, callback) {
-    callback(null, publicDirname.concat("/images"));
-  },
-  filename(req, file, callback) {
-    const ext = file.mimetype.split("/")[1];
-    const name = req.session
-      .user!.id.slice(0, 8)
-      .concat(new Date().getTime().toString(), ".", ext);
-    callback(null, name);
-  },
-});
-const upload = multer({ storage });
 const testRouter = Router();
 
-testRouter.post("/", upload.single("image"), async (req, res) => {
-  console.log(req.file, req.body);
+testRouter.get("/", async (req, res) => {
+  await new Promise((res, rej) => {
+    setTimeout(res, 60000 * 3);
+  });
 
   res.sendStatus(200);
 });

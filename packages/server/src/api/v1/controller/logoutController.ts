@@ -8,9 +8,17 @@ const handleLogout = async (
   next: NextFunction
 ) => {
   const sessionService = new SessionService();
-  const isDeleted = await sessionService.deleteSession(req.session, () =>
-    deleteCookie(res)
-  );
+
+  let isDeleted: boolean = false;
+  if (req.session.tokens) {
+    isDeleted = await sessionService.deleteSessionRecursive(
+      req.session.user!.id
+    );
+  } else {
+    isDeleted = await sessionService.deleteSession(req.session, () =>
+      deleteCookie(res)
+    );
+  }
 
   if (isDeleted) {
     res.sendStatus(200);

@@ -2,6 +2,7 @@ import { CustomError } from "./types.js";
 
 const ERROR_TYPES = {
   db: 0,
+  auth: 1,
 };
 
 export function isServerError(err: Error): err is ServerError {

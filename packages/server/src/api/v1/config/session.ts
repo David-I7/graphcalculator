@@ -10,6 +10,7 @@ declare module "express-session" {
   interface SessionData {
     user: UserSessionData;
     tokens: Omit<Tokens, "id_token" | "scope">;
+    tmp: Record<string, Record<string, string>>;
   }
 }
 

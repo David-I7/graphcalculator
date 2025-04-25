@@ -68,3 +68,14 @@
     cursor: default;
   }
 }
+
+.underline-button-link {
+  @extend .underline-button;
+  font-weight: base.$fw-medium;
+  color: base.$primary;
+
+  &:focus {
+    outline: 2px solid black;
+    border-radius: base.$br-100;
+  }
+}

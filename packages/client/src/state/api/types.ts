@@ -1,12 +1,12 @@
 import { UserSessionData } from "@graphcalculator/types";
 
-export type RegisterUserData = Omit<
+export type RegisterUserData = Pick<
   UserSessionData,
-  "email_is_verified" | "id"
+  "first_name" | "last_name" | "email"
 > & { password: string };
 
 export type VerifyEmailResponse = {
-  data: { isRegistered: boolean };
+  data: { isRegistered: boolean; provider?: number };
 };
 
 export type ApiErrorResponse = {

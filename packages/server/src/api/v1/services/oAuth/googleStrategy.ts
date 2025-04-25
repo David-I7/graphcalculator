@@ -50,7 +50,10 @@ export class GoogleOpenIDStrategy implements OpenIDStrategy {
 
     try {
       const { credentials } = await this.client.refreshAccessToken();
-      return credentials.access_token!;
+      return {
+        expiry_date: credentials.expiry_date!,
+        access_token: credentials.access_token!,
+      };
     } catch (err) {
       console.log(err);
     } finally {

@@ -34,7 +34,7 @@ const handleAuth = async (req: Request, res: Response) => {
   }
 
   const userDao = new UserDao();
-  const user = await userDao.findUserByEmail(email);
+  const user = await userDao.findUserByColumnName("email", email, "*");
 
   if (!user) {
     res
@@ -116,7 +116,6 @@ const handleEmail = (req: Request, res: Response) => {
 };
 
 const handleEmailCallback = async (req: Request, res: Response) => {
-  debugger;
   const code = req.query.code;
   if (typeof code !== "string") {
     res.sendStatus(500);
@@ -141,7 +140,6 @@ const handleEmailCallback = async (req: Request, res: Response) => {
 const handleDeleteEmailTokens = async (req: Request, res: Response) => {
   const emailService = new GoogleEmailService();
   try {
-    emailService.setTokens();
     const result = await emailService.revokeRefreshToken();
     if (!result) {
       res.sendStatus(500);
