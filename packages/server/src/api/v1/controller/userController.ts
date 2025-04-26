@@ -8,6 +8,7 @@ import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
 import { TempCodeService } from "../services/cache/static/tempCodeService.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
+import { VerifyEmaiTemplate } from "../services/email/template/verifyEmailTemplate.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -89,21 +90,7 @@ const verifyEmail = async (req: Request, res: Response) => {
     message
       .to(email)
       .subject("Verify your email address")
-      .html(
-        `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Verify your email address</title>
-        </head>
-        <body>
-          <h1>Verification code</h1>
-          <b>${code}</b>
-        </body>
-        </html>
-      `
-      );
+      .html(new VerifyEmaiTemplate(code.code).createTemplate());
 
     const sent = await emailService.sendEmail(message);
     if (!sent) {

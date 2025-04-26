@@ -47,7 +47,7 @@ export abstract class StaticTimeCache<T> {
   }
 
   get(key: string): T | undefined {
-    return this.cache[key].value;
+    return this.cache[key]?.value;
   }
 
   set(key: string, value: T) {

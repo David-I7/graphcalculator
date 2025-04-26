@@ -1,12 +1,12 @@
 import { ClientError } from "../../error/clientError.js";
-import { MinutesTimeCache } from "./minuteTimeCache.js";
+import { CodeTimeCache } from "./codeTimeCache.js";
 
 class Code {
   constructor(public code: string, public tries: number) {}
 }
 
 export class TempCodeService {
-  private cache = new MinutesTimeCache<Code>();
+  private cache = new CodeTimeCache<Code>();
 
   constructor(private MAX_TRIES: number = 3) {}
 
@@ -15,7 +15,7 @@ export class TempCodeService {
       Math.floor(Math.random() * 9)
     ).join("");
 
-    return new Code(code, this.MAX_TRIES);
+    return new Code(code, 0);
   }
 
   set(key: string, code: Code) {
