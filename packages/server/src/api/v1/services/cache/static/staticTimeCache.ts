@@ -31,10 +31,12 @@ export abstract class StaticTimeCache<T> {
       this.timeout = null;
       return;
     } else if (node === nextTimeout) {
-      this.timeout = setTimeout(
-        () => this.handleTimeout(nextTimeout),
-        this.getRemaingTimeout(nextTimeout)
-      );
+      if (!this.timeout) {
+        this.timeout = setTimeout(
+          () => this.handleTimeout(nextTimeout),
+          this.getRemaingTimeout(nextTimeout)
+        );
+      }
     } else {
       this.head = nextTimeout;
       this.head.prev = null;

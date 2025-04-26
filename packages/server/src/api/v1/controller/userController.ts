@@ -36,7 +36,8 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
         new ApiErrorResponse().createResponse(
           new SimpleErrorFactory().createServerError(
             "db",
-            "Failed to save, please try again."
+            "Failed to save, please try again.",
+            500
           )
         )
       );

@@ -1,27 +1,24 @@
 import { UserSessionData } from "@graphcalculator/types";
 import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
-import Dialog from "../../../../../../components/dialog/Dialog";
 import {
   DialogProvider,
   useDialogContext,
 } from "../../../../../../components/dialog/DialogContext";
-import { isClickOutside } from "../../../../../../helpers/dom";
 import { useLazyFetch } from "../../../../../../hooks/api";
 import { deleteUserAccount } from "../../../../../../state/api/actions";
 import OutlinedButton from "../../../../../../components/buttons/common/OutlineButton";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
-import VerifyEmailDialog from "../emailVerification/VerifyEmailDialog";
 import { NestedDialog } from "../../../../../../components/dialog/NestedDialog";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useEffect } from "react";
 
 const DeleteAccount = ({ user }: { user: UserSessionData }) => {
-  if (!user.email_is_verified)
-    return (
-      <DialogProvider>
-        <VerifyEmailDialog email={user.email} />
-      </DialogProvider>
-    );
+  // if (!user.email_is_verified)
+  //   return (
+  //     <DialogProvider>
+  //       <VerifyEmailDialog email={user.email} />
+  //     </DialogProvider>
+  //   );
 
   return (
     <DialogProvider>
@@ -46,7 +43,7 @@ const DeleteAccountConfirmation = ({
           setIsOpen(true);
         }}
       >
-        Delete account
+        Delete account?
       </UnderlineButton>
       <DeleteAccountDialog email={email} />
     </div>

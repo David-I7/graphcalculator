@@ -25,14 +25,18 @@ export class TempCodeService {
   validate(code: string, key: string) {
     const node = this.cache.get(key);
     if (!node || node.tries >= this.MAX_TRIES)
-      return new ClientError("auth", "The code has expired or does not exist.");
+      return new ClientError(
+        "auth",
+        "The code has expired or does not exist.",
+        403
+      );
 
     if (code === node.code) {
       this.cache.remove(key);
       return;
     } else {
       node.tries++;
-      return new ClientError("auth", "Invalid code, please try again.");
+      return new ClientError("auth", "Invalid code, please try again.", 401);
     }
   }
 }

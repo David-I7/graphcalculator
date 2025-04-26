@@ -6,16 +6,18 @@ export class SimpleErrorFactory {
   createClientError(
     type: ClientError["type"],
     message: string,
+    statusCode: number,
     stack?: string
   ): CustomError {
-    return new ClientError(type, message, stack);
+    return new ClientError(type, message, statusCode, stack);
   }
 
   createServerError(
     type: ServerError["type"],
     message: string,
+    statusCode: number,
     stack?: string
   ): CustomError {
-    return new ServerError(type, message, stack);
+    return new ServerError(type, message, statusCode, stack);
   }
 }
