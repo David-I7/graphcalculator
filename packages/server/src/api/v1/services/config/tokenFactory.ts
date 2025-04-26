@@ -45,7 +45,6 @@ export class TokenFactory {
   }
 
   async delete(key: string): Promise<boolean> {
-    console.log(TokenFactory.tokens);
     if (!(key in TokenFactory.tokens)) return false;
     delete TokenFactory.tokens[key];
     return this.save();
