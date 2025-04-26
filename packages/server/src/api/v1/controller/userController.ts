@@ -6,8 +6,9 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
-import { TmpCodeService } from "../services/tempCodeService.js";
+import { TempCodeService } from "../services/cache/static/tempCodeService.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
+import { VerifyEmaiTemplate } from "../services/email/template/verifyEmailTemplate.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -35,7 +36,8 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
         new ApiErrorResponse().createResponse(
           new SimpleErrorFactory().createServerError(
             "db",
-            "Failed to save, please try again."
+            "Failed to save, please try again.",
+            500
           )
         )
       );
@@ -82,28 +84,14 @@ const verifyEmail = async (req: Request, res: Response) => {
 
   const emailService = new GoogleEmailService();
   try {
-    const codeService = new TmpCodeService();
-    const code = codeService.generate();
-    codeService.save(code, req.session);
+    const codeService = new TempCodeService();
+    const code = codeService.generateCode();
+    codeService.set(req.session.user!.id, code);
     const message = emailService.getDefaultMessageBuilder();
     message
       .to(email)
       .subject("Verify your email address")
-      .html(
-        `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Verify your email address</title>
-        </head>
-        <body>
-          <h1>Verification code</h1>
-          <b>${code}</b>
-        </body>
-        </html>
-      `
-      );
+      .html(new VerifyEmaiTemplate(code.code).createTemplate());
 
     const sent = await emailService.sendEmail(message);
     if (!sent) {
@@ -119,13 +107,16 @@ const verifyEmail = async (req: Request, res: Response) => {
 
 export const verifyCode = async (req: Request, res: Response) => {
   const { sessionCode } = req.body;
-  console.log(sessionCode, req.session.tmp);
+
   if (typeof sessionCode != "string" || sessionCode.length !== 6) {
     res.sendStatus(400);
     return;
   }
 
-  const error = new TmpCodeService().validate(sessionCode, req.session);
+  const error = new TempCodeService().validate(
+    sessionCode,
+    req.session.user!.id
+  );
 
   if (error) {
     res.status(401).json(new ApiErrorResponse().createResponse(error));

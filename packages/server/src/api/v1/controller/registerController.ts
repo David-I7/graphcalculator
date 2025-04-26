@@ -16,7 +16,8 @@ const handleEmailVerification = async (req: Request, res: Response) => {
         new ApiErrorResponse().createResponse(
           new SimpleErrorFactory().createClientError(
             "register",
-            "Invalid credentials."
+            "Invalid credentials.",
+            400
           )
         )
       );
@@ -68,7 +69,8 @@ const handleRegister = async (req: Request, res: Response) => {
         new ApiErrorResponse().createResponse(
           new SimpleErrorFactory().createClientError(
             "register",
-            "Invalid credentials."
+            "Invalid credentials.",
+            400
           )
         )
       );

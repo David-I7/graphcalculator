@@ -23,6 +23,33 @@
       padding: 2rem 0 1rem;
     }
   }
+
+  &-email-status {
+    padding-block: 1rem;
+    dl {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 0.25rem;
+
+      dt {
+        @extend .font-body-sm;
+        color: base.$on-surface-body;
+      }
+    }
+    button {
+      margin-left: 4.3rem;
+    }
+  }
+}
+
+.profile-tab .delete-account-dialog {
+  display: flex;
+  justify-content: flex-end;
+
+  & > button {
+    color: base.$on-surface-body-low;
+  }
 }
 
 .admin-tab {

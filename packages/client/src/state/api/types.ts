@@ -14,6 +14,7 @@ export type ApiErrorResponse = {
     code: number;
     message: string;
     type: string;
+    statusCode: number;
   };
 };
 

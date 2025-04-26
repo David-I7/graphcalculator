@@ -63,6 +63,8 @@ export class GoogleEmailService
   async refreshAccessToken(
     refresh_token?: string
   ): Promise<{ expiry_date: number; access_token: string } | undefined> {
+    if (!this.client.credentials.refresh_token) return;
+
     try {
       const { credentials } = await this.client.refreshAccessToken();
       return {
@@ -90,7 +92,6 @@ export class GoogleEmailService
 
   async sendEmail(message: MessageBuilder): Promise<boolean> {
     if (this.isExpiredAccessToken(this.client.credentials.expiry_date!)) {
-      debugger;
       const refreshed = await this.refreshAccessToken();
       if (!refreshed) return false;
       this.setTokens({ ...this.tokens.get("email")!, ...refreshed });

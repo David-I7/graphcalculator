@@ -6,9 +6,10 @@ import {
 } from "./types";
 import { UserSessionData } from "@graphcalculator/types";
 
-function createFetchError(): ApiErrorResponse {
+function createFetchError(statusCode: number): ApiErrorResponse {
   return {
     error: {
+      statusCode,
       code: -1,
       type: "network error",
       message: `A network error has occurred.`,
@@ -27,7 +28,7 @@ async function handleApiResponse(res: Response) {
   if (contentType?.startsWith("application/json")) {
     return await res.json();
   } else {
-    return createFetchError();
+    return createFetchError(503);
   }
 }
 

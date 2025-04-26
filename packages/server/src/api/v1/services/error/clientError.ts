@@ -14,10 +14,17 @@ export class ClientError extends Error implements CustomError {
   readonly type: keyof typeof ERROR_TYPES;
   readonly code: number;
   readonly name = "ClientError";
-  constructor(type: keyof typeof ERROR_TYPES, message: string, stack?: string) {
+  readonly statusCode: number;
+  constructor(
+    type: keyof typeof ERROR_TYPES,
+    message: string,
+    statusCode: number,
+    stack?: string
+  ) {
     super(message);
     this.stack = stack;
     this.type = type;
     this.code = ERROR_TYPES[type];
+    this.statusCode = statusCode;
   }
 }

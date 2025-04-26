@@ -26,7 +26,8 @@ const handleAuth = async (req: Request, res: Response) => {
         new ApiErrorResponse().createResponse(
           new SimpleErrorFactory().createClientError(
             "auth",
-            "Invalid credentials."
+            "Invalid credentials.",
+            400
           )
         )
       );
@@ -41,7 +42,11 @@ const handleAuth = async (req: Request, res: Response) => {
       .status(404)
       .json(
         new ApiErrorResponse().createResponse(
-          new SimpleErrorFactory().createClientError("auth", "User not found.")
+          new SimpleErrorFactory().createClientError(
+            "auth",
+            "User not found.",
+            404
+          )
         )
       );
     return;
@@ -61,7 +66,8 @@ const handleAuth = async (req: Request, res: Response) => {
         new ApiErrorResponse().createResponse(
           new SimpleErrorFactory().createClientError(
             "auth",
-            "Incorrect password."
+            "Incorrect password.",
+            403
           )
         )
       );
