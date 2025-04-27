@@ -106,17 +106,14 @@ const verifyEmail = async (req: Request, res: Response) => {
 };
 
 export const verifyCode = async (req: Request, res: Response) => {
-  const { sessionCode } = req.body;
+  const { code } = req.body;
 
-  if (typeof sessionCode != "string" || sessionCode.length !== 6) {
+  if (typeof code != "string" || code.length !== 6) {
     res.sendStatus(400);
     return;
   }
 
-  const error = new TempCodeService().validate(
-    sessionCode,
-    req.session.user!.id
-  );
+  const error = new TempCodeService().validate(code, req.session.user!.id);
 
   if (error) {
     res.status(401).json(new ApiErrorResponse().createResponse(error));

@@ -6,14 +6,21 @@ import { CloseDialog } from "./CloseDialog";
 
 type DialogProps = DialogHTMLAttributes<HTMLDialogElement> & {
   children: ReactNode;
+  responsive?: boolean;
 };
 
-const Dialog = ({ children, ...dialogAttr }: DialogProps) => {
+const Dialog = ({
+  children,
+  responsive = true,
+  ...dialogAttr
+}: DialogProps) => {
   const { setIsOpen, ref } = useDialogContext();
   const mergedClassname = useMemo(() => {
-    return dialogAttr.className
-      ? dialogAttr.className + " " + styles.dialog
+    const base = responsive
+      ? styles.dialog.concat(" ", styles.responsive)
       : styles.dialog;
+
+    return dialogAttr.className ? dialogAttr.className + " " + base : base;
   }, [dialogAttr.className]);
 
   return (
@@ -29,7 +36,7 @@ const Dialog = ({ children, ...dialogAttr }: DialogProps) => {
       className={mergedClassname}
     >
       {children}
-      <CloseDialog ref={ref} />
+      <CloseDialog responsive={responsive} ref={ref} />
     </dialog>
   );
 };

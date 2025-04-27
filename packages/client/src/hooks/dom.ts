@@ -1,4 +1,4 @@
-import React, { RefObject, useEffect } from "react";
+import React, { RefObject, useEffect, useState } from "react";
 
 export const useClickOutside = <T extends HTMLElement | null>(
   enabled: boolean = true,
@@ -101,4 +101,41 @@ export function useIntersectionObserver(
     },
     opt?.enabled === undefined ? [] : undefined
   );
+}
+
+type TimeoutState = {
+  done: boolean;
+  reset: () => void;
+};
+
+export function useTimeout({
+  duration,
+  onComplete,
+}: {
+  duration: number;
+  onComplete?: () => void;
+}) {
+  const [state, setState] = useState<TimeoutState>({
+    done: false,
+    reset,
+  });
+
+  function reset() {
+    setState({ done: false, reset });
+  }
+
+  useEffect(() => {
+    if (state.done) return;
+
+    const timeout = setTimeout(() => {
+      setState({ done: true, reset });
+      onComplete?.();
+    }, duration);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [state.done]);
+
+  return state;
 }

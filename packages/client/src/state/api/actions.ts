@@ -115,7 +115,7 @@ export async function verifyEmailAddress(): Promise<string | ApiErrorResponse> {
 export async function verifyCode(
   code: string
 ): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
-  return await fetch(baseUrl + "/user/verify/email", {
+  return await fetch(baseUrl + "/user/verify/code", {
     credentials: "include",
     headers: { "content-type": "application/json" },
     method: "post",
