@@ -180,8 +180,10 @@ header .account-settings-dropdown {
   }
 
   &-dialog {
-    width: 500px;
-    height: 500px;
+    width: min(600px, calc(100vw - 4rem - 8px));
+    height: min(401px, calc(100vh - 4rem - 8px));
+    display: flex;
+    flex-direction: column;
 
     &-opener {
       margin-top: 1rem;
@@ -194,15 +196,22 @@ header .account-settings-dropdown {
     }
 
     &-header {
-      margin-block: 1.5rem;
+      padding-block: 1.5rem;
       padding-left: 1rem;
     }
 
     &-body {
-      padding: 0 1rem;
+      padding: 0 1rem 1rem;
+      flex: 1;
+      overflow-y: auto;
     }
   }
 }
 
 @media screen and (max-width: 500px) {
+  .account-settings {
+    &-dialog {
+      width: 100%;
+    }
+  }
 }

@@ -176,7 +176,6 @@ export class SessionService {
     updated: {
       user?: SessionData["user"];
       tokens?: SessionData["tokens"];
-      tmp?: SessionData["tmp"];
     }
   ) {
     if (updated.user) {
@@ -184,9 +183,6 @@ export class SessionService {
     }
     if (updated.tokens) {
       session.tokens = updated.tokens;
-    }
-    if (updated.tmp) {
-      session.tmp = updated.tmp;
     }
   }
 
@@ -219,7 +215,8 @@ export class SessionService {
             new ApiErrorResponse().createResponse(
               new SimpleErrorFactory().createClientError(
                 "auth",
-                "Already logged in."
+                "Already logged in.",
+                400
               )
             )
           );
@@ -242,7 +239,8 @@ export class SessionService {
             new ApiErrorResponse().createResponse(
               new SimpleErrorFactory().createClientError(
                 "auth",
-                "You do not have the required permissions to access this resource"
+                "You do not have the required permissions to access this resource",
+                403
               )
             )
           );

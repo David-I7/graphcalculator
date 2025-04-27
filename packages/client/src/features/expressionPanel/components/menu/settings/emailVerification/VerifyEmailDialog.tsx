@@ -11,6 +11,14 @@ import {
   verifyCode,
   verifyEmailAddress,
 } from "../../../../../../state/api/actions";
+import { CSS_VARIABLES } from "../../../../../../data/css/variables";
+import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
+import { useAppDispatch } from "../../../../../../state/hooks";
+import apiSlice from "../../../../../../state/api/apiSlice";
+import CodeInput from "../../../../../../components/input/CodeInput";
+import { e } from "mathjs";
+import Timeout from "../../../../../../components/Loading/Timeout/Timeout";
+import { useTimeout } from "../../../../../../hooks/dom";
 
 const VerifyEmailDialogL = ({ email }: { email: UserSessionData["email"] }) => {
   const { setIsOpen } = useDialogContext();
@@ -51,7 +59,7 @@ export function VerifyEmailDialog({
       <UnderlineButton onClick={toggleDialog} buttonType="link">
         Verify email address
       </UnderlineButton>
-      <NestedDialog>
+      <NestedDialog responsive={false}>
         {step === 0 && (
           <VerifyEmailConfirmation
             email={email}
@@ -60,41 +68,116 @@ export function VerifyEmailDialog({
             toggleDialog={toggleDialog}
           />
         )}
-        {step === 1 && <VerifyCode email={email} />}
+        {step === 1 && <VerifyCode />}
       </NestedDialog>
     </div>
   );
 }
 
-const VerifyCode = ({ email }: { email: UserSessionData["email"] }) => {
-  const [trigger, { data, error }] = useLazyFetch(() => verifyCode(code));
+const VerifyCode = () => {
+  const [trigger, { data, error, isLoading }] = useLazyFetch(() =>
+    verifyCode(code)
+  );
   const [code, setCode] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(
+    undefined
+  );
+  const dispatch = useAppDispatch();
+  const { done, reset } = useTimeout({ duration: 60000 });
+  const upsertUserSessionData = (data: { data: { user: UserSessionData } }) => {
+    dispatch(
+      apiSlice.util.upsertQueryData(
+        "getUser",
+        undefined,
+        //@ts-ignore
+        data
+      )
+    );
+  };
 
   useEffect(() => {
     if (!data && !error) return;
+
+    if (data && "data" in data) {
+      upsertUserSessionData(data);
+    } else {
+      setErrorMessage(data ? data.error.message : error!.message);
+    }
   }, [data, error]);
 
   return (
-    <div>
-      <h2>We've sent an email to ({email}).</h2>
+    <div className="verify-email-code">
+      <h2>Check your inbox!</h2>
       <p>
         Type the 6 digit code from your inbox to verify your email. The Code
-        expires in 5 minutes
+        expires in 5 minutes.
       </p>
 
-      <div>
-        <label>Enter 6 digit code</label>
-        <FormInput
-          onChange={(e) => setCode(e.target.value)}
-          type="number"
-          min={6}
-          max={6}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (code.length !== 6 || isLoading) return;
+          trigger();
+        }}
+      >
+        <CodeInput
+          aria-label={"Enter 6 digit code"}
+          style={{
+            width: "200px",
+          }}
+          isError={errorMessage != null}
+          message={errorMessage}
+          onChange={(e) => {
+            if (errorMessage) setErrorMessage(undefined);
+            if (e.target.value.length > 6) return;
+            setCode(e.target.value);
+          }}
+          value={code}
+          minLength={6}
+          maxLength={6}
         />
+
+        <FilledButton disabled={code.length !== 6}>
+          {isLoading ? (
+            <div
+              style={{
+                display: "grid",
+                placeContent: "center",
+                width: "2.825rem",
+              }}
+            >
+              <Spinner
+                style={{
+                  borderColor: CSS_VARIABLES.onPrimary,
+                  borderTopColor: "transparent",
+                }}
+              />
+            </div>
+          ) : (
+            "Submit"
+          )}
+        </FilledButton>
+      </form>
+      <div className="did-not-receive-email">
+        <p>Did not receive an email?</p>
+        <UnderlineButton
+          onClick={() => {
+            reset();
+          }}
+          disabled={!done}
+        >
+          Resend
+        </UnderlineButton>
+        {!done && (
+          <Timeout
+            width={18}
+            height={18}
+            strokeWidth={1}
+            stroke="black"
+            duration={60000}
+          />
+        )}
       </div>
-      <p>
-        Did not receive an email?
-        <UnderlineButton>Resend</UnderlineButton>
-      </p>
     </div>
   );
 };
@@ -118,29 +201,55 @@ function VerifyEmailConfirmation({
 
     if (typeof data === "string") {
       handleNextStep(step + 1);
-    } else if (data?.error) {
-      // expired
     }
   }, [data, error]);
 
   return (
-    <div>
+    <div className="verify-email-confirmation">
       <h2>
-        We will send a 6 digit code to {email} to verify your email address
+        To verify your email address, we will send a 6 digit code to{" "}
+        <em>{email}</em>
       </h2>
-
+      {data && typeof data != "string" && (
+        <p style={{ marginBottom: "1rem", color: CSS_VARIABLES.error }}>
+          {data.error.message}
+        </p>
+      )}
       <div>
+        <OutlinedButton
+          className="button--hovered bg-surface"
+          onClick={() => {
+            toggleDialog();
+          }}
+        >
+          Cancel
+        </OutlinedButton>
         <FilledButton
           onClick={() => {
             if (isLoading) return;
             trigger();
           }}
         >
-          Send
+          {isLoading ? (
+            <div
+              style={{
+                display: "grid",
+                placeContent: "center",
+                width: "33px",
+              }}
+            >
+              <Spinner
+                style={{
+                  borderColor: CSS_VARIABLES.onPrimary,
+                  borderTopColor: "transparent",
+                }}
+              />
+            </div>
+          ) : (
+            "Send"
+          )}
         </FilledButton>
       </div>
-
-      {data && typeof data != "string" && <p>{data.error.message}</p>}
     </div>
   );
 }

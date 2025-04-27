@@ -15,6 +15,7 @@ export class TokenFactory {
         path.join(serverDirname, "/config/tokens.json"),
         "r+"
       );
+
       TokenFactory.tokens = JSON.parse(
         fs.readFileSync(TokenFactory.fd).toString() || "{}"
       );

@@ -1,0 +1,16 @@
+@use "../../../assets/styles/base" as base;
+
+.circle {
+  rotate: -90deg;
+  stroke-dasharray: 100 0;
+  animation: dash var(--duration) ease-in-out infinite;
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 0, 100;
+  }
+  100% {
+    stroke-dasharray: 100, 0;
+  }
+}

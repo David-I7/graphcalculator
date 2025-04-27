@@ -78,6 +78,7 @@ function ChangeCredentialsForm({
 
   return (
     <form
+      className="user-credentials-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (isLoading) return;
@@ -115,7 +116,8 @@ function ChangeCredentialsForm({
         <FilledButton
           disabled={
             !firstName ||
-            (firstName === user.first_name && lastName === user.last_name)
+            (firstName === user.first_name &&
+              lastName === (user.last_name ?? ""))
           }
         >
           {isLoading ? (

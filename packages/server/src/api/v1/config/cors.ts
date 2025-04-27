@@ -17,7 +17,8 @@ export const corsOptions: CorsOptions = {
       callback(
         new SimpleErrorFactory().createClientError(
           "cors",
-          "Not allowed by CORS."
+          "Not allowed by CORS.",
+          403
         ),
         false
       );

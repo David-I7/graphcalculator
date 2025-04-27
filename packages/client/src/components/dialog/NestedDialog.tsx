@@ -6,14 +6,21 @@ import styles from "./dialog.module.scss";
 
 type DialogProps = DialogHTMLAttributes<HTMLDialogElement> & {
   children: ReactNode;
+  responsive?: boolean;
 };
 
-export const NestedDialog = ({ children, ...dialogAttr }: DialogProps) => {
+export const NestedDialog = ({
+  children,
+  responsive = true,
+  ...dialogAttr
+}: DialogProps) => {
   const { setIsOpen, ref } = useDialogContext();
   const mergedClassname = useMemo(() => {
-    return dialogAttr.className
-      ? dialogAttr.className + " " + styles.dialog
+    const base = responsive
+      ? styles.dialog.concat(" ", styles.responsive)
       : styles.dialog;
+
+    return dialogAttr.className ? dialogAttr.className + " " + base : base;
   }, [dialogAttr.className]);
 
   return (
@@ -33,7 +40,7 @@ export const NestedDialog = ({ children, ...dialogAttr }: DialogProps) => {
       className={mergedClassname}
     >
       {children}
-      <CloseDialog ref={ref} />
+      <CloseDialog responsive={responsive} ref={ref} />
     </dialog>
   );
 };

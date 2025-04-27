@@ -91,6 +91,12 @@ export class GoogleEmailService
   }
 
   async sendEmail(message: MessageBuilder): Promise<boolean> {
+    if (!this.client.credentials) {
+      throw new Error("Credentials must be set by admin");
+    }
+
+    console.log(this.client);
+
     if (this.isExpiredAccessToken(this.client.credentials.expiry_date!)) {
       const refreshed = await this.refreshAccessToken();
       if (!refreshed) return false;

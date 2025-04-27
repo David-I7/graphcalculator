@@ -2,8 +2,9 @@
 
 .profile-tab {
   margin-top: 1rem;
+  overflow: hidden;
 
-  & form {
+  & .user-credentials-form {
     label {
       @extend .font-body-sm;
       color: base.$on-surface-body;
@@ -11,12 +12,18 @@
       margin-bottom: 0.5rem;
     }
 
-    & > div {
+    & > div:first-child {
       display: flex;
+      align-items: center;
       gap: 4rem;
+
+      & > * {
+        flex: 1;
+      }
     }
 
     & > div:last-child {
+      display: flex;
       justify-content: flex-end;
       gap: 1rem;
       align-items: center;
@@ -36,8 +43,12 @@
         @extend .font-body-sm;
         color: base.$on-surface-body;
       }
+
+      dd {
+        word-break: break-all;
+      }
     }
-    button {
+    & > div > button {
       margin-left: 4.3rem;
     }
   }
@@ -49,6 +60,61 @@
 
   & > button {
     color: base.$on-surface-body-low;
+  }
+}
+
+.verify-email-confirmation {
+  width: min(500px, calc(100vw - 4rem - 8px));
+
+  padding: 0rem 1rem 1rem;
+  h2 {
+    @extend .font-body-m;
+    margin-block: 1.5rem;
+    color: base.$on-surface-body;
+    font-weight: base.$fw-regular;
+
+    em {
+      color: base.$on-surface-heading;
+      font-weight: base.$fw-medium;
+      word-break: break-all;
+    }
+  }
+
+  & > div {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap-reverse;
+    gap: 1rem;
+  }
+}
+
+.verify-email-code {
+  width: min(500px, calc(100vw - 4rem - 8px));
+  padding: 0rem 1rem 1rem;
+  color: base.$on-surface-body;
+
+  h2 {
+    @extend .font-body-xl;
+    margin-block: 1.5rem;
+  }
+
+  form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    gap: 3rem;
+    margin-block: 2rem;
+  }
+
+  .did-not-receive-email {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    p {
+      @extend .font-body-sm;
+    }
   }
 }
 

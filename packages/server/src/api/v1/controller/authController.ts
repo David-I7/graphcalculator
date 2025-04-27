@@ -123,6 +123,13 @@ const handleEmail = (req: Request, res: Response) => {
 
 const handleEmailCallback = async (req: Request, res: Response) => {
   const code = req.query.code;
+  const error = req.query.error;
+  const template = new OAuthReponseTemplate();
+  if (error) {
+    template.setMessage({ type: "email_error" });
+    res.status(200).send(template.createTemplate());
+    return;
+  }
   if (typeof code !== "string") {
     res.sendStatus(500);
     return;
@@ -132,12 +139,11 @@ const handleEmailCallback = async (req: Request, res: Response) => {
   try {
     await emailService.getTokens(code);
 
-    const template = new OAuthReponseTemplate();
     template.setMessage({ type: "email_success" });
     res.send(template.createTemplate());
   } catch (err) {
     console.log(err);
-    const template = new OAuthReponseTemplate();
+
     template.setMessage({ type: "email_error" });
     res.send(template.createTemplate());
   }

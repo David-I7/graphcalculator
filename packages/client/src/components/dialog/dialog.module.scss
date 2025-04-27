@@ -38,12 +38,15 @@
   background-color: base.$scrim-color;
 }
 
+.responsive {
+}
+
 @media screen and (max-width: 500px) {
-  .close-dialog {
+  .close-dialog.responsive {
     top: -2.5rem;
     right: 0.25rem;
   }
-  .dialog {
+  .dialog.responsive {
     margin-top: 48px;
     border-radius: 0;
     max-width: 100%;
