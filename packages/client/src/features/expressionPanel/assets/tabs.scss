@@ -14,8 +14,8 @@
 
     & > div:first-child {
       display: flex;
-      align-items: center;
-      gap: 4rem;
+      align-items: flex-end;
+      gap: 2rem;
 
       & > * {
         flex: 1;
@@ -51,6 +51,12 @@
     & > div > button {
       margin-left: 4.3rem;
     }
+
+    &-verified {
+      margin-left: 4.2rem;
+      @extend .font-body-sm;
+      color: base.$success;
+    }
   }
 }
 
@@ -66,7 +72,7 @@
 .verify-email-confirmation {
   width: min(500px, calc(100vw - 4rem - 8px));
 
-  padding: 0rem 1rem 1rem;
+  padding: 0rem 1rem 1.5rem;
   h2 {
     @extend .font-body-m;
     margin-block: 1.5rem;
@@ -90,7 +96,7 @@
 
 .verify-email-code {
   width: min(500px, calc(100vw - 4rem - 8px));
-  padding: 0rem 1rem 1rem;
+  padding: 0rem 1rem 1.5rem;
   color: base.$on-surface-body;
 
   h2 {

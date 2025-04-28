@@ -22,6 +22,7 @@ const AuthDialog = () => {
 
   return (
     <Dialog
+      responsive={false}
       onKeyDown={(e) => {
         e.stopPropagation();
       }}

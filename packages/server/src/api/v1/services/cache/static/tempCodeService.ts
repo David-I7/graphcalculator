@@ -8,7 +8,7 @@ class Code {
 export class TempCodeService {
   private cache = new CodeTimeCache<Code>();
 
-  constructor(private MAX_TRIES: number = 3) {}
+  constructor(private MAX_TRIES: number = 5) {}
 
   generateCode(): Code {
     const code = Array.from({ length: 6 }, () =>

@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, useMemo, useState } from "react";
+import { InputHTMLAttributes, useMemo, useState } from "react";
 import styles from "./input.module.scss";
 import { CSS_VARIABLES } from "../../data/css/variables";
 import ButtonTarget from "../buttons/target/ButtonTarget";

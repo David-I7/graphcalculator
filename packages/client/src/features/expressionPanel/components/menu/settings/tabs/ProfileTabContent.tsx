@@ -1,18 +1,14 @@
 import { UserSessionData } from "@graphcalculator/types";
 import FormInput from "../../../../../../components/input/FormInput";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
 import { CSS_VARIABLES } from "../../../../../../data/css/variables";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../../hooks/api";
-import {
-  updateUserCredentials,
-  verifyEmailAddress,
-} from "../../../../../../state/api/actions";
+import { updateUserCredentials } from "../../../../../../state/api/actions";
 import apiSlice from "../../../../../../state/api/apiSlice";
 import { useAppDispatch } from "../../../../../../state/hooks";
 import DeleteAccount from "../deleteAccount/DeleteAccount";
-import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
 import VerifyEmailDialog from "../emailVerification/VerifyEmailDialog";
 import { DialogProvider } from "../../../../../../components/dialog/DialogContext";
 
@@ -35,6 +31,9 @@ export function ProfileTabContent({
           <DialogProvider>
             <VerifyEmailDialog email={user.email} />
           </DialogProvider>
+        )}
+        {user.email_is_verified && (
+          <div className="profile-tab-email-status-verified">Verfied</div>
         )}
       </div>
 
