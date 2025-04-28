@@ -21,20 +21,22 @@ export function ProfileTabContent({
 }) {
   return (
     <div className="profile-tab">
-      <ChangeCredentialsForm closeDialog={closeDialog} user={user} />
-      <div className="profile-tab-email-status">
-        <dl>
-          <dt>Email</dt>
-          <dd>{user.email}</dd>
-        </dl>
-        {!user.email_is_verified && (
-          <DialogProvider>
-            <VerifyEmailDialog email={user.email} />
-          </DialogProvider>
-        )}
-        {user.email_is_verified && (
-          <div className="profile-tab-email-status-verified">Verfied</div>
-        )}
+      <div>
+        <ChangeCredentialsForm closeDialog={closeDialog} user={user} />
+        <div className="profile-tab-email-status">
+          <dl>
+            <dt>Email</dt>
+            <dd>{user.email}</dd>
+          </dl>
+          {!user.email_is_verified && (
+            <DialogProvider>
+              <VerifyEmailDialog email={user.email} />
+            </DialogProvider>
+          )}
+          {user.email_is_verified && (
+            <div className="profile-tab-email-status-verified">Verfied</div>
+          )}
+        </div>
       </div>
 
       <DeleteAccount user={user} />

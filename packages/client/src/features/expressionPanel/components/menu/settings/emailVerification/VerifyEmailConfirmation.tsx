@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
 import OutlinedButton from "../../../../../../components/buttons/common/OutlineButton";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
@@ -9,13 +9,13 @@ import { verifyEmailAddress } from "../../../../../../state/api/actions";
 export function VerifyEmailConfirmation({
   step,
   handleNextStep,
-  email,
   toggleDialog,
+  children,
 }: {
+  children: ReactNode;
   step: number;
   handleNextStep: (step: number) => void;
   toggleDialog: () => void;
-  email: string;
 }) {
   const [trigger, { data, error, isLoading, reset }] =
     useLazyFetch(verifyEmailAddress);
@@ -30,10 +30,7 @@ export function VerifyEmailConfirmation({
 
   return (
     <div className="verify-email-confirmation">
-      <h2>
-        To verify your email address, we will send a 6 digit code to{" "}
-        <em>{email}</em>
-      </h2>
+      {children}
       {data && typeof data != "string" && (
         <p style={{ marginBottom: "1rem", color: CSS_VARIABLES.error }}>
           {data.error.message}

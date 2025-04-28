@@ -118,8 +118,6 @@ export const verifyCode = async (req: Request, res: Response) => {
   if (error) {
     res.status(401).json(new ApiErrorResponse().createResponse(error));
   } else {
-    console.log("valid code");
-
     const userDao = new UserDao();
 
     const updated = await userDao.updateUserById(
