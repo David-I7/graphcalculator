@@ -18,7 +18,7 @@ router.use("/api/graphs", graphRouter);
 router.use("/api/auth", authRouter);
 router.use("/api/register", registerRouter);
 router.use("/api/logout", logoutRouter);
-router.use("/api/user", new SessionService().validateSession(), userRouter);
+router.use("/api/user", userRouter);
 router.use("/api/test", testRouter);
 router.all("*", (req, res) => {
   res.sendFile(path.join(serverDirname, "/view/notFound.html"));

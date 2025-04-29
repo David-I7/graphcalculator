@@ -74,10 +74,13 @@ export async function registerUser(
   }).then(handleApiResponse);
 }
 
-export async function logoutUser(): Promise<string | ApiErrorResponse> {
-  return await fetch(baseUrl + "/logout", { credentials: "include" }).then(
-    handleApiResponse
-  );
+export async function logoutUser(
+  deleteUser: boolean = false
+): Promise<string | ApiErrorResponse> {
+  return await fetch(
+    baseUrl + (deleteUser ? `/logout?deleteUser=1` : "/logout"),
+    { credentials: "include" }
+  ).then(handleApiResponse);
 }
 
 export async function updateUserCredentials(credentials: {
@@ -94,13 +97,6 @@ export async function updateUserCredentials(credentials: {
 
 export async function revokeEmailTokens(): Promise<string | ApiErrorResponse> {
   return await fetch(baseUrl + "/auth/email/token", {
-    method: "DELETE",
-    credentials: "include",
-  }).then(handleApiResponse);
-}
-
-export async function deleteUserAccount(): Promise<string | ApiErrorResponse> {
-  return await fetch(baseUrl + "/user", {
     method: "DELETE",
     credentials: "include",
   }).then(handleApiResponse);

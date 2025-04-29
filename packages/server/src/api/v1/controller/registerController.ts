@@ -6,6 +6,7 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { isEmail, isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
 import { OAuthStore } from "../services/oAuth/tokenStore.js";
+import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 
 const handleEmailVerification = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -51,6 +52,8 @@ const handleRegister = async (req: Request, res: Response) => {
       email_is_verified: data.payload.email_verified || false,
       provider: data.tokens.provider,
     });
+
+    await new DeletedUsersDao().revokeScheduledDeleteIfExists(user.id);
 
     req.session.user = user;
     req.session.tokens = data.tokens;

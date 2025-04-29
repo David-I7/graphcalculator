@@ -92,7 +92,7 @@
       }
     }
 
-    & div:has(button) {
+    & div:last-child:has(button) {
       display: flex;
       gap: 1rem;
       justify-content: flex-end;

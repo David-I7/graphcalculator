@@ -6,9 +6,12 @@ import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
-import { TempCodeService } from "../services/cache/static/tempCodeService.js";
+import { WeakCodeService } from "../services/cache/static/weakCodeService.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
-import { VerifyEmaiTemplate } from "../services/email/template/verifyEmailTemplate.js";
+import { VerifyEmailTemplate } from "../services/email/template/verify/verifyEmailTemplate.js";
+import { deleteCookie } from "../helpers/cookie.js";
+import { StrongCodeService } from "../services/cache/static/strongCodeService.js";
+import { DeleteCodeResponseTemplate } from "../services/email/template/delete/deleteCodeResponseTemplate.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -58,20 +61,34 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
 };
 
 const handleDelete = async (req: Request, res: Response) => {
-  const deletedUserDao = new DeletedUsersDao();
+  const { deleteToken } = req.query;
 
-  const isScheduled = await deletedUserDao.scheduleDelete(req.session.user!.id);
-  if (!isScheduled) {
-    res.sendStatus(500);
+  if (typeof deleteToken !== "string") {
+    res.sendStatus(400);
     return;
   }
 
-  const sessionService = new SessionService();
-  const isDeleted = await sessionService.deleteSessionRecursive(
-    req.session.user!.id
-  );
+  const service = new StrongCodeService<UserSessionData>();
+  const result = service.validate(deleteToken, deleteToken);
 
-  isDeleted ? res.sendStatus(200) : res.sendStatus(500);
+  if ("message" in result) {
+    res.sendStatus(403);
+    return;
+  } else {
+    const code = result;
+
+    const deletedUserDao = new DeletedUsersDao();
+
+    const isScheduled = await deletedUserDao.scheduleDelete(code.data.id);
+    if (!isScheduled) {
+      res.sendStatus(500);
+      return;
+    }
+
+    isScheduled
+      ? res.send(new DeleteCodeResponseTemplate().createTemplate())
+      : res.sendStatus(500);
+  }
 };
 
 const verifyEmail = async (req: Request, res: Response) => {
@@ -84,14 +101,14 @@ const verifyEmail = async (req: Request, res: Response) => {
 
   const emailService = new GoogleEmailService();
   try {
-    const codeService = new TempCodeService();
-    const code = codeService.generateCode();
+    const codeService = new WeakCodeService();
+    const code = codeService.generateCode(undefined);
     codeService.set(req.session.user!.id, code);
     const message = emailService.getDefaultMessageBuilder();
     message
       .to(email)
       .subject("Verify your email address")
-      .html(new VerifyEmaiTemplate(code.code).createTemplate());
+      .html(new VerifyEmailTemplate(code.code).createTemplate());
 
     const sent = await emailService.sendEmail(message);
     if (!sent) {
@@ -113,10 +130,10 @@ export const verifyCode = async (req: Request, res: Response) => {
     return;
   }
 
-  const error = new TempCodeService().validate(code, req.session.user!.id);
+  const result = new WeakCodeService().validate(code, req.session.user!.id);
 
-  if (error) {
-    res.status(401).json(new ApiErrorResponse().createResponse(error));
+  if ("message" in result) {
+    res.status(401).json(new ApiErrorResponse().createResponse(result));
   } else {
     const userDao = new UserDao();
 

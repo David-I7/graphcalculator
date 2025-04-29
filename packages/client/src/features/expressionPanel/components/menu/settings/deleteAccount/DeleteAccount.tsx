@@ -5,13 +5,13 @@ import {
   useDialogContext,
 } from "../../../../../../components/dialog/DialogContext";
 import { useLazyFetch } from "../../../../../../hooks/api";
-import { deleteUserAccount } from "../../../../../../state/api/actions";
 import OutlinedButton from "../../../../../../components/buttons/common/OutlineButton";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
 import { NestedDialog } from "../../../../../../components/dialog/NestedDialog";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useEffect } from "react";
 import { VerifyEmailBeforeDelete } from "../emailVerification/VerifyEmailDialog";
+import { logoutUser } from "../../../../../../state/api/actions";
 
 const DeleteAccount = ({ user }: { user: UserSessionData }) => {
   if (!user.email_is_verified)
@@ -56,9 +56,10 @@ const DeleteAccountDialog = ({
 }: {
   email: UserSessionData["email"];
 }) => {
-  const { setIsOpen, ref } = useDialogContext();
-  const [trigger, { isLoading, isError, data, error, reset }] =
-    useLazyFetch(deleteUserAccount);
+  const { setIsOpen } = useDialogContext();
+  const [trigger, { isLoading, data, error, reset }] = useLazyFetch(() =>
+    logoutUser(true)
+  );
 
   useEffect(() => {
     if (!data && !error) return;
@@ -80,8 +81,19 @@ const DeleteAccountDialog = ({
             <b>we will retain your data for 30 days.</b>
             You can reactivate your account at any time during those 30 days by
             logging back in. If there's something about Graph Calculator we can
-            improve, please
-            <a href="mailto:iosubdavid7@gmail.com"> let us know.</a>
+            improve, please{" "}
+            <UnderlineButton
+              style={{ fontSize: "1rem", height: "auto" }}
+              role="link"
+              buttonType="link"
+            >
+              <a
+                style={{ textDecoration: "none", color: "inherit" }}
+                href="mailto:iosubdavid7@gmail.com"
+              >
+                let us know.
+              </a>
+            </UnderlineButton>
           </p>
           <p>
             We will send you a link to your email address <span>({email})</span>{" "}
@@ -97,7 +109,6 @@ const DeleteAccountDialog = ({
             Cancel
           </OutlinedButton>
           <FilledButton
-            disabled={isLoading}
             onClick={() => {
               if (isLoading) return;
               trigger();
