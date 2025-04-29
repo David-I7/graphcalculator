@@ -181,7 +181,7 @@ header .account-settings-dropdown {
 
   &-dialog {
     width: min(600px, calc(100vw - 4rem - 8px));
-    height: min(401px, calc(100vh - 4rem - 8px));
+    height: min(409px, calc(100vh - 4rem - 8px));
     display: flex;
     flex-direction: column;
 
@@ -212,6 +212,7 @@ header .account-settings-dropdown {
   .account-settings {
     &-dialog {
       width: 100%;
+      height: 100%;
     }
   }
 }

@@ -61,9 +61,11 @@ export class GoogleEmailService
   }
 
   async refreshAccessToken(
-    refresh_token?: string
+    refresh_token: string
   ): Promise<{ expiry_date: number; access_token: string } | undefined> {
-    if (!this.client.credentials.refresh_token) return;
+    this.client.setCredentials({
+      refresh_token,
+    });
 
     try {
       const { credentials } = await this.client.refreshAccessToken();
@@ -95,10 +97,10 @@ export class GoogleEmailService
       throw new Error("Credentials must be set by admin");
     }
 
-    console.log(this.client);
-
     if (this.isExpiredAccessToken(this.client.credentials.expiry_date!)) {
-      const refreshed = await this.refreshAccessToken();
+      const refreshed = await this.refreshAccessToken(
+        this.client.credentials.refresh_token!
+      );
       if (!refreshed) return false;
       this.setTokens({ ...this.tokens.get("email")!, ...refreshed });
     }

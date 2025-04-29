@@ -3,6 +3,7 @@ import DB from "../index.js";
 interface IDeletedUsersDao {
   getScheduledDeletions(): Promise<{ user_id: string }[]>;
   scheduleDelete(userId: string): Promise<boolean>;
+  revokeScheduledDeleteIfExists(userId: string): Promise<boolean>;
 }
 
 export class DeletedUsersDao implements IDeletedUsersDao {
@@ -30,6 +31,20 @@ export class DeletedUsersDao implements IDeletedUsersDao {
         [userId]
       );
       return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  }
+
+  async revokeScheduledDeleteIfExists(userId: string): Promise<boolean> {
+    try {
+      const res = await DB.query<{ user_id: string }>(
+        `delete from deleted_users where user_id = $1 returning user_id;`,
+        [userId]
+      );
+
+      return res.rows.length ? true : false;
     } catch (err) {
       console.log(err);
       return false;

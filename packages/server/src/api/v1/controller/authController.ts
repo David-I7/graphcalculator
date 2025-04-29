@@ -9,6 +9,7 @@ import { GoogleOpenIDStrategy } from "../services/oAuth/googleStrategy.js";
 import { OpenIDClient } from "../services/oAuth/OAuthClient.js";
 import { OAuthReponseTemplate } from "../services/oAuth/responseTemplate.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
+import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 
 const handleAuthStatus = (req: Request, res: Response) => {
   res
@@ -54,6 +55,7 @@ const handleAuth = async (req: Request, res: Response) => {
 
   if (await new PasswordService().compare(password, user.password)) {
     const { password, ...userSessionData } = user;
+    await new DeletedUsersDao().revokeScheduledDeleteIfExists(user.id);
 
     req.session.user = userSessionData;
     res

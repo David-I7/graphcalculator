@@ -1,6 +1,7 @@
 @use "../../assets/styles/base" as base;
 
 .tabs {
+  height: 100%;
   &-header {
     display: flex;
   }

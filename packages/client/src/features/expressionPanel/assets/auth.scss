@@ -25,6 +25,7 @@
       color: base.$on-surface-heading;
       font-weight: base.$fw-medium;
       font-size: 1.5rem;
+      line-height: base.$lh-body-xl;
     }
 
     label {
@@ -39,15 +40,15 @@
 .email-form {
   display: grid;
   grid-template-rows: 4.5rem 1fr;
-  width: 25rem;
-  height: 296px;
+  width: min(500px, calc(100vw - 4rem - 8px));
+  height: 295px;
   max-height: inherit;
 
   &-body {
     overflow-y: auto;
 
     &-content {
-      padding: 0 1rem 2.25rem;
+      padding: 0 1rem 2rem;
     }
   }
 
@@ -59,7 +60,8 @@
 
 .register-form {
   @extend .email-form;
-  height: 22.25rem;
+  height: 24rem;
+  width: min(500px, calc(100vw - 4rem - 8px));
 
   &-header {
     padding-left: 0.25rem;
@@ -90,7 +92,8 @@
     & > div:nth-child(1) {
       display: flex;
       justify-content: space-between;
-      gap: 4rem;
+      align-items: flex-end;
+      gap: 2rem;
       margin-bottom: 1rem;
     }
   }
@@ -98,7 +101,8 @@
 
 .auth-form {
   @extend .email-form;
-  height: 12.75rem;
+  height: 13.95rem;
+  width: min(500px, calc(100vw - 4rem - 8px));
 
   &-header {
     @extend .register-form-header;
@@ -117,6 +121,7 @@
 
         & strong {
           display: inline;
+          word-break: break-all;
         }
       }
     }
@@ -135,6 +140,7 @@
   @extend .font-body-m;
   color: base.$on-surface-body;
   justify-content: center;
+  text-align: center;
   border: 1px solid base.$border-high;
   border-radius: base.$br-100;
   height: 3rem;
@@ -149,11 +155,5 @@
     pointer-events: none;
     border: 1px solid base.$border-lowest;
     color: base.$border-lowest;
-  }
-}
-
-@media screen and (max-width: 500px) {
-  .email-form {
-    width: 100%;
   }
 }

@@ -7,6 +7,8 @@ $on-primary: #f0f0f0;
 $on-secondary: #f0f0f0;
 $error: #c74440;
 $onError: #0f0f0f;
+$success: hsl(144, 50%, 50%);
+$onSuccess: #0f0f0f;
 
 // inverse (contrasting effects)
 $inverse-surface: black;
@@ -75,8 +77,8 @@ $fs-h3: 2rem;
 $fs-h4: 1.75rem;
 
 // LINE HEIGHT
-$lh-scaler-body: 1.2;
-$lh-scaler-headings: 1.2;
+$lh-scaler-body: 1.3;
+$lh-scaler-headings: 1.3;
 
 $lh-body-xs: $fs-body-xs * $lh-scaler-body;
 $lh-body-sm: $fs-body-sm * $lh-scaler-body;

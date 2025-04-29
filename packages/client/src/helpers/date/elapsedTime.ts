@@ -1,17 +1,11 @@
-const months = new Map([
-  [1, "Jan"],
-  [2, "Feb"],
-  [3, "Mar"],
-  [4, "Apr"],
-  [5, "May"],
-  [6, "Jun"],
-  [7, "Jul"],
-  [8, "Aug"],
-  [9, "Sep"],
-  [10, "Oct"],
-  [11, "Nov"],
-  [12, "Dec"],
-]);
+import { months } from "./date";
+import {
+  ElapsedTimeStrategy,
+  MinutesAgo,
+  MinutesRemaning,
+  SecondsAgo,
+  SecondsRemaning,
+} from "./elapsedTimeStrategy";
 
 abstract class ElapsedTimeHandler {
   private next!: ElapsedTimeHandler;
@@ -30,11 +24,13 @@ abstract class ElapsedTimeHandler {
 }
 
 class SecondsHandler extends ElapsedTimeHandler {
+  constructor(private strategy: ElapsedTimeStrategy) {
+    super();
+  }
+
   handle(elapsed: number, original: string): string | null {
-    if (elapsed < 2) {
-      return "1 second ago";
-    } else if (elapsed < 60) {
-      return `${Math.floor(elapsed)} seconds ago`;
+    if (elapsed < 60) {
+      return this.strategy.display(elapsed);
     }
     elapsed = elapsed / 60;
     return this.handleNext(elapsed, original);
@@ -42,11 +38,12 @@ class SecondsHandler extends ElapsedTimeHandler {
 }
 
 class MinutesHandler extends ElapsedTimeHandler {
+  constructor(private strategy: ElapsedTimeStrategy) {
+    super();
+  }
   handle(elapsed: number, original: string): string | null {
-    if (elapsed < 2) {
-      return "1 minute ago";
-    } else if (elapsed < 60) {
-      return `${Math.floor(elapsed)} minutes ago`;
+    if (elapsed < 60) {
+      return this.strategy.display(elapsed);
     }
     elapsed = elapsed / 60;
     return this.handleNext(elapsed, original);
@@ -100,10 +97,10 @@ class BaseCaseHandler extends ElapsedTimeHandler {
   }
 }
 
-function buildHandler(): ElapsedTimeHandler {
-  const root = new SecondsHandler();
+export function buildElapsedHandler(): ElapsedTimeHandler {
+  const root = new SecondsHandler(new SecondsAgo());
   root
-    .setNext(new MinutesHandler())
+    .setNext(new MinutesHandler(new MinutesAgo()))
     .setNext(new HoursHandler())
     .setNext(new DaysHandler())
     .setNext(new WeeksHandler())
@@ -112,9 +109,6 @@ function buildHandler(): ElapsedTimeHandler {
   return root;
 }
 
-export function getElapsedTime(date: string): string {
-  const curDate = new Date();
-  const deltaSec = (curDate.getTime() - new Date(date).getTime()) * 1e-3;
-
-  return buildHandler().handle(deltaSec, date) ?? "";
+export function buildRemaingHandler(): ElapsedTimeHandler {
+  return new MinutesHandler(new MinutesRemaning());
 }

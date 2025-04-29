@@ -8,6 +8,8 @@ export const CSS_VARIABLES = {
   onSecondary: "#f0f0f0",
   error: "#c74440",
   onError: "#0f0f0f",
+  success: "hsl(144,50%,50%)",
+  onSuccess: "#0f0f0f",
 
   // Inverse (contrasting effects)
   inverseSurface: "black",

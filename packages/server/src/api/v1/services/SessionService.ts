@@ -45,7 +45,10 @@ export class SessionService {
     });
   }
 
-  async deleteSessionRecursive(userId: string): Promise<boolean> {
+  async deleteSessionRecursive(
+    userId: string,
+    onDelete: () => void
+  ): Promise<boolean> {
     try {
       const sessions = (
         await DB.query<{ refresh_token: string; provider: number }>(
@@ -75,7 +78,7 @@ export class SessionService {
       });
 
       await Promise.allSettled(requests);
-
+      onDelete();
       return true;
     } catch (err) {
       return false;

@@ -64,7 +64,7 @@ function GenerateEmailTokens() {
           setIsOpenPopup(false);
         });
       }
-    }, 2500);
+    }, 500);
 
     window.addEventListener(
       "message",
