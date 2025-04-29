@@ -20,7 +20,7 @@ const Timeout = ({ duration, ...svgProps }: TimeoutProps) => {
       style={{
         ...svgProps.style,
         //@ts-ignore
-        "--duration": `${Math.floor(duration / 1000)}s`,
+        "--duration": `${Math.ceil(duration / 1000)}s`,
       }}
     >
       <circle

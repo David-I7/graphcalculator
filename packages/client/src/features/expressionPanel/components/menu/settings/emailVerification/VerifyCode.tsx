@@ -13,7 +13,8 @@ import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { CSS_VARIABLES } from "../../../../../../data/css/variables";
 import FilledButton from "../../../../../../components/buttons/common/FilledButton";
 import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
-import Timeout from "../../../../../../components/Loading/Timeout/Timeout";
+import Timeout from "../../../../../../components/Loading/Timeout/TimeoutLoader";
+import TimeoutLiteral from "../../../../../../components/Loading/Timeout/TimeoutLiteral";
 
 export const VerifyCode = ({
   step,
@@ -24,21 +25,35 @@ export const VerifyCode = ({
   handleNextStep: (step: number) => void;
   toggleDialog: () => void;
 }) => {
+  const codeDuration = 60000 * 5;
   const [trigger, { data, error, isLoading }] = useLazyFetch(() =>
     verifyCode(code)
   );
   const [code, setCode] = useState<string>("");
-  const [attempts, setattempts] = useState<number>(0);
-  const [isDisabled, setIsDisabled] = useState<boolean>(false);
-  const notifyParent = (success: boolean) => {
-    setCode("");
-    setattempts(0);
-    setIsDisabled(!success);
-  };
+  const {
+    done,
+    reset: resetTimeout,
+    removeTimeout,
+  } = useTimeout({
+    duration: codeDuration,
+    onComplete: () => {
+      toggleDialog();
+      handleNextStep(step - 1);
+    },
+  });
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
     undefined
   );
   const dispatch = useAppDispatch();
+  const notifyParent = (success: boolean) => {
+    setCode("");
+    setErrorMessage(undefined);
+    if (!success) {
+      removeTimeout();
+    } else {
+      resetTimeout();
+    }
+  };
 
   const upsertUserSessionData = (data: { data: { user: UserSessionData } }) => {
     dispatch(
@@ -59,12 +74,13 @@ export const VerifyCode = ({
       toggleDialog();
       return;
     } else {
-      setErrorMessage(data ? data.error.message : error!.message);
-    }
+      if (data && data.error.message[data.error.message.length - 1] === "0") {
+        toggleDialog();
+        handleNextStep(step - 1);
+        return;
+      }
 
-    if (attempts === 5 && !isLoading) {
-      toggleDialog();
-      handleNextStep(step - 1);
+      setErrorMessage(data ? data.error.message : error!.message);
     }
   }, [data, error]);
 
@@ -73,22 +89,26 @@ export const VerifyCode = ({
       <h2>Check your inbox!</h2>
       <p>
         Type the 6 digit code from your inbox to verify your email. The Code
-        expires in 5 minutes.
+        expires in{" "}
+        <TimeoutLiteral
+          style={{ color: CSS_VARIABLES.onSurfaceHeading, fontWeight: 500 }}
+          fastForward={done}
+          duration={codeDuration}
+        />
       </p>
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (code.length !== 6 || isLoading || isDisabled) return;
+          if (code.length !== 6 || isLoading) return;
           trigger();
-          setattempts((prev) => prev + 1);
         }}
       >
         <CodeInput
           autoFocus
           aria-label={"Enter 6 digit code"}
           style={{
-            width: "200px",
+            width: "212px",
           }}
           isError={errorMessage != null}
           message={errorMessage}
@@ -102,7 +122,7 @@ export const VerifyCode = ({
           maxLength={6}
         />
 
-        <FilledButton disabled={code.length !== 6 || isLoading || isDisabled}>
+        <FilledButton disabled={code.length !== 6 || isLoading}>
           {isLoading ? (
             <div
               style={{

@@ -36,7 +36,11 @@ export class TempCodeService {
       return;
     } else {
       node.tries++;
-      return new ClientError("auth", "Invalid code, please try again.", 401);
+      return new ClientError(
+        "auth",
+        `Invalid code, remaining attempts: ${this.MAX_TRIES - node.tries}`,
+        401
+      );
     }
   }
 }

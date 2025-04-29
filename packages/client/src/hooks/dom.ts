@@ -105,8 +105,6 @@ export function useIntersectionObserver(
 
 type TimeoutState = {
   done: boolean;
-  reset: () => void;
-  removeTimeout: () => void;
 };
 
 export function useTimeout({
@@ -118,17 +116,15 @@ export function useTimeout({
 }) {
   const [state, setState] = useState<TimeoutState>({
     done: false,
-    reset,
-    removeTimeout,
   });
 
   function reset() {
-    setState({ done: false, reset, removeTimeout });
+    setState({ done: false });
   }
 
   function removeTimeout() {
     if (!state.done) {
-      setState({ done: true, reset, removeTimeout });
+      setState({ done: true });
     }
   }
 
@@ -136,7 +132,7 @@ export function useTimeout({
     if (state.done) return;
 
     const timeout = setTimeout(() => {
-      setState({ done: true, reset, removeTimeout });
+      setState({ done: true });
       onComplete?.();
     }, duration);
 
@@ -145,5 +141,5 @@ export function useTimeout({
     };
   }, [state.done]);
 
-  return state;
+  return { done: state.done, removeTimeout, reset };
 }
