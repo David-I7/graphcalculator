@@ -18,8 +18,8 @@ const handleLogout = async (
     const emailService = new GoogleEmailService();
     try {
       const message = emailService.getDefaultMessageBuilder();
-      const service = new StrongCodeService<UserSessionData>();
-      const code = service.generateCode(req.session.user!);
+      const service = new StrongCodeService<UserSessionData["id"]>();
+      const code = service.generateCode(req.session.user!.id);
       service.set(code.code, code);
       const template = new DeleteAccountTemplate(code.code);
       message

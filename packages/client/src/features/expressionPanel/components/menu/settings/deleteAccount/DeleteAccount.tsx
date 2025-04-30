@@ -11,7 +11,7 @@ import { NestedDialog } from "../../../../../../components/dialog/NestedDialog";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useEffect } from "react";
 import { VerifyEmailBeforeDelete } from "../emailVerification/VerifyEmailDialog";
-import { logoutUser } from "../../../../../../state/api/actions";
+import { logoutUser } from "../../../../../../lib/api/actions";
 
 const DeleteAccount = ({ user }: { user: UserSessionData }) => {
   if (!user.email_is_verified)

@@ -87,7 +87,7 @@ export async function updateUserCredentials(credentials: {
   first_name: string;
   last_name: string;
 }): Promise<ApiErrorResponse | { data: { user: UserSessionData } }> {
-  return await fetch(baseUrl + "/user", {
+  return await fetch(baseUrl + "/user/account", {
     credentials: "include",
     method: "PATCH",
     headers: { "content-type": "application/json" },
@@ -111,10 +111,30 @@ export async function verifyEmailAddress(): Promise<string | ApiErrorResponse> {
 export async function verifyCode(
   code: string
 ): Promise<{ data: { user: UserSessionData } } | ApiErrorResponse> {
-  return await fetch(baseUrl + "/user/verify/code", {
+  return await fetch(baseUrl + "/user/verify/email", {
     credentials: "include",
     headers: { "content-type": "application/json" },
     method: "post",
     body: JSON.stringify({ code }),
+  }).then(handleApiResponse);
+}
+
+export async function requestResetPassword(): Promise<
+  ApiErrorResponse | string
+> {
+  return await fetch(baseUrl + "/user/account/reset", {
+    credentials: "include",
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ password: 1 }),
+  }).then(handleApiResponse);
+}
+
+export async function resetPassword(newPassword: string) {
+  return await fetch(baseUrl + "/user/account/reset", {
+    method: "POST",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ password: newPassword }),
   }).then(handleApiResponse);
 }

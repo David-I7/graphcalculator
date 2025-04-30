@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
-import { baseUrl, ORIGINS } from "../../../../../../state/api/config";
+import { baseUrl, ORIGINS } from "../../../../../../lib/api/config";
 import { useAppSelector } from "../../../../../../state/hooks";
 import { CSS_VARIABLES } from "../../../../../../data/css/variables";
 import { useLazyFetch } from "../../../../../../hooks/api";
-import { revokeEmailTokens } from "../../../../../../state/api/actions";
+import { revokeEmailTokens } from "../../../../../../lib/api/actions";
 
 export function AdminTabContent() {
   return (

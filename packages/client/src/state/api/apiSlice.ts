@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { GraphData } from "../graph/types";
 import { UserSessionData } from "@graphcalculator/types";
-import { baseUrl, SAVED_GRAPHS_LIMIT } from "./config";
+import { baseUrl, SAVED_GRAPHS_LIMIT } from "../../lib/api/config";
 
 const apiSlice = createApi({
   reducerPath: "api",

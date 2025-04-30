@@ -7,12 +7,11 @@ import {
   Triangle,
 } from "../../../../components/svgs";
 import FilterChip from "../../../../components/chips/FilterChip";
-import { UserContentProps } from "../../../../components/dropdown/Dropdown";
+import { CustomMenuProps } from "../../../../components/dropdown/Dropdown";
 import { usePopulateRef } from "../../../../hooks/reactutils";
 import type {
   Expression,
   ExpressionSettings,
-  PointType,
 } from "../../../../state/graph/types";
 import { useAppDispatch } from "../../../../state/hooks";
 import {
@@ -27,6 +26,7 @@ import { PREDEFINED_COLORS } from "../../../../data/css/variables";
 import Switch from "../../../../components/switch/Switch";
 import UnderlineInput from "../../../../components/input/UnderlineInput";
 import Hr from "../../../../components/hr/Hr";
+import { PointType } from "@graphcalculator/types";
 
 const functionLineTypes: ExpressionSettings["function"]["lineType"][] = [
   "linear",
@@ -47,7 +47,7 @@ export function ExpressionSettingsMenu({
   ariaControlsId,
   isOpen,
   children,
-}: UserContentProps) {
+}: CustomMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const expressionListRef = useRef<HTMLDivElement>(null);
 

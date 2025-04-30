@@ -54,7 +54,7 @@ function DialogContent({
             }
             label="Profile"
           />
-          <Tab content={<PasswordTabContent />} label="Password" />
+          <Tab content={<PasswordTabContent user={user} />} label="Password" />
           {user.role === UserRolesEnum.ADMIN ? (
             <Tab content={<AdminTabContent />} label="Admin" />
           ) : null}

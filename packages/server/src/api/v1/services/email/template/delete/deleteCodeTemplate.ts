@@ -9,10 +9,10 @@ export abstract class DeleteCodeTemplate {
     </head>
     <body>
       <header>Graph Calculator</header>
-      <p>We just received a request to delete your Desmos account. If you didn't request this, please ignore this email.</p>
+      <p>We just received a request to delete your Graph Calculator account. If you didn't request this, please ignore this email.</p>
       <a href="${
         process.env.SERVER_ORIGIN
-      }/api/user?deleteToken=${this.createCode()}">Click to delete your Graph Calculator account</a>
+      }/api/user/account?deleteToken=${this.createCode()}">Click to delete your Graph Calculator account</a>
       
     </body>
     </html>

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import {
   RegisterUserData,
   VerifyEmailResponse,
-} from "../../../../../state/api/types";
+} from "../../../../../lib/api/types";
 import LoginOrSignupForm from "./LoginOrSignupForm";
 import AuthForm from "./AuthForm";
 import RegisterForm from "./RegisterForm";
