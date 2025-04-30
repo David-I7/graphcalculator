@@ -41,4 +41,8 @@ export class CredentialsFactory {
   getEmail(): string {
     return CredentialsFactory.credentials["email"];
   }
+
+  getJWTSecret(): string {
+    return CredentialsFactory.credentials["jwtSecret"];
+  }
 }

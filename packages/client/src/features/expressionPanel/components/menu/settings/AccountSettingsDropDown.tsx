@@ -3,7 +3,7 @@ import Dropdown from "../../../../../components/dropdown/Dropdown";
 import Hr from "../../../../../components/hr/Hr";
 import Spinner from "../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../hooks/api";
-import { logoutUser } from "../../../../../state/api/actions";
+import { logoutUser } from "../../../../../lib/api/actions";
 import { DialogProvider } from "../../../../../components/dialog/DialogContext";
 import { UserSessionData } from "@graphcalculator/types";
 import { Suspense } from "react";

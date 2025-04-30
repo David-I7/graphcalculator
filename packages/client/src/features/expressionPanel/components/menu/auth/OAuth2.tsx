@@ -1,8 +1,8 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { registerUser } from "../../../../../state/api/actions";
+import { registerUser } from "../../../../../lib/api/actions";
 import { useAppSelector } from "../../../../../state/hooks";
 import { UserSessionData } from "@graphcalculator/types";
-import { baseUrl, ORIGINS } from "../../../../../state/api/config";
+import { baseUrl, ORIGINS } from "../../../../../lib/api/config";
 import { pollPopupClose } from "../../../../../helpers/dom";
 
 export function OAuth2({

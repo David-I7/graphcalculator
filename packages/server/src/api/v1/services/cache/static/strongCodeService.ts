@@ -14,7 +14,7 @@ export class CodeTimeCache<T> extends StaticTimeCache<T> {
 
 export class StrongCodeService<T> extends CodeService<T> {
   constructor() {
-    super(new CodeTimeCache(), 5);
+    super(new CodeTimeCache(), 10);
   }
 
   generateCode(data: T): Code<T> {

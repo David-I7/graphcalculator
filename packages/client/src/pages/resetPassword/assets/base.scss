@@ -1,0 +1,58 @@
+@use "../../../assets/styles/base" as base;
+
+header a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main > section {
+  display: grid;
+  place-content: center;
+  height: calc(100% - 54px);
+
+  & .content {
+    border: 1px solid base.$border-low;
+    padding: 0 1rem 1.5rem;
+    border-radius: base.$br-100;
+    width: min(400px, calc(100vw - 4rem - 8px));
+    height: min(330px, calc(100vh - 4rem - 8px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    label {
+      @extend .font-body-sm;
+      color: base.$on-surface-body;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.reset-password-heading {
+  font-size: base.$fs-body-xl;
+  padding-block: 1.5rem;
+  line-height: base.$lh-body-xl;
+  font-weight: base.$fw-semibold;
+}
+
+.reset-password-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+
+  & > div:first-child {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  & > div:last-child {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+  }
+}

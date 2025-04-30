@@ -81,6 +81,15 @@ input[type="number"] {
   line-height: var.$lh-body-xl;
 }
 
+.logo {
+  font-size: var.$fs-body-xl;
+  color: var.$on-surface-heading;
+  font-weight: var.$fw-bold;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 1rem;
+  border-bottom: 1px solid var.$border-lowest;
+}
+
 h1,
 h2,
 h3,

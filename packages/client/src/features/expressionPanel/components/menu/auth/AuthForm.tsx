@@ -1,7 +1,7 @@
 import React, { SetStateAction, useId, useState } from "react";
 import FilledButton from "../../../../../components/buttons/common/FilledButton";
 import { useLazyFetch } from "../../../../../hooks/api";
-import { authenticateUser } from "../../../../../state/api/actions";
+import { authenticateUser } from "../../../../../lib/api/actions";
 import ButtonTarget from "../../../../../components/buttons/target/ButtonTarget";
 import { ArrowLeft } from "../../../../../components/svgs";
 import PasswordInput from "../../../../../components/input/PasswordInput";

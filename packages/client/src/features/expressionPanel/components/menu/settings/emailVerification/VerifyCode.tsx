@@ -3,7 +3,7 @@ import { useLazyFetch } from "../../../../../../hooks/api";
 import {
   verifyCode,
   verifyEmailAddress,
-} from "../../../../../../state/api/actions";
+} from "../../../../../../lib/api/actions";
 import { UserSessionData } from "@graphcalculator/types";
 import { useTimeout } from "../../../../../../hooks/dom";
 import { useAppDispatch } from "../../../../../../state/hooks";

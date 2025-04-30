@@ -9,9 +9,9 @@ import { GoogleEmailService } from "../services/email/emailService.js";
 import { WeakCodeService } from "../services/cache/static/weakCodeService.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { VerifyEmailTemplate } from "../services/email/template/verify/verifyEmailTemplate.js";
-import { deleteCookie } from "../helpers/cookie.js";
 import { StrongCodeService } from "../services/cache/static/strongCodeService.js";
 import { DeleteCodeResponseTemplate } from "../services/email/template/delete/deleteCodeResponseTemplate.js";
+import { ResetPasswordTemplate } from "../services/email/template/reset/resetPasswordTemplate.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -68,7 +68,7 @@ const handleDelete = async (req: Request, res: Response) => {
     return;
   }
 
-  const service = new StrongCodeService<UserSessionData>();
+  const service = new StrongCodeService<UserSessionData["id"]>();
   const result = service.validate(deleteToken, deleteToken);
 
   if ("message" in result) {
@@ -79,7 +79,7 @@ const handleDelete = async (req: Request, res: Response) => {
 
     const deletedUserDao = new DeletedUsersDao();
 
-    const isScheduled = await deletedUserDao.scheduleDelete(code.data.id);
+    const isScheduled = await deletedUserDao.scheduleDelete(code.data);
     if (!isScheduled) {
       res.sendStatus(500);
       return;
@@ -161,9 +161,58 @@ export const verifyCode = async (req: Request, res: Response) => {
   }
 };
 
+const handleReset = async (req: Request, res: Response) => {
+  const { password } = req.body;
+
+  if (typeof password !== "string" && password !== "1") {
+    res.sendStatus(400);
+    return;
+  }
+
+  const emailService = new GoogleEmailService();
+  const service = new StrongCodeService<UserSessionData["id"]>();
+  const code = service.generateCode(req.session.user!.id);
+  service.set(code.code, code);
+  try {
+    const message = emailService.getDefaultMessageBuilder();
+    message
+      .to(req.session.user!.email)
+      .subject("Change your password")
+      .html(new ResetPasswordTemplate(code.code).createTemplate());
+
+    await emailService.sendEmail(message);
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500);
+  }
+
+  res.sendStatus(200);
+};
+
+const verifyResetCode = async (req: Request, res: Response) => {
+  const { resetToken } = req.query;
+
+  if (typeof resetToken !== "string") {
+    res.sendStatus(400);
+    return;
+  }
+
+  const result = new StrongCodeService().validate(resetToken, resetToken);
+
+  if ("message" in result) {
+    res.sendStatus(403);
+    return;
+  } else {
+  }
+};
+
 export default {
   handleUpdateUserCredentials,
   handleDelete,
   verifyEmail,
   verifyCode,
+  handleReset,
+  verifyResetCode,
 };

@@ -175,6 +175,25 @@
   }
 }
 
+.password-tab {
+  padding: 1rem 0rem;
+  color: base.$on-surface-body;
+
+  b {
+    font-weight: base.$fw-medium;
+    color: base.$on-surface-heading;
+    word-break: break-all;
+  }
+
+  & > div:last-child {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
 @media screen and (max-width: 500px) {
   .profile-tab .delete-account-dialog {
     &-content {
@@ -187,7 +206,8 @@
     }
   }
 
-  .profile-tab {
+  .profile-tab,
+  .password-tab {
     height: calc(100% - 1rem);
     display: flex;
     flex-direction: column;

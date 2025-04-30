@@ -5,12 +5,17 @@ import { SessionService } from "../services/sessionService.js";
 const userRouter = Router();
 
 userRouter
-  .route("/")
+  .route("/account")
   .patch(
     new SessionService().validateSession(),
     userController.handleUpdateUserCredentials
   )
   .get(userController.handleDelete);
+
+userRouter
+  .route("/account/reset")
+  .patch(new SessionService().validateSession(), userController.handleReset)
+  .post(userController.verifyResetCode);
 
 userRouter
   .get(
@@ -19,7 +24,7 @@ userRouter
     userController.verifyEmail
   )
   .post(
-    "/verify/code",
+    "/verify/email",
     new SessionService().validateSession(),
     userController.verifyCode
   );

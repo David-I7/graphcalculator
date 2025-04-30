@@ -5,7 +5,7 @@ import FilledButton from "../../../../../../components/buttons/common/FilledButt
 import { CSS_VARIABLES } from "../../../../../../data/css/variables";
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { useLazyFetch } from "../../../../../../hooks/api";
-import { updateUserCredentials } from "../../../../../../state/api/actions";
+import { updateUserCredentials } from "../../../../../../lib/api/actions";
 import apiSlice from "../../../../../../state/api/apiSlice";
 import { useAppDispatch } from "../../../../../../state/hooks";
 import DeleteAccount from "../deleteAccount/DeleteAccount";

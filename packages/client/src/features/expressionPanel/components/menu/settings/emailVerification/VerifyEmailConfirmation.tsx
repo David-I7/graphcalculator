@@ -4,7 +4,7 @@ import OutlinedButton from "../../../../../../components/buttons/common/OutlineB
 import Spinner from "../../../../../../components/Loading/Spinner/Spinner";
 import { CSS_VARIABLES } from "../../../../../../data/css/variables";
 import { useLazyFetch } from "../../../../../../hooks/api";
-import { verifyEmailAddress } from "../../../../../../state/api/actions";
+import { verifyEmailAddress } from "../../../../../../lib/api/actions";
 
 export function VerifyEmailConfirmation({
   step,
