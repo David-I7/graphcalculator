@@ -21,7 +21,7 @@ testRouter.get("/sign", async (req, res) => {
 
 testRouter.post(
   "/verify",
-  new JWTService().verify(),
+  new JWTService().verifyBearerToken(),
   (req: Request, res: Response) => {
     console.log(req.jwtPayload);
     res.sendStatus(200);

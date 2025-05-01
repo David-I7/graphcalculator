@@ -11,16 +11,25 @@ userRouter
     new SessionService().validateSession(),
     userController.handleUpdateUserCredentials
   )
-  .get(new JWTService().verify(), userController.handleDeleteUser);
+  .get(
+    new JWTService().verifyUrlToken("deleteToken"),
+    userController.handleDeleteUser
+  );
 
 userRouter
   .route("/account/reset")
-  .get(new SessionService().validateSession(), userController.handleReset);
+  .post(new SessionService().validateSession(), userController.handleReset);
 
 userRouter
   .route("/account/reset/password")
-  .get(new JWTService().verify(), userController.handleResetPasswordView)
-  .post(new JWTService().verify(), userController.verifyResetPassword);
+  .get(
+    new JWTService().verifyUrlToken("resetToken"),
+    userController.handleResetPasswordView
+  )
+  .post(
+    new JWTService().verifyBearerToken(),
+    userController.verifyResetPassword
+  );
 
 userRouter
   .get(

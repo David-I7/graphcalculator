@@ -1,17 +1,21 @@
-import React, { useId, useState } from "react";
+import { useId, useState } from "react";
 import { useLazyFetch } from "../../../hooks/api";
 import PasswordInput from "../../../components/input/PasswordInput";
 import { CSS_VARIABLES } from "../../../data/css/variables";
 import FilledButton from "../../../components/buttons/common/FilledButton";
 import Spinner from "../../../components/Loading/Spinner/Spinner";
 import { resetPassword } from "../../../lib/api/actions";
+import { useSearchParams } from "../../../hooks/dom";
 
 export default ResetPasswordForm;
 
 function ResetPasswordForm() {
-  const [trigger, { isLoading, error, reset }] = useLazyFetch(() =>
-    resetPassword(password)
+  const { resetToken } = useSearchParams(["resetToken"]);
+  const [trigger, { isLoading, data, error, reset }] = useLazyFetch(() =>
+    resetPassword(password, resetToken as string)
   );
+  const isError = (data && typeof data !== "string") || error;
+  const isSuccess = data && typeof data === "string" ? true : false;
 
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -23,7 +27,12 @@ function ResetPasswordForm() {
       className="reset-password-form"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!(password.length >= 8) || password !== confirmPassword) return;
+        if (
+          !(password.length >= 8) ||
+          password !== confirmPassword ||
+          isSuccess
+        )
+          return;
         if (isLoading) return;
         trigger();
       }}
@@ -53,9 +62,26 @@ function ResetPasswordForm() {
         </div>
       </div>
       <div>
-        {error && <div style={{ color: CSS_VARIABLES.error }}>{"hello"}</div>}
+        {isError && (
+          <div className="font-body-sm" style={{ color: CSS_VARIABLES.error }}>
+            {data && typeof data !== "string"
+              ? data.error.message
+              : error!.message}
+          </div>
+        )}
+        {isSuccess && (
+          <div
+            className="font-body-sm"
+            style={{ color: CSS_VARIABLES.success }}
+          >
+            Password successfully changed
+          </div>
+        )}
+
         <FilledButton
-          disabled={!(password.length >= 8) || password !== confirmPassword}
+          disabled={
+            !(password.length >= 8) || password !== confirmPassword || isSuccess
+          }
         >
           {isLoading ? (
             <div
@@ -72,6 +98,8 @@ function ResetPasswordForm() {
                 }}
               />
             </div>
+          ) : isSuccess ? (
+            "Saved"
           ) : (
             "Save"
           )}

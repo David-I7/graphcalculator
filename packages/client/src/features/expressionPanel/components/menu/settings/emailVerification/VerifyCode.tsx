@@ -26,10 +26,7 @@ export const VerifyCode = ({
   toggleDialog: () => void;
 }) => {
   const codeDuration = 60000 * 5;
-  const [trigger, { data, error, isLoading }] = useLazyFetch(() =>
-    verifyCode(code)
-  );
-  const [code, setCode] = useState<string>("");
+  const [cancelled, setCancelled] = useState<boolean>(false);
   const {
     done,
     reset: resetTimeout,
@@ -41,20 +38,54 @@ export const VerifyCode = ({
       handleNextStep(step - 1);
     },
   });
+  const notifyParent = (success: boolean) => {
+    setCancelled(!success);
+    if (success) {
+      resetTimeout();
+    } else {
+      removeTimeout();
+    }
+  };
+
+  return (
+    <div className="verify-email-code">
+      <h2>Check your inbox!</h2>
+      <p>
+        Type the 6 digit code from your inbox to verify your email. The Code
+        expires in{" "}
+        <TimeoutLiteral
+          style={{ color: CSS_VARIABLES.onSurfaceHeading, fontWeight: 500 }}
+          fastForward={cancelled}
+          duration={codeDuration}
+        />
+      </p>
+      <SubmitCodeForm
+        toggleDialog={toggleDialog}
+        handleNextStep={handleNextStep}
+        step={step}
+      />
+      <DidNotReceiveEmail notifyParent={notifyParent} />
+    </div>
+  );
+};
+
+function SubmitCodeForm({
+  toggleDialog,
+  step,
+  handleNextStep,
+}: {
+  toggleDialog: () => void;
+  step: number;
+  handleNextStep: (step: number) => void;
+}) {
+  const [trigger, { data, error, isLoading }] = useLazyFetch(() =>
+    verifyCode(code)
+  );
+  const [code, setCode] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | undefined>(
     undefined
   );
   const dispatch = useAppDispatch();
-  const notifyParent = (success: boolean) => {
-    setCode("");
-    setErrorMessage(undefined);
-    if (!success) {
-      removeTimeout();
-    } else {
-      resetTimeout();
-    }
-  };
-
   const upsertUserSessionData = (data: { data: { user: UserSessionData } }) => {
     dispatch(
       apiSlice.util.upsertQueryData(
@@ -85,68 +116,54 @@ export const VerifyCode = ({
   }, [data, error]);
 
   return (
-    <div className="verify-email-code">
-      <h2>Check your inbox!</h2>
-      <p>
-        Type the 6 digit code from your inbox to verify your email. The Code
-        expires in{" "}
-        <TimeoutLiteral
-          style={{ color: CSS_VARIABLES.onSurfaceHeading, fontWeight: 500 }}
-          fastForward={done}
-          duration={codeDuration}
-        />
-      </p>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (code.length !== 6 || isLoading) return;
-          trigger();
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (code.length !== 6 || isLoading) return;
+        trigger();
+      }}
+    >
+      <CodeInput
+        autoFocus
+        aria-label={"Enter 6 digit code"}
+        style={{
+          width: "212px",
         }}
-      >
-        <CodeInput
-          autoFocus
-          aria-label={"Enter 6 digit code"}
-          style={{
-            width: "212px",
-          }}
-          isError={errorMessage != null}
-          message={errorMessage}
-          onChange={(e) => {
-            if (errorMessage) setErrorMessage(undefined);
-            if (e.target.value.length > 6) return;
-            setCode(e.target.value);
-          }}
-          value={code}
-          minLength={6}
-          maxLength={6}
-        />
+        isError={errorMessage != null}
+        message={errorMessage}
+        onChange={(e) => {
+          if (errorMessage) setErrorMessage(undefined);
+          if (e.target.value.length > 6) return;
+          setCode(e.target.value);
+        }}
+        value={code}
+        minLength={6}
+        maxLength={6}
+      />
 
-        <FilledButton disabled={code.length !== 6 || isLoading}>
-          {isLoading ? (
-            <div
+      <FilledButton disabled={code.length !== 6 || isLoading}>
+        {isLoading ? (
+          <div
+            style={{
+              display: "grid",
+              placeContent: "center",
+              width: "2.825rem",
+            }}
+          >
+            <Spinner
               style={{
-                display: "grid",
-                placeContent: "center",
-                width: "2.825rem",
+                borderColor: CSS_VARIABLES.onPrimary,
+                borderTopColor: "transparent",
               }}
-            >
-              <Spinner
-                style={{
-                  borderColor: CSS_VARIABLES.onPrimary,
-                  borderTopColor: "transparent",
-                }}
-              />
-            </div>
-          ) : (
-            "Submit"
-          )}
-        </FilledButton>
-      </form>
-      <DidNotReceiveEmail notifyParent={notifyParent} />
-    </div>
+            />
+          </div>
+        ) : (
+          "Submit"
+        )}
+      </FilledButton>
+    </form>
   );
-};
+}
 
 function DidNotReceiveEmail({
   notifyParent,
@@ -155,17 +172,19 @@ function DidNotReceiveEmail({
 }) {
   const durationMS = 60000;
   const { done, reset, removeTimeout } = useTimeout({ duration: durationMS });
-  const [triggerResend, { data, error, isLoading, reset: resetRend }] =
+  const [triggerResend, { data, error, isLoading, reset: resetResend }] =
     useLazyFetch(verifyEmailAddress);
 
   useEffect(() => {
     if (!data && !error) return;
 
     const timeout = setTimeout(() => {
-      resetRend();
+      resetResend();
       if (typeof data === "string") {
         reset();
         notifyParent(true);
+      } else {
+        notifyParent(false);
       }
     }, 5000);
 
@@ -173,16 +192,16 @@ function DidNotReceiveEmail({
   }, [data, error]);
 
   const isError = (data && typeof data !== "string") || error;
+  const isSuccess = data && typeof data == "string" ? true : false;
 
   return (
     <div className="did-not-receive-email">
       <p>Did not receive an email?</p>
-      {!data && !isError && !isLoading && (
+      {!isSuccess && !isError && !isLoading && (
         <UnderlineButton
           onClick={() => {
             if (isLoading) return;
             triggerResend();
-            notifyParent(false);
             removeTimeout();
           }}
           disabled={!done}
@@ -190,21 +209,18 @@ function DidNotReceiveEmail({
           Resend
         </UnderlineButton>
       )}
-      {(isError || isLoading || data !== null) && (
+      {(isError || isLoading || isSuccess) && (
         <div
           className="grid-center font-body-sm"
           style={{ height: "2rem", color: CSS_VARIABLES.onSurfaceHeading }}
         >
           {isLoading && "Resending..."}
-          {data && typeof data !== "string" && (
+          {isError && (
             <div style={{ color: CSS_VARIABLES.error }}>
-              {data!.error.message}
+              {typeof data !== "string" ? data!.error.message : error!.message}
             </div>
           )}
-          {error && (
-            <div style={{ color: CSS_VARIABLES.error }}>{error.message}</div>
-          )}
-          {data && typeof data === "string" && "Sent"}
+          {isSuccess && "Sent"}
         </div>
       )}
       {!done && <Timeout duration={durationMS} />}

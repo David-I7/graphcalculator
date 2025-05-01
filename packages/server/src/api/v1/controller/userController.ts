@@ -8,15 +8,13 @@ import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
 import { WeakCodeService } from "../services/cache/static/weakCodeService.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
-import { VerifyEmailTemplate } from "../services/email/template/verify/verifyEmailTemplate.js";
-import { StrongCodeService } from "../services/cache/static/strongCodeService.js";
-import { DeleteCodeResponseTemplate } from "../services/email/template/delete/deleteCodeResponseTemplate.js";
-import { ResetPasswordTemplate } from "../services/email/template/reset/resetPasswordTemplate.js";
 import { JWTService } from "../services/jwt/jwtService.js";
 import { clientDirname } from "../constants.js";
 import path from "path";
 import { isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
+import { ResetPasswordTemplate } from "../services/email/template/resetPasswordTemplate.js";
+import { VerifyCodeTemplate } from "../services/email/template/verifyCodeTemplate.ts.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -77,7 +75,7 @@ const handleDeleteUser = async (req: Request, res: Response) => {
   }
 
   isScheduled
-    ? res.send(new DeleteCodeResponseTemplate().createTemplate())
+    ? res.sendFile(path.join(clientDirname, "/deleteResponse.html"))
     : res.sendStatus(500);
 };
 
@@ -98,7 +96,7 @@ const verifyEmail = async (req: Request, res: Response) => {
     message
       .to(email)
       .subject("Verify your email address")
-      .html(new VerifyEmailTemplate(code.code).createTemplate());
+      .html(new VerifyCodeTemplate(code.code).createTemplate());
 
     const sent = await emailService.sendEmail(message);
     if (!sent) {
@@ -154,7 +152,7 @@ export const verifyEmailCode = async (req: Request, res: Response) => {
 const handleReset = async (req: Request, res: Response) => {
   const { password } = req.body;
 
-  if (typeof password !== "string" && password !== "1") {
+  if (typeof password !== "number" || password !== 1) {
     res.sendStatus(400);
     return;
   }

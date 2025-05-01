@@ -32,7 +32,10 @@ export function VerifyEmailConfirmation({
     <div className="verify-email-confirmation">
       {children}
       {data && typeof data != "string" && (
-        <p style={{ marginBottom: "1rem", color: CSS_VARIABLES.error }}>
+        <p
+          className="font-body-sm"
+          style={{ marginBottom: "1rem", color: CSS_VARIABLES.error }}
+        >
           {data.error.message}
         </p>
       )}

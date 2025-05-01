@@ -17,7 +17,27 @@ export class JWTService {
     this.secret = new CredentialsFactory().getJWTSecret();
   }
 
-  verify() {
+  verifyUrlToken(tokenName: string) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      const token = req.query[tokenName];
+
+      if (typeof token !== "string") {
+        res.sendStatus(400);
+        return;
+      }
+
+      Jwt.verify(token, this.secret, (err, payload) => {
+        if (err) {
+          res.sendStatus(403);
+          return;
+        }
+        req.jwtPayload = payload as JwtPayload;
+        next();
+      });
+    };
+  }
+
+  verifyBearerToken() {
     return async (req: Request, res: Response, next: NextFunction) => {
       const auth = req.headers.authorization?.split(" ");
 

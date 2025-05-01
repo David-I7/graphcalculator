@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { SessionService } from "../services/sessionService.js";
 import { deleteCookie } from "../helpers/cookie.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
-import { DeleteAccountTemplate } from "../services/email/template/delete/deleteAccountTemplate.js";
+import { DeleteAccountTemplate } from "../services/email/template/deleteAccountTemplate.js";
 import { JWTService } from "../services/jwt/jwtService.js";
 
 const handleLogout = async (
