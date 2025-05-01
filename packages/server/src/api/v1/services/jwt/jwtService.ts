@@ -19,19 +19,17 @@ export class JWTService {
 
   verify() {
     return async (req: Request, res: Response, next: NextFunction) => {
-      console.log(req.headers.authorization);
       const auth = req.headers.authorization?.split(" ");
 
-      if (!auth || auth.length !== 2) {
+      if (!auth || auth.length !== 2 || auth[0] !== "bearer") {
         res.sendStatus(400);
         return;
       }
 
-      const token = auth[1].trim();
+      const token = auth[1];
 
       Jwt.verify(token, this.secret, (err, payload) => {
         if (err) {
-          console.log(err);
           res.sendStatus(403);
           return;
         }
@@ -43,7 +41,7 @@ export class JWTService {
 
   async sign(
     payload: string | Buffer | object,
-    options: Jwt.SignOptions
+    options?: Jwt.SignOptions
   ): Promise<string> {
     return new Promise((res, rej) => {
       Jwt.sign(

@@ -27,7 +27,7 @@ export class DeletedUsersDao implements IDeletedUsersDao {
       (new Date().getTime() + this.SCHEDULE_DEADLINE) * 1e-3;
     try {
       await DB.query(
-        `insert into deleted_users values (to_timestamp(${schedule_date}),$1)`,
+        `insert into deleted_users values (to_timestamp(${schedule_date}),$1) on conflict (user_id) DO NOTHING;`,
         [userId]
       );
       return true;

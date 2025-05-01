@@ -1,6 +1,7 @@
 import { Router } from "express";
 import userController from "../controller/userController.js";
 import { SessionService } from "../services/sessionService.js";
+import { JWTService } from "../services/jwt/jwtService.js";
 
 const userRouter = Router();
 
@@ -10,12 +11,16 @@ userRouter
     new SessionService().validateSession(),
     userController.handleUpdateUserCredentials
   )
-  .get(userController.handleDelete);
+  .get(new JWTService().verify(), userController.handleDeleteUser);
 
 userRouter
   .route("/account/reset")
-  .patch(new SessionService().validateSession(), userController.handleReset)
-  .post(userController.verifyResetCode);
+  .get(new SessionService().validateSession(), userController.handleReset);
+
+userRouter
+  .route("/account/reset/password")
+  .get(new JWTService().verify(), userController.handleResetPasswordView)
+  .post(new JWTService().verify(), userController.verifyResetPassword);
 
 userRouter
   .get(
@@ -26,7 +31,7 @@ userRouter
   .post(
     "/verify/email",
     new SessionService().validateSession(),
-    userController.verifyCode
+    userController.verifyEmailCode
   );
 
 export default userRouter;

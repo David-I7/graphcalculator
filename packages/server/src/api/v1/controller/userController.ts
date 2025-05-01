@@ -12,6 +12,11 @@ import { VerifyEmailTemplate } from "../services/email/template/verify/verifyEma
 import { StrongCodeService } from "../services/cache/static/strongCodeService.js";
 import { DeleteCodeResponseTemplate } from "../services/email/template/delete/deleteCodeResponseTemplate.js";
 import { ResetPasswordTemplate } from "../services/email/template/reset/resetPasswordTemplate.js";
+import { JWTService } from "../services/jwt/jwtService.js";
+import { clientDirname } from "../constants.js";
+import path from "path";
+import { isValidPassword } from "../services/validation/auth.js";
+import { PasswordService } from "../services/passwordService.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   if (req.session.user?.provider !== Provider.graphCalulator) {
@@ -60,35 +65,20 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   return;
 };
 
-const handleDelete = async (req: Request, res: Response) => {
-  const { deleteToken } = req.query;
+const handleDeleteUser = async (req: Request, res: Response) => {
+  const userId = req.jwtPayload!.userId as string;
 
-  if (typeof deleteToken !== "string") {
-    res.sendStatus(400);
+  const deletedUserDao = new DeletedUsersDao();
+
+  const isScheduled = await deletedUserDao.scheduleDelete(userId);
+  if (!isScheduled) {
+    res.sendStatus(500);
     return;
   }
 
-  const service = new StrongCodeService<UserSessionData["id"]>();
-  const result = service.validate(deleteToken, deleteToken);
-
-  if ("message" in result) {
-    res.sendStatus(403);
-    return;
-  } else {
-    const code = result;
-
-    const deletedUserDao = new DeletedUsersDao();
-
-    const isScheduled = await deletedUserDao.scheduleDelete(code.data);
-    if (!isScheduled) {
-      res.sendStatus(500);
-      return;
-    }
-
-    isScheduled
-      ? res.send(new DeleteCodeResponseTemplate().createTemplate())
-      : res.sendStatus(500);
-  }
+  isScheduled
+    ? res.send(new DeleteCodeResponseTemplate().createTemplate())
+    : res.sendStatus(500);
 };
 
 const verifyEmail = async (req: Request, res: Response) => {
@@ -122,7 +112,7 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
-export const verifyCode = async (req: Request, res: Response) => {
+export const verifyEmailCode = async (req: Request, res: Response) => {
   const { code } = req.body;
 
   if (typeof code != "string" || code.length !== 6) {
@@ -170,15 +160,13 @@ const handleReset = async (req: Request, res: Response) => {
   }
 
   const emailService = new GoogleEmailService();
-  const service = new StrongCodeService<UserSessionData["id"]>();
-  const code = service.generateCode(req.session.user!.id);
-  service.set(code.code, code);
+  const token = await new JWTService().sign({ userId: req.session.user!.id });
   try {
     const message = emailService.getDefaultMessageBuilder();
     message
       .to(req.session.user!.email)
       .subject("Change your password")
-      .html(new ResetPasswordTemplate(code.code).createTemplate());
+      .html(new ResetPasswordTemplate(token).createTemplate());
 
     await emailService.sendEmail(message);
 
@@ -187,32 +175,37 @@ const handleReset = async (req: Request, res: Response) => {
     console.log(err);
     res.sendStatus(500);
   }
-
-  res.sendStatus(200);
 };
 
-const verifyResetCode = async (req: Request, res: Response) => {
-  const { resetToken } = req.query;
+const handleResetPasswordView = async (req: Request, res: Response) => {
+  res.sendFile(path.join(clientDirname, "/resetPassword.html"));
+};
 
-  if (typeof resetToken !== "string") {
+const verifyResetPassword = async (req: Request, res: Response) => {
+  const { password } = req.body;
+  const userId = req.jwtPayload!.userId as string;
+
+  if (!isValidPassword(password)) {
     res.sendStatus(400);
     return;
   }
 
-  const result = new StrongCodeService().validate(resetToken, resetToken);
+  const hashedPassword = await new PasswordService().hash(password);
+  const userDao = new UserDao();
 
-  if ("message" in result) {
-    res.sendStatus(403);
-    return;
+  if (await userDao.updateUserById(userId, ["password"], [hashedPassword])) {
+    res.sendStatus(200);
   } else {
+    res.sendStatus(500);
   }
 };
 
 export default {
   handleUpdateUserCredentials,
-  handleDelete,
+  handleDeleteUser,
   verifyEmail,
-  verifyCode,
+  verifyEmailCode,
   handleReset,
-  verifyResetCode,
+  handleResetPasswordView,
+  verifyResetPassword,
 };

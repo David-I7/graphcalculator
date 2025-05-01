@@ -12,7 +12,7 @@ export class ResetPasswordTemplate {
     <body>
       <header>Graph Calculator</header>
       <p>We just received a request to reset your Graph Calculator password. If you didn't request this, please ignore this email.</p>
-      <a href="${process.env.SERVER_ORIGIN}/api/user/account/reset?resetToken=${this.code}">Click to reset your Graph Calculator password</a>
+      <a href="${process.env.SERVER_ORIGIN}/api/user/account/reset/password?resetToken=${this.code}">Click to reset your Graph Calculator password</a>
     </body>
     </html>
   `;
