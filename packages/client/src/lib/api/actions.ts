@@ -124,17 +124,23 @@ export async function requestResetPassword(): Promise<
 > {
   return await fetch(baseUrl + "/user/account/reset", {
     credentials: "include",
-    method: "PATCH",
+    method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ password: 1 }),
   }).then(handleApiResponse);
 }
 
-export async function resetPassword(newPassword: string) {
-  return await fetch(baseUrl + "/user/account/reset", {
+export async function resetPassword(
+  newPassword: string,
+  resetToken: string
+): Promise<ApiErrorResponse | string> {
+  return await fetch(baseUrl + "/user/account/reset/password", {
     method: "POST",
     credentials: "include",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      Authorization: `bearer ${resetToken}`,
+    },
     body: JSON.stringify({ password: newPassword }),
   }).then(handleApiResponse);
 }

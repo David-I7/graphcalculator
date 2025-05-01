@@ -2,9 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { SessionService } from "../services/sessionService.js";
 import { deleteCookie } from "../helpers/cookie.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
-import { DeleteAccountTemplate } from "../services/email/template/delete/deleteAccountTemplate.js";
-import { StrongCodeService } from "../services/cache/static/strongCodeService.js";
-import { UserSessionData } from "@graphcalculator/types";
+import { DeleteAccountTemplate } from "../services/email/template/deleteAccountTemplate.js";
+import { JWTService } from "../services/jwt/jwtService.js";
 
 const handleLogout = async (
   req: Request,
@@ -18,10 +17,10 @@ const handleLogout = async (
     const emailService = new GoogleEmailService();
     try {
       const message = emailService.getDefaultMessageBuilder();
-      const service = new StrongCodeService<UserSessionData["id"]>();
-      const code = service.generateCode(req.session.user!.id);
-      service.set(code.code, code);
-      const template = new DeleteAccountTemplate(code.code);
+      const token = await new JWTService().sign({
+        userId: req.session.user!.id,
+      });
+      const template = new DeleteAccountTemplate(token);
       message
         .to(req.session.user!.email)
         .subject("Delete you Graph Calculator account")

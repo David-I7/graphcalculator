@@ -144,7 +144,7 @@ function Form({
         }}
       >
         {isError && (
-          <div style={{ color: CSS_VARIABLES.error, fontSize: "12px" }}>
+          <div className="font-body-sm" style={{ color: CSS_VARIABLES.error }}>
             {error?.message}
           </div>
         )}

@@ -143,3 +143,23 @@ export function useTimeout({
 
   return { done: state.done, removeTimeout, reset };
 }
+
+export function useSearchParams<
+  QueryKeys extends string[] | undefined = undefined
+>(
+  keys?: QueryKeys
+): QueryKeys extends undefined
+  ? URLSearchParams
+  : Record<string, string | null | string[]> {
+  const params = new URLSearchParams(window.location.search);
+  if (keys) {
+    const queryVals: Record<string, string | null | string[]> = {};
+    for (let i = 0; i < keys.length; i++) {
+      const res = params.getAll(keys[i]);
+      queryVals[keys[i]] = res.length ? res : null;
+    }
+    return queryVals as any;
+  }
+
+  return params as any;
+}

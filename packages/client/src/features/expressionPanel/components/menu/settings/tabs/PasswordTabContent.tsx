@@ -75,19 +75,21 @@ function SendResetPasswordLink() {
     useLazyFetch(requestResetPassword);
 
   const isError = (data && typeof data !== "string") || error;
+  const isSuccess = data && typeof data === "string" ? true : false;
 
   return (
     <>
       {isError && (
-        <p style={{ color: CSS_VARIABLES.error }}>
+        <p className="font-body-xs" style={{ color: CSS_VARIABLES.error }}>
           {typeof data !== "string" ? data!.error.message : error!.message}
         </p>
       )}
       <FilledButton
         onClick={() => {
-          if (isLoading) return;
+          if (isLoading || isSuccess) return;
           trigger();
         }}
+        disabled={isSuccess}
       >
         {isLoading ? (
           <div
@@ -104,6 +106,8 @@ function SendResetPasswordLink() {
               }}
             />
           </div>
+        ) : isSuccess ? (
+          "Sent"
         ) : (
           "Send"
         )}
