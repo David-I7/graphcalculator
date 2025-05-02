@@ -10,7 +10,7 @@ main > section {
   place-content: center;
   height: calc(100% - 54px);
 
-  & .content {
+  & .reset-password-content {
     border: 1px solid base.$border-low;
     padding: 0 1rem 1.5rem;
     border-radius: base.$br-100;

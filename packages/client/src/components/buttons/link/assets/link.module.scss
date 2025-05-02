@@ -1,0 +1,24 @@
+@use "../../../../assets/styles/base" as base;
+
+.oauth2-login-button {
+  @extend .flex-center;
+  @extend .font-body-m;
+  color: base.$on-surface-body;
+  justify-content: center;
+  text-align: center;
+  border: 1px solid base.$border-high;
+  border-radius: base.$br-100;
+  height: 3rem;
+  width: 100%;
+  gap: 0.5rem;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &[aria-disabled="true"] {
+    pointer-events: none;
+    border: 1px solid base.$border-lowest;
+    color: base.$border-lowest;
+  }
+}

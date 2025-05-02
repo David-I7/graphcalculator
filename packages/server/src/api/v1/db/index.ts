@@ -10,7 +10,10 @@ export class DB {
       host: process.env.DB_HOST || "localhost",
       port:
         process.env.DB_PORT !== undefined ? Number(process.env.DB_PORT) : 5432,
-      database: process.env.DB_DATABASE,
+      database:
+        process.env.NODE_ENV === "development"
+          ? process.env.DEV_DATABASE
+          : process.env.PROD_DATABASE,
     });
   }
 

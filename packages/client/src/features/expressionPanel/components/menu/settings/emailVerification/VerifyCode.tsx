@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLazyFetch } from "../../../../../../hooks/api";
+import { FetchState, Trigger, useLazyFetch } from "../../../../../../hooks/api";
 import {
   verifyCode,
   verifyEmailAddress,
@@ -15,18 +15,47 @@ import FilledButton from "../../../../../../components/buttons/common/FilledButt
 import UnderlineButton from "../../../../../../components/buttons/common/UnderlineButton";
 import Timeout from "../../../../../../components/Loading/Timeout/TimeoutLoader";
 import TimeoutLiteral from "../../../../../../components/Loading/Timeout/TimeoutLiteral";
+import { ApiErrorResponse } from "../../../../../../lib/api/types";
 
-export const VerifyCode = ({
-  step,
-  handleNextStep,
-  toggleDialog,
-}: {
+type VerifyCodeProps = {
   step: number;
   handleNextStep: (step: number) => void;
   toggleDialog: () => void;
-}) => {
+};
+
+export const VerifyCode = (props: VerifyCodeProps) => {
+  const [triggerResend, state] = useLazyFetch(verifyEmailAddress);
+  const isError =
+    (state.data && typeof state.data !== "string") || state.error != null;
+  const isSuccess = state.data && typeof state.data == "string" ? true : false;
+
+  return (
+    <div className="verify-email-code">
+      <h2>Check your inbox!</h2>
+      <CodeTimeout
+        isResending={state.isLoading}
+        isSuccess={isSuccess}
+        {...props}
+      />
+      <SubmitCodeForm isResending={state.isLoading} {...props} />
+      <DidNotReceiveEmail
+        triggerResend={triggerResend}
+        fetchState={state}
+        isError={isError}
+        isSuccess={isSuccess}
+      />
+    </div>
+  );
+};
+
+function CodeTimeout({
+  toggleDialog,
+  step,
+  handleNextStep,
+  isResending,
+  isSuccess,
+}: VerifyCodeProps & { isResending: boolean; isSuccess: boolean }) {
   const codeDuration = 60000 * 5;
-  const [cancelled, setCancelled] = useState<boolean>(false);
   const {
     done,
     reset: resetTimeout,
@@ -38,46 +67,35 @@ export const VerifyCode = ({
       handleNextStep(step - 1);
     },
   });
-  const notifyParent = (success: boolean) => {
-    setCancelled(!success);
-    if (success) {
-      resetTimeout();
-    } else {
+
+  useEffect(() => {
+    if (isResending) {
       removeTimeout();
     }
-  };
+    if (isSuccess) {
+      resetTimeout();
+    }
+  }, [isResending, isSuccess]);
 
   return (
-    <div className="verify-email-code">
-      <h2>Check your inbox!</h2>
-      <p>
-        Type the 6 digit code from your inbox to verify your email. The Code
-        expires in{" "}
-        <TimeoutLiteral
-          style={{ color: CSS_VARIABLES.onSurfaceHeading, fontWeight: 500 }}
-          fastForward={cancelled}
-          duration={codeDuration}
-        />
-      </p>
-      <SubmitCodeForm
-        toggleDialog={toggleDialog}
-        handleNextStep={handleNextStep}
-        step={step}
+    <p>
+      Type the 6 digit code from your inbox to verify your email. The Code
+      expires in{" "}
+      <TimeoutLiteral
+        style={{ color: CSS_VARIABLES.onSurfaceHeading, fontWeight: 500 }}
+        fastForward={done}
+        duration={codeDuration}
       />
-      <DidNotReceiveEmail notifyParent={notifyParent} />
-    </div>
+    </p>
   );
-};
+}
 
 function SubmitCodeForm({
   toggleDialog,
   step,
   handleNextStep,
-}: {
-  toggleDialog: () => void;
-  step: number;
-  handleNextStep: (step: number) => void;
-}) {
+  isResending,
+}: VerifyCodeProps & { isResending: boolean }) {
   const [trigger, { data, error, isLoading }] = useLazyFetch(() =>
     verifyCode(code)
   );
@@ -96,6 +114,13 @@ function SubmitCodeForm({
       )
     );
   };
+
+  useEffect(() => {
+    if (isResending) {
+      setCode("");
+      setErrorMessage(undefined);
+    }
+  }, [isResending]);
 
   useEffect(() => {
     if (!data && !error) return;
@@ -166,33 +191,33 @@ function SubmitCodeForm({
 }
 
 function DidNotReceiveEmail({
-  notifyParent,
+  triggerResend,
+  fetchState: { data, error, isLoading, reset: resentResend },
+  isSuccess,
+  isError,
 }: {
-  notifyParent: (success: boolean) => void;
+  triggerResend: Trigger;
+  fetchState: FetchState<string | ApiErrorResponse> & {
+    reset: () => void;
+  };
+  isSuccess: boolean;
+  isError: boolean;
 }) {
   const durationMS = 60000;
   const { done, reset, removeTimeout } = useTimeout({ duration: durationMS });
-  const [triggerResend, { data, error, isLoading, reset: resetResend }] =
-    useLazyFetch(verifyEmailAddress);
 
   useEffect(() => {
     if (!data && !error) return;
 
     const timeout = setTimeout(() => {
-      resetResend();
+      resentResend();
       if (typeof data === "string") {
         reset();
-        notifyParent(true);
-      } else {
-        notifyParent(false);
       }
     }, 5000);
 
     return () => clearTimeout(timeout);
   }, [data, error]);
-
-  const isError = (data && typeof data !== "string") || error;
-  const isSuccess = data && typeof data == "string" ? true : false;
 
   return (
     <div className="did-not-receive-email">
@@ -214,13 +239,13 @@ function DidNotReceiveEmail({
           className="grid-center font-body-sm"
           style={{ height: "2rem", color: CSS_VARIABLES.onSurfaceHeading }}
         >
-          {isLoading && "Resending..."}
+          {isLoading && <span>Resending...</span>}
           {isError && (
-            <div style={{ color: CSS_VARIABLES.error }}>
+            <span style={{ color: CSS_VARIABLES.error }}>
               {typeof data !== "string" ? data!.error.message : error!.message}
-            </div>
+            </span>
           )}
-          {isSuccess && "Sent"}
+          {isSuccess && <span>Sent</span>}
         </div>
       )}
       {!done && <Timeout duration={durationMS} />}

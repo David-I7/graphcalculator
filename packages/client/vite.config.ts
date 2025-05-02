@@ -9,7 +9,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: path.resolve(__dirname, "index.html"),
-        test: path.resolve(__dirname, "test.html"),
         resetPassword: path.resolve(__dirname, "resetPassword.html"),
         notFound: path.resolve(__dirname, "notFound.html"),
         deleteResponse: path.resolve(__dirname, "deleteResponse.html"),

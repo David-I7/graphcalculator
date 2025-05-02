@@ -66,7 +66,7 @@ const DeleteAccountDialog = ({
 
     if (typeof data === "string") {
       window.location.reload();
-    } else if (error) {
+    } else {
       reset();
     }
   }, [data, error]);

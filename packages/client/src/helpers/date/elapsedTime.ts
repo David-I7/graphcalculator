@@ -4,7 +4,6 @@ import {
   MinutesAgo,
   MinutesRemaning,
   SecondsAgo,
-  SecondsRemaning,
 } from "./elapsedTimeStrategy";
 
 abstract class ElapsedTimeHandler {

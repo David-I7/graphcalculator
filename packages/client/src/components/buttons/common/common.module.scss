@@ -9,6 +9,7 @@
   font-weight: base.$fw-semibold;
   background-color: base.$primary;
   color: base.$on-primary;
+  flex-shrink: 0;
 
   &:hover:not(:disabled) {
     filter: brightness(85%);
