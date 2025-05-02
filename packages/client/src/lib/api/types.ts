@@ -1,4 +1,4 @@
-import { Provider, PROVIDERS, UserSessionData } from "@graphcalculator/types";
+import { Provider, UserSessionData } from "@graphcalculator/types";
 
 export type RegisterUserData = Pick<
   UserSessionData,

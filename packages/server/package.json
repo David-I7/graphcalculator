@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently \"nodemon --watch dist/api/v1 dist/api/v1/server.js\"  \"tsc -w\"",
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "start": "node dist/api/v1/server.js"
   },
   "author": "Iosub David",
   "license": "ISC",

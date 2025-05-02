@@ -1,4 +1,8 @@
-import { UserRolesEnum, UserSessionData } from "@graphcalculator/types";
+import {
+  Provider,
+  UserRolesEnum,
+  UserSessionData,
+} from "@graphcalculator/types";
 import UnderlineButton from "../../../../../components/buttons/common/UnderlineButton";
 import Dialog from "../../../../../components/dialog/Dialog";
 import { useDialogContext } from "../../../../../components/dialog/DialogContext";
@@ -54,7 +58,12 @@ function DialogContent({
             }
             label="Profile"
           />
-          <Tab content={<PasswordTabContent user={user} />} label="Password" />
+          {user.provider === Provider.graphCalulator ? (
+            <Tab
+              content={<PasswordTabContent user={user} />}
+              label="Password"
+            />
+          ) : null}
           {user.role === UserRolesEnum.ADMIN ? (
             <Tab content={<AdminTabContent />} label="Admin" />
           ) : null}
