@@ -6,7 +6,8 @@ import {
 import LoginOrSignupForm from "./LoginOrSignupForm";
 import AuthForm from "./AuthForm";
 import RegisterForm from "./RegisterForm";
-import { UserSessionData } from "@graphcalculator/types";
+import { Provider, UserSessionData } from "@graphcalculator/types";
+import { AuthWithProvider } from "./AuthWithProvider";
 
 export default function FormProgress({
   onComplete,
@@ -20,7 +21,9 @@ export default function FormProgress({
     first_name: "",
     last_name: "",
   });
-  const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
+  const [verifyEmailResponse, setVerifyEmailResponse] = useState<
+    VerifyEmailResponse["data"] | null
+  >(null);
 
   const handleSuccessEmail = (
     email: string,
@@ -31,7 +34,7 @@ export default function FormProgress({
     } else {
       user.current = { ...user.current, email, password: "" };
     }
-    setIsRegistered(data.isRegistered);
+    setVerifyEmailResponse(data);
     setProgress(progress + 1);
   };
 
@@ -52,20 +55,38 @@ export default function FormProgress({
         <LoginOrSignupForm
           onComplete={onComplete}
           handleSuccessEmail={handleSuccessEmail}
-          previousValue={{ email: user.current.email, isRegistered }}
+          previousValue={{
+            email: user.current.email,
+            data: verifyEmailResponse,
+          }}
         />
       );
     case 1: {
-      if (isRegistered === null) return;
+      if (verifyEmailResponse === null) return;
+      console.log(verifyEmailResponse);
 
-      if (isRegistered) {
-        return (
-          <AuthForm
-            email={user.current.email}
-            handlePreviousStep={handlePreviousRegistered}
-            handleSuccess={onComplete}
-          />
-        );
+      if (verifyEmailResponse.isRegistered) {
+        if (
+          !verifyEmailResponse.provider ||
+          //@ts-ignore
+          verifyEmailResponse.provider === Provider.graphCalulator
+        )
+          return (
+            <AuthForm
+              email={user.current.email}
+              handlePreviousStep={handlePreviousRegistered}
+              handleSuccess={onComplete}
+            />
+          );
+        else
+          return (
+            <AuthWithProvider
+              email={user.current.email}
+              handlePreviousStep={() => setProgress(progress - 1)}
+              onComplete={onComplete}
+              provider={verifyEmailResponse.provider}
+            />
+          );
       }
 
       return (

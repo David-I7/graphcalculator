@@ -4,6 +4,7 @@ import { useAppSelector } from "../../../../../state/hooks";
 import { UserSessionData } from "@graphcalculator/types";
 import { baseUrl, ORIGINS } from "../../../../../lib/api/config";
 import { pollPopupClose } from "../../../../../helpers/dom";
+import OAuthLink from "../../../../../components/buttons/link/OAuthLink";
 
 export function OAuth2({
   stategies,
@@ -52,22 +53,20 @@ export function OAuth2({
 
   return (
     <div className="oauth2-flow">
-      {stategies.map((stategy) => (
-        <a
-          key={stategy[1]}
+      {stategies.map((strategy) => (
+        <OAuthLink
+          key={strategy[1]}
+          strategy={strategy}
           aria-disabled={isOpen}
-          className="oauth2-login-button"
           onClick={() => {
             popup.current = window.open(
-              `${baseUrl}/auth/${stategy[1].toLowerCase()}`,
+              `${baseUrl}/auth/${strategy[1].toLowerCase()}`,
               "",
               isMobile ? "" : "popup,width=500px,height=500px"
             );
             setIsOpen(true);
           }}
-        >
-          {stategy[0]} Continue with {stategy[1]}
-        </a>
+        />
       ))}
     </div>
   );

@@ -1,4 +1,4 @@
-import { UserSessionData } from "@graphcalculator/types";
+import { Provider, PROVIDERS, UserSessionData } from "@graphcalculator/types";
 
 export type RegisterUserData = Pick<
   UserSessionData,
@@ -6,7 +6,7 @@ export type RegisterUserData = Pick<
 > & { password: string };
 
 export type VerifyEmailResponse = {
-  data: { isRegistered: boolean; provider?: number };
+  data: { isRegistered: boolean; provider?: Provider };
 };
 
 export type ApiErrorResponse = {

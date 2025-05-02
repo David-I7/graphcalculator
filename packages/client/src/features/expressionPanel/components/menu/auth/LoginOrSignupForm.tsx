@@ -7,12 +7,13 @@ import { verifyIsRegistered } from "../../../../../lib/api/actions";
 import { VerifyEmailResponse } from "../../../../../lib/api/types";
 import Or from "../../../../../components/hr/Or";
 import { useLazyFetch } from "../../../../../hooks/api";
-import { Google } from "../../../../../components/svgs";
+
 import { OAuth2 } from "./OAuth2";
 import { UserSessionData } from "@graphcalculator/types";
+import oauthStrategies from "../../../../../data/oauthStrategies";
 
 type LoginOrSignupFormPorps = {
-  previousValue: { email: string; isRegistered: boolean | null };
+  previousValue: { email: string; data: VerifyEmailResponse["data"] | null };
   onComplete: (res: { data: { user: UserSessionData } }) => void;
   handleSuccessEmail: (
     email: string,
@@ -31,7 +32,7 @@ const LoginOrSignupForm = (props: LoginOrSignupFormPorps) => {
         <div className="email-form-body-content">
           <OAuth2
             onComplete={props.onComplete}
-            stategies={[[<Google />, "Google"]]}
+            stategies={Object.values(oauthStrategies)}
           />
           <Or style={{ marginBlock: "1.5rem" }} />
           <VerifyEmailForm {...props} />
@@ -75,12 +76,10 @@ function VerifyEmailForm({
         if (isLoading) return;
         if (
           input !== "" &&
-          previousValue.isRegistered !== null &&
+          previousValue.data !== null &&
           previousValue.email === input
         )
-          return handleSuccessEmail(input, {
-            isRegistered: previousValue.isRegistered,
-          });
+          return handleSuccessEmail(previousValue.email, previousValue.data);
 
         trigger();
       }}
