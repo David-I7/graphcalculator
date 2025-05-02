@@ -7,6 +7,7 @@ export function ErrorFallback({ error }: { error: Error }) {
     <div role="alert">
       <p>Something went wrong:</p>
       <pre style={{ color: "red" }}>{error.message}</pre>
+      <pre>{error.stack}</pre>
       <button onClick={resetBoundary}>Try again</button>
     </div>
   );

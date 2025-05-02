@@ -18,13 +18,12 @@ const TimeoutLiteral = ({
   useEffect(() => {
     if (!ref.current || fastForward) return;
 
-    const currentRef = ref.current;
-
     let cur = duration / 1000;
 
     const interval = setInterval(() => {
+      if (!ref.current) return;
       cur -= 1;
-      currentRef.textContent = timeFormatter.handle(cur / 60, "");
+      ref.current.textContent = timeFormatter.handle(cur / 60, "");
       if (cur === 0) {
         clearInterval(interval);
       }
@@ -36,9 +35,11 @@ const TimeoutLiteral = ({
   }, [fastForward]);
 
   return (
-    <span role="timer" className={className} style={style} ref={ref}>
-      {!fastForward && timeFormatter.handle(duration / 1000 / 60, "")}
-      {fastForward && timeFormatter.handle(0, "")}
+    <span role="timer" className={className} style={style}>
+      {!fastForward && (
+        <span ref={ref}>{timeFormatter.handle(duration / 1000 / 60, "")}</span>
+      )}
+      {fastForward && <span>{timeFormatter.handle(0, "")}</span>}
     </span>
   );
 };

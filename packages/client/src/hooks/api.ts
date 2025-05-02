@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-type FetchState<T> = {
+export type FetchState<T> = {
   data: T | null;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
 };
 
-type Trigger = () => void;
+export type Trigger = () => void;
 
 export function useLazyFetch<Data>(
   cb: () => Promise<Data>
