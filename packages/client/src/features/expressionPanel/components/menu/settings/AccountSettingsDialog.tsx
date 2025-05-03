@@ -58,7 +58,7 @@ function DialogContent({
             }
             label="Profile"
           />
-          {user.provider === Provider.graphCalulator ? (
+          {user.provider === Provider.graphCalculator ? (
             <Tab
               content={<PasswordTabContent user={user} />}
               label="Password"

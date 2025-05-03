@@ -37,7 +37,7 @@ export class GraphDao implements IGraphDao {
   }
 
   async getSavedGraphs(
-    id: string,
+    userId: string,
     page: number,
     limit: number
   ): Promise<{ graphs: GraphData[]; totalPages: number }> {
@@ -45,14 +45,14 @@ export class GraphDao implements IGraphDao {
       const totalCount = DB.query<{ count: number }>(
         `Select count(*)::int from users as u
         join saved_graphs as sg on u.id = sg.user_id where u.id = $1;`,
-        [id]
+        [userId]
       );
       const graphs = await DB.query<GraphData>(
         `select sg.id, name, image,modified_at,graph_snapshot,items from users as u
         join saved_graphs as sg on u.id = sg.user_id where u.id = $1
         order by modified_at desc limit $2 offset $3;`,
 
-        [id, limit, limit * (page - 1)]
+        [userId, limit, limit * (page - 1)]
       );
 
       const totalPages = Math.ceil((await totalCount).rows[0].count / limit);
@@ -66,7 +66,7 @@ export class GraphDao implements IGraphDao {
   async putSavedGraph(userId: string, graph: GraphData): Promise<boolean> {
     try {
       await DB.query(
-        `insert into saved_graphs values ($1,$2,$3,$4,$5,$6,$7) on conflict (id) 
+        `insert into saved_graphs values ($1,$2,$3,$4,$5,$6,$7) on conflict (user_id,id) 
         do update set name=$3, modified_at=$4, graph_snapshot=$5, items=$6, image=$7;`,
         [
           graph.id,
@@ -86,11 +86,14 @@ export class GraphDao implements IGraphDao {
     }
   }
 
-  async deleteSavedGraph(graphId: string): Promise<string | undefined> {
+  async deleteSavedGraph(
+    userId: string,
+    graphId: string
+  ): Promise<string | undefined> {
     try {
       const res = await DB.query<{ image: string }>(
-        `delete from saved_graphs where id = $1 returning image;`,
-        [graphId]
+        `delete from saved_graphs where user_id = $1 and id = $2 returning image;`,
+        [userId, graphId]
       );
 
       return res.rows[0].image;

@@ -8,7 +8,7 @@ type AuthWithProviderProps = {
   email: string;
   onComplete: (res: { data: { user: UserSessionData } }) => void;
   handlePreviousStep: () => void;
-  provider: Exclude<Provider, Provider.graphCalulator>;
+  provider: Exclude<Provider, Provider.graphCalculator>;
 };
 
 export const AuthWithProvider = ({

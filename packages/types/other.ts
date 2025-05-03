@@ -1,6 +1,6 @@
 export type PROVIDERS = "graphCalculator" | "google";
 export enum Provider {
-  "graphCalulator" = 0,
+  "graphCalculator" = 0,
   "google" = 1,
 }
 

@@ -7,7 +7,8 @@
     "dev": "concurrently \"nodemon --watch dist/api/v1 dist/api/v1/server.js\"  \"tsc -w\"",
     "build": "tsc",
     "clean": "rm -rf dist",
-    "start": "node dist/api/v1/server.js"
+    "start": "node dist/api/v1/server.js",
+    "migrate": "psql -U postgres -d postgres -f dist/api/v1/db/init_prod_db.sql"
   },
   "author": "Iosub David",
   "license": "ISC",
