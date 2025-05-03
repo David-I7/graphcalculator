@@ -70,7 +70,7 @@ const handelDeleteSavedGraph = async (req:Request,res:Response)=>{
   }
 
   const graphDao = new GraphDao()
-  const image = await graphDao.deleteSavedGraph(graphId)
+  const image = await graphDao.deleteSavedGraph(req.session.user!.id,graphId)
   
   if (!image){
     res.sendStatus(400)

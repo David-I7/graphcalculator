@@ -69,7 +69,7 @@ export default function FormProgress({
         if (
           !verifyEmailResponse.provider ||
           //@ts-ignore
-          verifyEmailResponse.provider === Provider.graphCalulator
+          verifyEmailResponse.provider === Provider.graphCalculator
         )
           return (
             <AuthForm
