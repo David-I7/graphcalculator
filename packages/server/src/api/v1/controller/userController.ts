@@ -17,7 +17,7 @@ import { ResetPasswordTemplate } from "../services/email/template/resetPasswordT
 import { VerifyCodeTemplate } from "../services/email/template/verifyCodeTemplate.ts.js";
 
 const handleUpdateUserCredentials = async (req: Request, res: Response) => {
-  if (req.session.user?.provider !== Provider.graphCalulator) {
+  if (req.session.user?.provider !== Provider.graphCalculator) {
     res.sendStatus(400);
     return;
   }

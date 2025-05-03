@@ -1,4 +1,4 @@
-import { ExpressionType, ItemDataServer } from "@graphcalculator/types";
+import { ExpressionType } from "@graphcalculator/types";
 import z from "zod";
 
 export class GraphSchemaDirector {
@@ -21,11 +21,11 @@ export class GraphSchemaDirector {
 
   private buildMetadataSchema(): typeof schema {
     const schema = z.object({
-      name: z.string(),
+      name: z.string().max(50),
       id: z.string(),
       graph_snapshot: this.buildGraphSnapshotSchema(),
       modified_at: z.string().datetime(),
-      image: z.string(),
+      image: z.string().max(80),
     });
 
     return schema;

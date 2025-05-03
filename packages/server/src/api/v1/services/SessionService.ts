@@ -59,7 +59,7 @@ export class SessionService {
       ).rows;
 
       const queue = sessions.filter((sess) => {
-        return sess.provider !== Provider.graphCalulator;
+        return sess.provider !== Provider.graphCalculator;
       });
 
       const requests = Array.from({ length: 4 }, async () => {
