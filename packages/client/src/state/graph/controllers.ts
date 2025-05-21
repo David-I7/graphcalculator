@@ -234,6 +234,7 @@ export function removeDependencies(
       }
     }
   });
+  if (!graph[variable].length) delete graph[variable];
 }
 
 export function updateScopeSync(
@@ -464,16 +465,16 @@ export function deleteScopeSync(
   depGraph: SerializedAdjList,
   scope: Scope
 ) {
-  delete scope[deleted];
-  let topologyOrder = AdjacencyList.topologicSort(depGraph);
-  if (!topologyOrder) throw new Error("Cycle has been detected");
+  const q = [deleted];
+  let i = 0;
+  while (i < q.length) {
+    const node = q[i];
+    const edges = depGraph[node];
+    delete scope[node];
 
-  const updatedIdx = topologyOrder.findIndex((v) => v === deleted);
-  if (updatedIdx === -1 || updatedIdx === topologyOrder.length - 1) return;
-
-  topologyOrder = topologyOrder.slice(updatedIdx + 1);
-
-  for (const v of topologyOrder) {
-    delete scope[v];
+    for (const edge of edges) {
+      if (edge in scope) q.push(edge);
+    }
+    i++;
   }
 }

@@ -4,7 +4,7 @@
   "main": "dist/index.html",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc -b tsconfig.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

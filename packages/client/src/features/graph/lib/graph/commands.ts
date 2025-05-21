@@ -18,7 +18,6 @@ import {
   toScientificNotation,
 } from "./utils";
 import { Expression, ExpressionSettings } from "../../../../state/graph/types";
-import { GraphSettings } from "./settings";
 
 export class CommandController implements GraphCommandController {
   public commands: GraphCommand[] = [];
@@ -75,8 +74,8 @@ export class DrawGridCommand implements GraphCommand {
     this.settings = {
       labelsPadding: this.graph.dpr * 14,
       labelStrokeWidth: this.graph.dpr * 3,
-      majorGridline: this.graph.dpr * 0.5,
-      minorGridline: this.graph.dpr * 0.25,
+      majorGridline: this.graph.dpr * 0.6,
+      minorGridline: this.graph.dpr * 0.3,
     };
   }
 
@@ -782,7 +781,7 @@ export class DrawFunctionCommand implements GraphCommand {
       }
       this.graph.ctx.stroke();
     } else {
-      let c = 0;
+      let c = 1;
       for (let y = minY; y < maxY; y += nextStep) {
         this.graph.ctx.beginPath();
         const curY = nextY ?? y * normFactor;
@@ -801,13 +800,13 @@ export class DrawFunctionCommand implements GraphCommand {
         this.graph.ctx.stroke();
 
         if (this.settings.lineType === "dotted") {
-          if (c % Math.floor(this.settings.strokeSize) === 0) {
+          if (c % 5 === 0) {
             nextX = undefined;
             nextY = undefined;
             y += nextStep * 4 * this.settings.strokeSize;
           }
         } else {
-          if (c % Math.floor(25 * this.settings.strokeSize) === 0) {
+          if (c % 25 === 0) {
             nextX = undefined;
             nextY = undefined;
             y += nextStep * 10 * this.settings.strokeSize;
@@ -856,7 +855,7 @@ export class DrawFunctionCommand implements GraphCommand {
       }
       this.graph.ctx.stroke();
     } else {
-      let c = 0;
+      let c = 1;
 
       for (let i = minX; i < maxX; i += nextStep) {
         this.graph.ctx.beginPath();
@@ -876,16 +875,16 @@ export class DrawFunctionCommand implements GraphCommand {
         this.graph.ctx.stroke();
 
         if (this.settings.lineType === "dotted") {
-          if (c % Math.floor(this.settings.strokeSize) === 0) {
+          if (c % 5 === 0) {
             nextX = undefined;
             nextY = undefined;
-            i += nextStep * 4 * this.settings.strokeSize;
+            i += nextStep * (4 * this.settings.strokeSize);
           }
         } else {
-          if (c % Math.floor(25 * this.settings.strokeSize) === 0) {
+          if (c % 25 === 0) {
             nextX = undefined;
             nextY = undefined;
-            i += nextStep * 10 * this.settings.strokeSize;
+            i += nextStep * (10 * this.settings.strokeSize);
           }
         }
 
@@ -1838,7 +1837,6 @@ class DrawTooltip {
 }
 
 export class DrawPointCommand implements GraphCommand {
-  // protected destroyController: AbortController | null = new AbortController()
   protected isHighlighted: boolean = false;
   protected boundPointerdown;
   protected tooltip: DrawTooltip;

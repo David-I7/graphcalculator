@@ -9,11 +9,17 @@ import sesssion from "express-session";
 import sessionOptions from "./config/session.js";
 import "./services/jobs/index.js";
 import { ONE_YEAR, publicDirname } from "./constants.js";
+import path from "node:path";
 
 const app = express();
 
 app.use((req, res, next) => {
   console.log(req.method, req.url);
+  if (req.url === "/favicon.ico") {
+    res.sendFile(path.join(publicDirname, "/favicon.ico"));
+    return;
+  }
+
   next();
 });
 
