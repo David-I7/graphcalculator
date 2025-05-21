@@ -377,11 +377,11 @@
 
 @media screen and (max-width: 500px) {
   .expression-panel {
-    top: 50%;
+    top: 50svh;
     left: 0;
     bottom: 0;
-    width: 100%;
-    max-width: 100%;
+    width: 100vw;
+    max-width: 100vw;
 
     &__resizer {
       inset: 0;

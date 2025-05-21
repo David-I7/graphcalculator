@@ -2,9 +2,8 @@ import { Router } from "express";
 import rootController from "../controller/rootController.js";
 import graphRouter from "./graphs.js";
 import authRouter from "./auth.js";
-import { clientDirname, serverDirname } from "../constants.js";
+import { clientDirname } from "../constants.js";
 import path from "path";
-import testRouter from "./test.js";
 import registerRouter from "./register.js";
 import logoutRouter from "./logout.js";
 import userRouter from "./user.js";
@@ -18,7 +17,6 @@ router.use("/api/auth", authRouter);
 router.use("/api/register", registerRouter);
 router.use("/api/logout", logoutRouter);
 router.use("/api/user", userRouter);
-router.use("/api/test", testRouter);
 router.all("*", (req, res) => {
   res.sendFile(path.join(clientDirname, "/notFound.html"));
 });

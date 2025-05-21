@@ -2,6 +2,7 @@
   width: 100%;
   height: 100%;
   min-height: 100svh;
+  max-height: 100svh;
 }
 
 .graph-container {
@@ -9,8 +10,9 @@
   right: 0;
   top: 0;
   bottom: 0;
+  left: auto;
   overflow: hidden;
-  width: calc(100% - 17.625rem);
+  width: calc(100vw - 17.625rem);
   touch-action: none;
 }
 
@@ -35,6 +37,7 @@
 
 @media screen and (max-width: 500px) {
   .graph-container {
-    width: 100%;
+    width: 100vw;
+    left: 0;
   }
 }

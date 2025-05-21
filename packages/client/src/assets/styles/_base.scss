@@ -139,10 +139,15 @@ body {
   overflow: hidden;
 }
 
+// There is a bug that in chrome mobile that doesn't show the correct height on page load
+// Tried fixing it, but found no solution.
+
 main {
   min-height: 100svh;
   height: 100svh;
   max-height: 100svh;
+  position: relative;
+  overflow: hidden;
 }
 
 // UTLILITY CLASSES
