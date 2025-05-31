@@ -14,7 +14,7 @@ export type SessionObject = Session & Partial<SessionData>;
 
 export class SessionService {
   hasSession(req: Request) {
-    return req?.session?.user !== undefined;
+    return req.session?.user !== undefined;
   }
 
   private async revokeRefreshToken(provider: Provider, refresh_token: string) {

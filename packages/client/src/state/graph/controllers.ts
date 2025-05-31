@@ -243,14 +243,6 @@ export function updateScopeSync(
   items: Item[],
   scope: Scope
 ) {
-  let topologyOrder = AdjacencyList.topologicSort(depGraph);
-  if (!topologyOrder) throw new Error("Cycle has been detected");
-
-  const updatedIdx = topologyOrder.findIndex((v) => v === updated);
-  if (updatedIdx === -1) return;
-
-  topologyOrder = topologyOrder.slice(updatedIdx + 1);
-
   const varToItem: Record<string, Expression> = {};
   const nonScopedExpr: Expression[] = [];
   items.forEach((item) => {
@@ -266,19 +258,30 @@ export function updateScopeSync(
   });
 
   const updatedExpr: Set<string> = new Set(updated);
-  for (const v of topologyOrder) {
-    const expr = varToItem[v];
+  const q: string[] = [];
+  for (const edge of depGraph[updated]) {
+    q.push(edge);
+  }
+  let i = 0;
+  while (i < q.length) {
+    const node = q[i];
+    const expr = varToItem[node];
+    if (!expr) continue;
 
-    if (!expr || !dependenciesInScope(expr.parsedContent!.scopeDeps, scope))
-      continue;
+    updatedExpr.add(node);
+    const edges = depGraph[node];
 
-    updatedExpr.add(v);
+    for (const edge of edges) {
+      if (!updatedExpr.has(edge)) q.push(edge);
+    }
+    i++;
+
     switch (expr.type) {
       case "variable": {
         const res = ExpressionTransformer.transform(expr, scope);
         if (res.err) {
           expr.parsedContent = undefined;
-          delete scope[v];
+          delete scope[node];
           break;
         }
 
@@ -302,7 +305,7 @@ export function updateScopeSync(
         const res = ExpressionTransformer.transform(expr, scope);
         if (res.err) {
           expr.parsedContent = undefined;
-          delete scope[v];
+          delete scope[node];
           break;
         }
 

@@ -9,10 +9,11 @@ const apiSlice = createApi({
   endpoints: (build) => ({
     getExampleGraphs: build.query<GraphData[], void>({
       query: () => ({
-        url: "graphs/examples",
+        url: baseUrl
+          .substring(0, baseUrl.length - 3)
+          .concat("public/examples.json"),
         credentials: "include",
       }),
-      transformResponse: (response: { data: GraphData[] }) => response.data,
     }),
     getSavedGraphs: build.infiniteQuery<
       { graphs: GraphData[]; totalPages: number },

@@ -109,6 +109,7 @@ const handleOAuth2Callback = async (req: Request, res: Response) => {
     });
     res.send(responseTemplate.createTemplate());
   } catch (error) {
+    console.log(error);
     responseTemplate.setMessage({
       type: "oauth_error",
     });

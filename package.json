@@ -7,7 +7,9 @@
     "packages/*"
   ],
   "scripts": {
-    "json-server": "npx json-server src/data/mock/db.json -p 5000"
+    "json-server": "npx json-server src/data/mock/db.json -p 5000",
+    "docker-up": "docker compose -f compose.yaml up -d --build",
+    "docker-down": "docker compose -f compose.yaml down"
   },
   "dependencies": {
     "uuid": "^11.1.0"
