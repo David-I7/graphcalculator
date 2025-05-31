@@ -5,7 +5,6 @@ import { SessionService } from "../services/sessionService.js";
 
 const graphRouter = Router();
 
-graphRouter.get("/examples", graphController.handleExampleGraphs);
 graphRouter
   .route("/saved")
   .get(

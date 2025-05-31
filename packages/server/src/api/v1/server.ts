@@ -3,35 +3,25 @@ import express from "express";
 import cors from "cors";
 import { corsOptions } from "./config/cors.js";
 import cookieParser from "cookie-parser";
-import serveStaticGZIP from "./middleware/serveStaticGZIP.js";
 import router from "./route/index.js";
 import sesssion from "express-session";
 import sessionOptions from "./config/session.js";
 import "./services/jobs/index.js";
-import { ONE_YEAR, publicDirname } from "./constants.js";
-import path from "node:path";
 
 const app = express();
 
 app.use((req, res, next) => {
   console.log(req.method, req.url);
-  if (req.url === "/favicon.ico") {
-    res.sendFile(path.join(publicDirname, "/favicon.ico"));
-    return;
-  }
-
   next();
 });
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
-app.use("/assets", serveStaticGZIP);
-app.use("/public", express.static(publicDirname, { maxAge: ONE_YEAR }));
 app.use(sesssion(sessionOptions));
 app.use(express.json());
 
 app.use(router);
 
-app.listen(process.env.PORT || 8080, () => {
+app.listen(Number(process.env.PORT) || 8080, "192.168.1.131", () => {
   console.log(`App listening on port ${process.env.PORT || 8080}`);
 });

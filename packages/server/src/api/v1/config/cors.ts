@@ -10,9 +10,7 @@ export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
 
-    const portIdx = origin.lastIndexOf(":");
-    const strippedPort = portIdx !== -1 ? origin.substring(0, portIdx) : origin;
-    if (allowedOrigins.has(strippedPort)) callback(null, true);
+    if (allowedOrigins.has(origin)) callback(null, true);
     else {
       callback(
         new SimpleErrorFactory().createClientError(

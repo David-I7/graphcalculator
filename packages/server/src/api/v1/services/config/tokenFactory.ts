@@ -1,6 +1,6 @@
 import path from "node:path";
 import { Tokens } from "../oAuth/types.js";
-import fs from "node:fs";
+import fs, { existsSync } from "node:fs";
 import { serverDirname } from "../../constants.js";
 
 type Token = Record<string, Omit<Tokens, "id_token" | "provider">>;
@@ -11,6 +11,12 @@ export class TokenFactory {
 
   constructor() {
     if (!TokenFactory.fd) {
+      const filePath = path.join(serverDirname, "/config/tokens.json");
+
+      if (!existsSync(filePath)) {
+        fs.closeSync(fs.openSync(filePath, "w"));
+      }
+
       TokenFactory.fd = fs.openSync(
         path.join(serverDirname, "/config/tokens.json"),
         "r+"
