@@ -1,20 +1,12 @@
-import multer from "multer";
-import { publicDirname } from "../constants.js";
+import multer, { Multer } from "multer";
 import fs from "node:fs";
 import path from "node:path";
+import { Request } from "express";
+import sharp from "sharp";
+import { publicDirname } from "../constants.js";
 
-const storage = multer.diskStorage({
-  destination(req, file, callback) {
-    callback(null, path.join(publicDirname, "/images"));
-  },
-  filename(req, file, callback) {
-    const ext = file.mimetype.split("/")[1];
-    const name = req.session
-      .user!.id.slice(0, 8)
-      .concat(new Date().getTime().toString(), ".", ext);
-    callback(null, name);
-  },
-});
+const storage = multer.memoryStorage();
+
 const upload = multer({ storage });
 
 export async function deleteFromFs(path: string): Promise<boolean> {
@@ -30,6 +22,26 @@ export default upload;
 
 export function createPathFromUrl(urls: string[], dir: string): string[] {
   return urls.map((url) => path.join(dir, `/${path.basename(url)}`));
+}
+
+export function generateUniquefileName(
+  file: Express.Multer.File,
+  req: Request
+): string {
+  const ext = file.mimetype.split("/")[1];
+  return req.session
+    .user!.id.slice(0, 8)
+    .concat(new Date().getTime().toString(), ".", ext);
+}
+
+export function generateFileUrl(fileName: string) {
+  return process.env.SERVER_ORIGIN!.concat("/public/images/", fileName);
+}
+
+export async function uploadFile(fileBuffer: Buffer, fileName: string) {
+  return sharp(fileBuffer)
+    .resize(80, 80)
+    .toFile(path.join(publicDirname, "/images/", fileName));
 }
 
 export async function deleteFiles(paths: string[], concurrency: number = 4) {

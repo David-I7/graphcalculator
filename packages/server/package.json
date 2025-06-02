@@ -26,6 +26,7 @@
     "multer": "^1.4.5-lts.2",
     "node-cron": "^3.0.3",
     "pg": "^8.14.1",
+    "sharp": "^0.34.2",
     "uuid": "*",
     "zod": "^3.24.2"
   },
@@ -40,6 +41,7 @@
     "@types/multer": "^1.4.12",
     "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.11.11",
+    "@types/sharp": "^0.31.1",
     "concurrently": "*",
     "nodemon": "^3.1.9"
   }
