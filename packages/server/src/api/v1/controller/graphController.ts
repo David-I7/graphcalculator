@@ -2,8 +2,14 @@ import { Request, Response } from "express";
 import { GraphDao } from "../db/dao/graphDao.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { GraphValidationService } from "../services/validation/GraphValidationService.js";
-import { createPathFromUrl, deleteFromFs } from "../middleware/fileStorage.js";
-import { publicDirname } from "../constants.js";
+import {
+  createPathFromUrl,
+  deleteFromFs,
+  generateFileUrl,
+  generateUniquefileName,
+  uploadFile,
+} from "../middleware/fileStorage.js";
+import { publicDirname, serverDirname } from "../constants.js";
 import path from "path";
 
 const handleGetSavedGraphs = async (req: Request, res: Response) => {
@@ -30,34 +36,33 @@ const handleGetSavedGraphs = async (req: Request, res: Response) => {
 const handlePutSavedGraphs = async (req: Request, res: Response) => {
   if (!req.file) res.sendStatus(400);
 
-  req.body.image = process.env.SERVER_ORIGIN!.concat(
-    "/public/images/",
-    req.file!.filename
-  );
+  const fileName = generateUniquefileName(req.file!, req);
+
+  req.body.image = generateFileUrl(fileName);
   req.body.graph_snapshot = JSON.parse(req.body.graph_snapshot);
   req.body.items = JSON.parse(req.body.items);
 
   const data = new GraphValidationService().validateGraph(req.body);
   if (!data) {
-    deleteFromFs(
-      createPathFromUrl([req.file!.filename], req.file!.destination)[0]
-    );
     res.sendStatus(400);
     return;
   }
 
   const graphDao = new GraphDao();
-
   const isSuccess = await graphDao.putSavedGraph(req.session.user!.id, data);
   if (!isSuccess) {
     res.sendStatus(500);
     return;
   }
 
+  uploadFile(req.file!.buffer, fileName);
   if (req.body.prevImage) {
     deleteFromFs(
-      createPathFromUrl([req.body.prevImage], req.file!.destination)[0]
-    );
+      createPathFromUrl(
+        [req.body.prevImage],
+        path.join(publicDirname, "/images")
+      )[0]
+    ).catch(console.error);
   }
 
   res.status(200).send(new ApiSuccessResponse().createResponse(data.image));

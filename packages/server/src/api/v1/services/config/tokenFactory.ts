@@ -17,10 +17,7 @@ export class TokenFactory {
         fs.closeSync(fs.openSync(filePath, "w"));
       }
 
-      TokenFactory.fd = fs.openSync(
-        path.join(serverDirname, "/config/tokens.json"),
-        "r+"
-      );
+      TokenFactory.fd = fs.openSync(filePath, "r+");
 
       TokenFactory.tokens = JSON.parse(
         fs.readFileSync(TokenFactory.fd).toString() || "{}"
