@@ -12,6 +12,7 @@ export default defineConfig({
         resetPassword: path.resolve(__dirname, "resetPassword.html"),
         notFound: path.resolve(__dirname, "notFound.html"),
         deleteResponse: path.resolve(__dirname, "deleteResponse.html"),
+        privacyPolicy: path.resolve(__dirname, "privacyPolicy.html"),
       },
     },
   },
