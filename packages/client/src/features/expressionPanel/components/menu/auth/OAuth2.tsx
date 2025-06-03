@@ -31,15 +31,19 @@ export function OAuth2({
         if (!ORIGINS.includes(e.origin as any)) return;
         if (!(e.data?.source === "graph calculator")) return;
 
-        setIsOpen(false);
+        cleanup.clearPollRequest();
         popup.current = null;
         if (e.data.type === "oauth_success") {
           registerUser(e.data.token as string).then((res) => {
+            setIsOpen(false);
+
             if ("error" in res) {
               return;
             }
             onComplete(res);
           });
+        } else {
+          setIsOpen(false);
         }
       },
       { signal: abortController.signal }

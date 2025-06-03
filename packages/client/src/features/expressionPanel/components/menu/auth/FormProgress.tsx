@@ -63,7 +63,6 @@ export default function FormProgress({
       );
     case 1: {
       if (verifyEmailResponse === null) return;
-      console.log(verifyEmailResponse);
 
       if (verifyEmailResponse.isRegistered) {
         if (

@@ -25,3 +25,8 @@ app.use(router);
 app.listen(Number(process.env.PORT) || 8080, "192.168.1.131", () => {
   console.log(`App listening on port ${process.env.PORT || 8080}`);
 });
+
+process.on("SIGINT", () => {
+  console.log("Received SIGINT, shutting down...");
+  process.exit(0);
+});
