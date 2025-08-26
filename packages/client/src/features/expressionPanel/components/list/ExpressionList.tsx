@@ -36,6 +36,7 @@ function ExpressionListRenderer() {
     data: items,
     focusedId,
     scope,
+    nextId,
   } = useAppSelector((state) => state.graphSlice.currentGraph.items);
   const graphId = useAppSelector((state) => state.graphSlice.currentGraph.id);
   const prevGraphId = usePrevious(graphId, graphId);
@@ -111,6 +112,8 @@ function ExpressionListRenderer() {
       dispatch(createItem({ type: "expression", loc: "end" }));
     }
   }, [items.length]);
+
+  console.log(nextId);
 
   return (
     <ol className="expression-list" ref={draggableContainerRef}>

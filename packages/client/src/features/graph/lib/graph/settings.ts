@@ -1,3 +1,4 @@
+import { isMobile } from "../../../../helpers/dom";
 import { throttle } from "../../../../helpers/timing";
 import { Graph } from "./graph";
 import { GraphSettingsState } from "@graphcalculator/types";
@@ -150,8 +151,9 @@ export class GraphSettings {
 
       if (pointerId !== e.pointerId) return;
 
-      const dx = e.clientX - lastMouseX;
-      const dy = e.clientY - lastMouseY;
+      const scaler = isMobile() ? 2 : 1;
+      const dx = (e.clientX - lastMouseX) * scaler;
+      const dy = (e.clientY - lastMouseY) * scaler;
       lastMouseX = e.clientX;
       lastMouseY = e.clientY;
 
