@@ -226,7 +226,7 @@ export function removeDependencies(
   graph: SerializedAdjList
 ) {
   depArray.forEach((dep) => {
-    const edges = graph[dep];
+    const edges = graph[dep] || [];
     for (let i = 0; i < edges.length; i++) {
       if (edges[i] === variable) {
         edges.splice(i, 1);
@@ -234,7 +234,7 @@ export function removeDependencies(
       }
     }
   });
-  if (!graph[variable].length) delete graph[variable];
+  if (!graph[variable]?.length) delete graph[variable];
 }
 
 export function updateScopeSync(
@@ -472,7 +472,7 @@ export function deleteScopeSync(
   let i = 0;
   while (i < q.length) {
     const node = q[i];
-    const edges = depGraph[node];
+    const edges = depGraph[node] || [];
     delete scope[node];
 
     for (const edge of edges) {
