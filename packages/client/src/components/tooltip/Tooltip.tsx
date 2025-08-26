@@ -1,6 +1,7 @@
 import { JSX, RefObject, useEffect, useId, useRef, useState } from "react";
 import styles from "./tooltip.module.scss";
 import { CSS_VARIABLES } from "../../data/css/variables";
+import { useAppSelector } from "../../state/hooks";
 
 type TooltipProps = {
   content: (ariaDescribedByID: string) => JSX.Element;
@@ -10,13 +11,14 @@ type TooltipProps = {
 };
 
 const Tooltip = ({ style, content, message, fixedPosition }: TooltipProps) => {
+  const isMobile = useAppSelector((state) => state.globalSlice.isMobile);
   const ariaDescribedByID = useId();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const timeoutId: RefObject<NodeJS.Timeout | null> = useRef(null);
   const tooltipRef: RefObject<HTMLDivElement | null> = useRef(null);
 
   useEffect(() => {
-    if (!tooltipRef.current || !isOpen) return;
+    if (!tooltipRef.current || !isOpen || isMobile) return;
     const currentTooltip = tooltipRef.current;
     const triangle = tooltipRef.current.nextElementSibling as HTMLDivElement;
 
@@ -36,20 +38,28 @@ const Tooltip = ({ style, content, message, fixedPosition }: TooltipProps) => {
   return (
     <div
       style={style}
-      onMouseEnter={() => {
-        if (timeoutId.current) return;
-        timeoutId.current = setTimeout(() => {
-          setIsOpen(true);
-        }, CSS_VARIABLES.animationSpeedSlowest);
-      }}
-      onMouseLeave={() => {
-        if (!timeoutId.current) return;
-        clearTimeout(timeoutId.current);
-        timeoutId.current = null;
-        if (isOpen) {
-          setIsOpen(false);
-        }
-      }}
+      onMouseEnter={
+        isMobile
+          ? undefined
+          : () => {
+              if (timeoutId.current) return;
+              timeoutId.current = setTimeout(() => {
+                setIsOpen(true);
+              }, CSS_VARIABLES.animationSpeedSlowest);
+            }
+      }
+      onMouseLeave={
+        isMobile
+          ? undefined
+          : () => {
+              if (!timeoutId.current) return;
+              clearTimeout(timeoutId.current);
+              timeoutId.current = null;
+              if (isOpen) {
+                setIsOpen(false);
+              }
+            }
+      }
       className={styles.tooltipContainer}
     >
       {content(ariaDescribedByID)}

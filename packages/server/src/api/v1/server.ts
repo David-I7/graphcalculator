@@ -22,7 +22,7 @@ app.use(express.json());
 
 app.use(router);
 
-app.listen(Number(process.env.PORT) || 8080, "192.168.1.131", () => {
+app.listen(Number(process.env.PORT) || 8080, "192.168.1.129", () => {
   console.log(`App listening on port ${process.env.PORT || 8080}`);
 });
 
