@@ -46,7 +46,7 @@ export function OAuth2({
           setIsOpen(false);
         }
       },
-      { signal: abortController.signal }
+      { signal: abortController.signal },
     );
 
     return () => {
@@ -66,7 +66,7 @@ export function OAuth2({
             popup.current = window.open(
               `${baseUrl}/auth/${strategy[1].toLowerCase()}`,
               "",
-              isMobile ? "" : "popup,width=500px,height=500px"
+              isMobile ? "" : "popup,width=500px,height=500px",
             );
             setIsOpen(true);
           }}

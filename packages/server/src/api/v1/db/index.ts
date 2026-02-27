@@ -5,21 +5,20 @@ export class DB {
   private _pool: pg.Pool;
   constructor() {
     this._pool = new Pool({
-      user: process.env.DB_USER || "postgres",
-      password: process.env.DB_PASSWORD,
-      host: process.env.DB_HOST || "localhost",
+      user: process.env.POSTGRES_USER || "postgres",
+      password: process.env.POSTGRES_PASSWORD,
+      host: process.env.POSTGRES_HOST || "localhost",
       port:
-        process.env.DB_PORT !== undefined ? Number(process.env.DB_PORT) : 5432,
-      database:
-        process.env.NODE_ENV === "development"
-          ? process.env.DEV_DATABASE
-          : process.env.PROD_DATABASE,
+        process.env.POSTGRES_PORT !== undefined
+          ? Number(process.env.POSTGRES_PORT)
+          : 5432,
+      database: process.env.POSTGRES_DB,
     });
   }
 
   async query<QueryResult extends QueryResultRow>(
     text: string,
-    values?: any[]
+    values?: any[],
   ) {
     return this._pool.query<QueryResult>(text, values);
   }

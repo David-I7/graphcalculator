@@ -1,7 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath } from "url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -19,6 +21,9 @@ export default defineConfig({
   server: {
     port: 3000,
     open: "index.html",
+    proxy: {
+      "/favicon.ico": "http://localhost:8080/public",
+    },
   },
   css: {
     modules: {

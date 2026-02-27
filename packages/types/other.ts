@@ -4,4 +4,7 @@ export enum Provider {
   "google" = 1,
 }
 
-export type Origins = "http://localhost" | "https://graphcalculator.xyz";
+export type Origins =
+  | "http://localhost:3000"
+  | "http://localhost:8080"
+  | "https://graphcalculator.xyz";

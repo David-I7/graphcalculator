@@ -1,3 +1,5 @@
+import { clientOrigin } from "../../constants.js";
+
 abstract class IOAuthReponseTemplate {
   createTemplate(): string {
     const origin = this.getOrigin();
@@ -22,9 +24,7 @@ abstract class IOAuthReponseTemplate {
   }
 
   getOrigin(): string {
-    return process.env.NODE_ENV === "development"
-      ? process.env.DEV_ORIGIN!
-      : process.env.SERVER_ORIGIN!;
+    return clientOrigin;
   }
 
   abstract createMessage(): string;

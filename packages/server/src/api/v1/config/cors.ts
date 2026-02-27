@@ -3,7 +3,9 @@ import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 
 const allowedOrigins: Set<string> = new Set<string>([
   "http://localhost",
-  "http://127.0.0.1",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://graphCalculator.xyz",
 ]);
 
 export const corsOptions: CorsOptions = {
@@ -16,9 +18,9 @@ export const corsOptions: CorsOptions = {
         new SimpleErrorFactory().createClientError(
           "cors",
           "Not allowed by CORS.",
-          403
+          403,
         ),
-        false
+        false,
       );
     }
   },
