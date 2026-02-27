@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { UserDao } from "../db/dao/userDao.js";
+import { UserDao } from "../db/dao/UserDao.js";
 import { Provider, UserSessionData } from "@graphcalculator/types";
-import { SessionService } from "../services/sessionService.js";
+import { SessionService } from "../services/SessionService.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
@@ -32,7 +32,7 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
   const dbres = await userDao.updateUserById(
     req.session.user.id,
     ["first_name", "last_name"],
-    [first_name, last_name]
+    [first_name, last_name],
   );
 
   if (!dbres) {
@@ -43,9 +43,9 @@ const handleUpdateUserCredentials = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createServerError(
             "db",
             "Failed to save, please try again.",
-            500
-          )
-        )
+            500,
+          ),
+        ),
       );
     return;
   }
@@ -128,7 +128,7 @@ export const verifyEmailCode = async (req: Request, res: Response) => {
     const updated = await userDao.updateUserById(
       req.session.user!.id,
       ["email_is_verified"],
-      [true]
+      [true],
     );
     if (!updated) {
       res.sendStatus(500);

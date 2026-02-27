@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { SessionService } from "../services/sessionService.js";
+import { SessionService } from "../services/SessionService.js";
 import { deleteCookie } from "../helpers/cookie.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
 import { DeleteAccountTemplate } from "../services/email/template/deleteAccountTemplate.js";
@@ -8,7 +8,7 @@ import { JWTService } from "../services/jwt/jwtService.js";
 const handleLogout = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { deleteUser } = req.query;
   const sessionService = new SessionService();
@@ -36,11 +36,11 @@ const handleLogout = async (
   if (req.session.tokens || (typeof deleteUser === "boolean" && deleteUser)) {
     isDeleted = await sessionService.deleteSessionRecursive(
       req.session.user!.id,
-      () => deleteCookie(res)
+      () => deleteCookie(res),
     );
   } else {
     isDeleted = await sessionService.deleteSession(req.session, () =>
-      deleteCookie(res)
+      deleteCookie(res),
     );
   }
 

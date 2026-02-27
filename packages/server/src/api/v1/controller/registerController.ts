@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserDao } from "../db/dao/userDao.js";
+import { UserDao } from "../db/dao/UserDao.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
@@ -18,9 +18,9 @@ const handleEmailVerification = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createClientError(
             "register",
             "Invalid credentials.",
-            400
-          )
-        )
+            400,
+          ),
+        ),
       );
     return;
   }
@@ -33,8 +33,8 @@ const handleEmailVerification = async (req: Request, res: Response) => {
       new ApiSuccessResponse().createResponse(
         user
           ? { isRegistered: true, provider: user.provider }
-          : { isRegistered: false }
-      )
+          : { isRegistered: false },
+      ),
     );
 };
 
@@ -73,9 +73,9 @@ const handleRegister = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createClientError(
             "register",
             "Invalid credentials.",
-            400
-          )
-        )
+            400,
+          ),
+        ),
       );
     return;
   }

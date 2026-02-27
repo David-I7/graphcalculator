@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserDao } from "../db/dao/userDao.js";
+import { UserDao } from "../db/dao/UserDao.js";
 import { ApiErrorResponse } from "../services/apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "../services/error/simpleErrorFactory.js";
 import { ApiSuccessResponse } from "../services/apiResponse/successResponse.js";
@@ -7,7 +7,7 @@ import { isEmail, isValidPassword } from "../services/validation/auth.js";
 import { PasswordService } from "../services/passwordService.js";
 import { GoogleOpenIDStrategy } from "../services/oAuth/googleStrategy.js";
 import { OpenIDClient } from "../services/oAuth/OAuthClient.js";
-import { OAuthReponseTemplate } from "../services/oAuth/responseTemplate.js";
+import { OAuthReponseTemplate } from "../services/oAuth/ResponseTemplate.js";
 import { GoogleEmailService } from "../services/email/emailService.js";
 import { DeletedUsersDao } from "../db/dao/deletedUsersDao.js";
 

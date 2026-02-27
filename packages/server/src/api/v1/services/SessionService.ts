@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { OpenIDClient } from "./oAuth/OAuthClient.js";
-import { OpenIDStrategyFactory } from "./oAuth/strategyFactory.js";
+import { OpenIDStrategyFactory } from "./oAuth/StrategyFactory.js";
 import { valueCompare } from "../helpers/objects.js";
 import { cookieOptions } from "../config/cookies.js";
 import { ApiErrorResponse } from "./apiResponse/errorResponse.js";
 import { SimpleErrorFactory } from "./error/simpleErrorFactory.js";
-import { UserDao } from "../db/dao/userDao.js";
+import { UserDao } from "../db/dao/UserDao.js";
 import { Provider, UserRolesEnum } from "@graphcalculator/types";
 import { Session, SessionData } from "express-session";
 import DB from "../db/index.js";
@@ -25,12 +25,12 @@ export class SessionService {
 
   async deleteSession(
     session: SessionObject,
-    onDelete: () => void
+    onDelete: () => void,
   ): Promise<boolean> {
     return new Promise(async (resolve, rej) => {
       if (session.tokens) {
         throw new Error(
-          "Sessions from other providers must be all deleted recursively since all tokens will get invalidated"
+          "Sessions from other providers must be all deleted recursively since all tokens will get invalidated",
         );
       }
 
@@ -47,14 +47,14 @@ export class SessionService {
 
   async deleteSessionRecursive(
     userId: string,
-    onDelete: () => void
+    onDelete: () => void,
   ): Promise<boolean> {
     try {
       const sessions = (
         await DB.query<{ refresh_token: string; provider: number }>(
           `delete from session where sess#>>'{user,id}' = $1
           returning sess#>>'{tokens,refresh_token}' as refresh_token, (sess#>>'{tokens,provider}')::int as provider`,
-          [userId]
+          [userId],
         )
       ).rows;
 
@@ -68,7 +68,7 @@ export class SessionService {
           try {
             await this.revokeRefreshToken(
               credentials.provider,
-              credentials.refresh_token
+              credentials.refresh_token,
             );
           } catch (err) {
             return false;
@@ -103,8 +103,8 @@ export class SessionService {
 
         client.setStrategy(
           new OpenIDStrategyFactory().createStrategy(
-            req.session.tokens.provider
-          )
+            req.session.tokens.provider,
+          ),
         );
 
         try {
@@ -126,7 +126,7 @@ export class SessionService {
                   req.session.user!.last_name,
                   req.session.user!.first_name,
                   req.session.user!.email_is_verified,
-                ]
+                ],
               )
             ) {
               const userDao = new UserDao();
@@ -137,7 +137,7 @@ export class SessionService {
                   userInfo.family_name,
                   userInfo.given_name,
                   userInfo.email_verified,
-                ]
+                ],
               );
 
               this.updateSession(req.session, {
@@ -179,7 +179,7 @@ export class SessionService {
     updated: {
       user?: SessionData["user"];
       tokens?: SessionData["tokens"];
-    }
+    },
   ) {
     if (updated.user) {
       session.user = updated.user;
@@ -219,9 +219,9 @@ export class SessionService {
               new SimpleErrorFactory().createClientError(
                 "auth",
                 "Already logged in.",
-                400
-              )
-            )
+                400,
+              ),
+            ),
           );
         return;
       }
@@ -243,9 +243,9 @@ export class SessionService {
               new SimpleErrorFactory().createClientError(
                 "auth",
                 "You do not have the required permissions to access this resource",
-                403
-              )
-            )
+                403,
+              ),
+            ),
           );
         return;
       }

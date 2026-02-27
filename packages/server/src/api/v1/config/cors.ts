@@ -5,7 +5,7 @@ const allowedOrigins: Set<string> = new Set<string>([
   "http://localhost",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "https://graphCalculator.xyz",
+  "https://graphcalculator.xyz",
 ]);
 
 export const corsOptions: CorsOptions = {

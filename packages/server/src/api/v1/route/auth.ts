@@ -1,6 +1,6 @@
 import { Router } from "express";
 import authController from "../controller/authController.js";
-import { SessionService } from "../services/sessionService.js";
+import { SessionService } from "../services/SessionService.js";
 import { UserRolesEnum } from "@graphcalculator/types";
 
 const authRouter = Router();
