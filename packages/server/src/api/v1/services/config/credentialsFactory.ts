@@ -1,5 +1,5 @@
 import path from "node:path";
-import { serverDirname } from "../../constants.js";
+import { serverDirname, serverOrigin } from "../../constants.js";
 import fs from "node:fs";
 import { PROVIDERS } from "@graphcalculator/types";
 
@@ -17,12 +17,16 @@ export class CredentialsFactory {
 
   constructor() {
     const cred = fs.readFileSync(
-      path.join(serverDirname, "/config/credentials.json")
+      path.join(serverDirname, "/config/credentials.json"),
     );
     CredentialsFactory.credentials = JSON.parse(
       // @ts-ignore
-      cred
+      cred,
     );
+
+    const redirect = CredentialsFactory.credentials["google"]["redirect"];
+    redirect["auth"] = serverOrigin.concat(redirect["auth"]);
+    redirect["email"] = serverOrigin.concat(redirect["email"]);
   }
 
   getCredentials(provider: PROVIDERS, endpoint: RedirectUri): Credentials {

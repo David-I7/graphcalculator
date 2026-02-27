@@ -1,4 +1,4 @@
-import multer, { Multer } from "multer";
+import multer from "multer";
 import fs from "node:fs";
 import path from "node:path";
 import { Request } from "express";
@@ -14,7 +14,7 @@ export async function deleteFromFs(path: string): Promise<boolean> {
     fs.rm(path, (err) => {
       if (err) rej(err);
       res(true);
-    })
+    }),
   );
 }
 
@@ -26,7 +26,7 @@ export function createPathFromUrl(urls: string[], dir: string): string[] {
 
 export function generateUniquefileName(
   file: Express.Multer.File,
-  req: Request
+  req: Request,
 ): string {
   const ext = file.mimetype.split("/")[1];
   return req.session
@@ -35,7 +35,13 @@ export function generateUniquefileName(
 }
 
 export function generateFileUrl(fileName: string) {
-  return process.env.SERVER_ORIGIN!.concat("/public/images/", fileName);
+  const origin =
+    process.env.NODE_ENV === "production"
+      ? process.env.SERVER_ORIGIN
+      : process.env.NODE_ENV === "preview"
+        ? process.env.CLIENT_PREVIEW_ORIGIN
+        : process.env.SERVER_DEV_ORIGIN;
+  return origin!.concat("/public/images/", fileName);
 }
 
 export async function uploadFile(fileBuffer: Buffer, fileName: string) {

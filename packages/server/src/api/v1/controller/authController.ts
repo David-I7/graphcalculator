@@ -28,9 +28,9 @@ const handleAuth = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createClientError(
             "auth",
             "Invalid credentials.",
-            400
-          )
-        )
+            400,
+          ),
+        ),
       );
     return;
   }
@@ -46,9 +46,9 @@ const handleAuth = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createClientError(
             "auth",
             "User not found.",
-            404
-          )
-        )
+            404,
+          ),
+        ),
       );
     return;
   }
@@ -69,9 +69,9 @@ const handleAuth = async (req: Request, res: Response) => {
           new SimpleErrorFactory().createClientError(
             "auth",
             "Incorrect password.",
-            403
-          )
-        )
+            403,
+          ),
+        ),
       );
   }
 };

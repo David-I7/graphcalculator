@@ -8,12 +8,12 @@ const authRouter = Router();
 authRouter.get(
   "/status",
   new SessionService().rollingSession(),
-  authController.handleAuthStatus
+  authController.handleAuthStatus,
 );
 authRouter.post(
   "/",
   new SessionService().isAuthenticated(),
-  authController.handleAuth
+  authController.handleAuth,
 );
 authRouter.get("/google", authController.handleOAuth2);
 authRouter.get("/google/callback", authController.handleOAuth2Callback);
@@ -21,12 +21,12 @@ authRouter.get("/email/callback", authController.handleEmailCallback);
 authRouter.get(
   "/email",
   new SessionService().verifyRoles(UserRolesEnum.ADMIN),
-  authController.handleEmail
+  authController.handleEmail,
 );
 authRouter.delete(
   "/email/token",
   new SessionService().verifyRoles(UserRolesEnum.ADMIN),
-  authController.handleDeleteEmailTokens
+  authController.handleDeleteEmailTokens,
 );
 
 export default authRouter;

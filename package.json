@@ -7,8 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "docker-up": "docker compose -f compose.yaml up -d --build",
-    "docker-down": "docker compose -f compose.yaml down"
+    "docker-down": "docker compose -f docker/docker-compose.yaml down",
+    "dev": "docker compose -f docker/docker-compose.yaml up --build postgres -d && cross-env NODE_ENV=development VITE_NODE_ENV=development concurrently \"npm run -w @graphcalculator/client dev\" \"npm run -w @graphcalculator/server dev\"",
+    "preview": "docker compose -f docker/docker-compose.yaml up -d  && cross-env NODE_ENV=preview npm run -w @graphcalculator/server start",
+    "build": "cross-env VITE_NODE_ENV=preview npm run -w @graphcalculator/client build && npm run -w @graphcalculator/client zip && npm run -w @graphcalculator/server build"
   },
   "dependencies": {
     "uuid": "^11.1.0"
@@ -17,6 +19,7 @@
     "@eslint/js": "^9.19.0",
     "@types/node": "^22.13.12",
     "concurrently": "^9.1.2",
+    "cross-env": "^10.1.0",
     "eslint": "^9.19.0",
     "globals": "^15.14.0",
     "tsx": "^4.19.3",

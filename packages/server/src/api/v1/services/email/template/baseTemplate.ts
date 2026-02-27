@@ -1,3 +1,5 @@
+import { clientOrigin } from "../../../constants.js";
+
 export abstract class BaseTemplate {
   createTemplate(): string {
     return `<!DOCTYPE html>
@@ -10,7 +12,7 @@ export abstract class BaseTemplate {
       <body>
         <main>
           <header style="font-size: 1.25rem;color: #0F0F0F;font-weight: bold;font-family: Arial, Helvetica, sans-serif;padding: 1rem;border-bottom: 1px solid #bababa"><a style="color: #0F0F0F;text-decoration:none;" href="${
-            process.env.SERVER_ORIGIN
+            clientOrigin
           }">Graph Calculator</a></header>
           <div style="font-size:1rem;padding: 0 1rem 1rem">
           ${this.createContent()}
